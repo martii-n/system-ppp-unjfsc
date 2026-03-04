@@ -1,0 +1,10 @@
+<?php
+
+namespace App\Enums\Dossier;
+
+enum DossierApprovalStatus: int
+{
+    case REJECTED = 0;
+    case COMPLETED = 1;
+    case PENDING = 2;
+}

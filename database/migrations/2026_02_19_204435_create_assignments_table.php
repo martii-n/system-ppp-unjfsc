@@ -1,0 +1,43 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('assignments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('role_id')->constrained('roles');
+            $table->foreignId('semester_id')->constrained('semesters');
+            $table->foreignId('section_id')->nullable()->constrained('sections');
+
+            // Life of the register
+            $table->unsignedTinyInteger('status')->default(1); // ACTIVE | INACTIVE
+
+            // Access of the user
+            $table->unsignedTinyInteger('access_status')->default(1); // FULL | LIMITED | READ_ONLY | BLOCKED
+
+            // Academic validaty
+            $table->unsignedTinyInteger('approval_status')->default(2); // APPROVED | PENDING | REJECTED
+
+            // Flow administrative
+            $table->unsignedTinyInteger('review_status')->default(0); // NONE | UNDER_REVIEW | OBSERVED
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('assignments');
+    }
+};
