@@ -93,15 +93,25 @@ const SemesterSelector = ({
         router.patch(`/semesters/${id}/select`, {}, { preserveState: false });
     };
 
+    const { academic } = usePage().props as any;
+    const isHistoric = academic?.historicMode;
+
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <div className="group flex h-10 cursor-pointer items-center gap-3 rounded-md border px-3 transition-colors hover:bg-zinc-800/50 data-[state=open]:bg-zinc-800">
                     <Calendar className="h-4 w-4 shrink-0 text-green-500" />
                     <div className="flex flex-col justify-center">
-                        <span className="text-[10px] leading-none font-bold tracking-tight text-zinc-500 uppercase text-left">
-                            Semester
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] leading-none font-bold tracking-tight text-zinc-500 uppercase text-left">
+                                Semester
+                            </span>
+                            {isHistoric && (
+                                <span className="text-[9px] font-bold bg-orange-500/10 text-orange-500 px-1 rounded-[2px] border border-orange-500/20 leading-none py-0.5">
+                                    FINALIZADO
+                                </span>
+                            )}
+                        </div>
                         <span className="text-xs font-semibold">
                             {active?.code || 'N/A'}
                         </span>

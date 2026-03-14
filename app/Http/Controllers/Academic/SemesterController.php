@@ -3,37 +3,48 @@
 namespace App\Http\Controllers\Academic;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Academic\UpdateSemesterRequest;
 use App\Models\Semester;
 use App\Services\Academic\SemesterService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SemesterController extends Controller
 {
-    protected $semesterService;
-
-    public function __construct(SemesterService $semesterService)
+    public function __construct(protected SemesterService $semesterService)
     {
-        $this->semesterService = $semesterService;
     }
 
-    public function index(): JsonResponse
+    public function index(): Response
     {
-        $semesters = Semester::all();
-        return response()->json([
-            'message' => 'Semesters retrieved successfully',
-            'data' => $semesters,
+        $semesters = Semester::orderBy('id', 'desc')->get();
+        return Inertia::render('academic/management/semesters/index', ['semesters' => $semesters]);
+    }
+
+    public function update(UpdateSemesterRequest $request, Semester $semester): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $semester->update($data);
+
+        return back()->with([
+            'message' => 'Semestre actualizado correctamente.',
         ], 200);
     }
 
-    public function closeCurrentSemester(Semester $semester): JsonResponse
+    public function closeCurrentSemester(Semester $semester): RedirectResponse
     {
         $this->semesterService->closeCurrentSemester($semester->id);
-        return response()->json(['message' => 'Semester closed successfully'], 200);
+        return back()->with([
+            'message' => 'Semestre finalizado correctamente.',
+        ], 200);
     }
 
-    public function backCurrentSemester(Semester $semester): JsonResponse
+    public function backCurrentSemester(Semester $semester): RedirectResponse
     {
         $this->semesterService->backCurrentSemester($semester->id);
-        return response()->json(['message' => 'Semester backed successfully'], 200);
+        return back()->with('success', 'Semestre restablecido correctamente.');
     }
 }

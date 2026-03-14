@@ -2,6 +2,13 @@
 
 namespace App\Services\Academic;
 
+use App\Enums\Academic\SemesterStatus;
+use App\Enums\Assignment\AssignmentAccessStatus;
+use App\Enums\GeneralStatus;
+use App\Exceptions\Semester\SemesterHasRelatedRecordsException;
+use App\Exceptions\Semester\SemesterInvalidCodeException;
+use App\Exceptions\Semester\SemesterPreviousNotFoundException;
+use App\Exceptions\Semester\SemesterRollbackNotAllowedException;
 use App\Models\Assignment;
 use App\Models\Resource;
 use App\Models\Semester;
@@ -12,7 +19,6 @@ class SemesterService
 {
     /**
      * Lista todos los semestres.
-     * @return Collection
      */
     public function listSemesters(): Collection
     {
@@ -22,15 +28,18 @@ class SemesterService
     public function closeCurrentSemester(int $semesterId): Semester
     {
         return DB::transaction(function () use ($semesterId) {
-            Assignment::query()->where('semester_id', $semesterId)->update(['access_status', 3]);
+            Assignment::query()
+                ->where('semester_id', $semesterId)
+                ->update(['access_status' => AssignmentAccessStatus::READ_ONLY]);
 
-            Resource::query()->where('semester_id', $semesterId)
+            Resource::query()
+                ->where('semester_id', $semesterId)
                 ->where('level', '<', 5)
-                ->update(['status' => 0]);
+                ->update(['status' => GeneralStatus::INACTIVE]);
 
             $currentSemester = Semester::query()->find($semesterId);
 
-            $currentSemester->status = 0;
+            $currentSemester->status = SemesterStatus::INACTIVE;
             $currentSemester->save();
 
             $newCode = $this->generateNextCode($currentSemester->code);
@@ -54,24 +63,24 @@ class SemesterService
     {
         $currentSemester = Semester::query()->find($semesterId);
 
-        if ($currentSemester->status !== 1) {
-            throw new \DomainException('Solo se puede retroceder desde un semestre activo.');
+        if ($currentSemester->status !== SemesterStatus::ACTIVE) {
+            throw new SemesterRollbackNotAllowedException;
         }
 
         if (Semester::query()->count() <= 1) {
-            throw new \DomainException('No hay semestres anteriores para retroceder.');
+            throw new SemesterPreviousNotFoundException;
         }
 
         if ($currentSemester->assignments()->exists() || $currentSemester->sections()->exists()) {
-            throw new \DomainException('No se puede retroceder, hay registros que dependen de este semestre, borre e intente nuevamente.');
+            throw new SemesterHasRelatedRecordsException;
         }
 
         $currentSemester->delete();
 
         $previousSemester = Semester::query()->orderBy('id', 'desc')->first();
 
-        if (!$previousSemester) {
-            throw new \DomainException('No hay semestres anteriores para retroceder.');
+        if (! $previousSemester) {
+            throw new SemesterPreviousNotFoundException;
         }
 
         $previousSemester->update(['status' => 1]);
@@ -85,7 +94,7 @@ class SemesterService
         $parts = explode('-', $currentCode);
 
         if (count($parts) !== 2) {
-            throw new \InvalidArgumentException('Invalid semester code');
+            throw new SemesterInvalidCodeException;
         }
 
         $year = $parts[0];
@@ -95,6 +104,7 @@ class SemesterService
             return "{$year}-2";
         } else {
             $nextYear = (int) $year + 1;
+
             return "{$nextYear}-1";
         }
     }

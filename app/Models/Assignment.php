@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\Assignment\AssignmentAccessStatus;
+use App\Enums\Assignment\AssignmentApprovalStatus;
+use App\Enums\Assignment\AssignmentReviewStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +24,14 @@ class Assignment extends Model
         'review_status',
         'status',
         'is_select',
+    ];
+
+    protected $casts = [
+        'access_status' => AssignmentAccessStatus::class,
+        'approval_status' => AssignmentApprovalStatus::class,
+        'review_status' => AssignmentReviewStatus::class,
+        'status' => 'integer',
+        'is_select' => 'boolean',
     ];
 
     /**

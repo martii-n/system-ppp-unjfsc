@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Semester;
 use App\Services\Auth\SharedDataService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -52,6 +53,48 @@ class HandleInertiaRequests extends Middleware
                 ? session('assignment_id') ? \App\Models\Assignment::find(session('assignment_id'))?->role_id : null
                 : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'flash' => [
+                'success' => session('success'),
+                'message' => session('message'),
+                'error' => session('error'),
+            ],
+            'academic' => [
+                'historicMode' => fn () => $this->isHistoricMode($request),
+                'currentSemester' => fn () => $this->getCurrentSemester(),
+                'selectedAssignmentId' => session('assignment_id'),
+                'sessionToken' => $user ? md5(session()->getId()) : null,
+            ],
+        ];
+    }
+
+    private function isHistoricMode(Request $request): bool
+    {
+        $assignmentId = session('assignment_id');
+        if (!$assignmentId) return false;
+
+        $assignment = \App\Models\Assignment::find($assignmentId);
+        if (!$assignment) return false;
+
+        // Si es Admin, nunca es historico para él (puede gestionar todo)
+        if ($assignment->role_id === \App\Enums\Role::ADMIN->value) {
+            return false;
+        }
+
+        return $assignment->semester && $assignment->semester->status->value === 0;
+    }
+
+    private function getCurrentSemester(): ?array
+    {
+        $semesterId = session('semester_id');
+        if (!$semesterId) return null;
+
+        $semester = Semester::find($semesterId);
+        if (!$semester) return null;
+
+        return [
+            'id' => $semester->id,
+            'code' => $semester->code,
+            'status' => $semester->status->value,
         ];
     }
 }

@@ -10,6 +10,7 @@ import {
     UserRoundCog,
 } from 'lucide-react';
 import { dashboard } from '@/routes';
+import { index as semestersIndex } from '@/routes/semesters';
 
 export const ACADEMIC_NAV = [
     {
@@ -107,7 +108,7 @@ export const ACADEMIC_NAV = [
         items: [
             {
                 title: 'Semestres',
-                href: '#',
+                href: semestersIndex().url,
                 roles: [1, 2, 3],
             },
             {

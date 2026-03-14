@@ -1,7 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { LayoutGrid } from 'lucide-react';
 
-import { NavDossier } from '@/components/nav-dossier';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -20,24 +19,10 @@ import {
     ACADEMIC_NAV,
     COMPANY_NAV,
     FOOTER_NAV,
-    RESOURCE_BY_TYPE,
 } from '@/config/navigation';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 import AppLogo from './app-logo';
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/marti-nm/system-ppp-unjfsc',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
 
 export function AppSidebar() {
     const { auth, role } = usePage().props as any;
@@ -75,22 +60,6 @@ export function AppSidebar() {
             .filter((item) => !item.items || item.items.length > 0);
     };
 
-    // 1. Tomamos los footers estáticos base
-    const dynamicFooterNav = footerNavItems.filter((item) => {
-        if (!item.roles) return true;
-        return item.roles.includes(role);
-    });
-
-    // 2. Extraemos el objeto de recurso según el ID del usuario
-    // Usamos 'keyof typeof' para que TypeScript no arroje error
-    const injectedResource =
-        RESOURCE_BY_TYPE[userTypeId as keyof typeof RESOURCE_BY_TYPE];
-
-    // 3. Si existe, lo añadimos como el primer elemento, seguido de los estáticos
-    /*const filteredFooterNav = injectedResource
-        ? [injectedResource, ...dynamicFooterNav]
-        : dynamicFooterNav;*/
-
     const filteredFooterNav = FOOTER_NAV.filter((item) => {
         if (!item.userTypes) return true;
         return item.userTypes.includes(userTypeId);
@@ -111,7 +80,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavDossier items={filterItems(mainNavItems, role)} />
+                <NavMain items={filterItems(mainNavItems, role)} />
             </SidebarContent>
 
             <SidebarFooter>

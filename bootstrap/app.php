@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\BusinessException;
+use App\Http\Middleware\EnsureActiveSemester;
 use App\Http\Middleware\EnsureHasRole;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleAppearance::class,
             HandleInertiaRequests::class,
+            EnsureActiveSemester::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
@@ -33,6 +35,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         //
         $exceptions->render(function (BusinessException $e, Request $request) {
+            if ($request->header('X-Inertia')) {
+                return back()->with('error', [
+                    'message' => $e->getMessage(),
+                    'code' => $e->code(),
+                    'status' => $e->status(),
+                ]);
+            }
+
             return response()->json([
                 'message' => $e->getMessage(),
                 'code' => $e->code(),

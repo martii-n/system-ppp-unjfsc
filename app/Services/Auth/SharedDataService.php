@@ -64,6 +64,10 @@ class SharedDataService
     {
         $semester_id = session('semester_id');
 
+        if (! $semester_id) {
+            $semester_id = Semester::getActiveSemester()->id;
+        }
+
         return [
             'semesters' => $this->getAcademicSemesters($user),
             'assignments' => $this->getUserAssignments($user, $semester_id),
