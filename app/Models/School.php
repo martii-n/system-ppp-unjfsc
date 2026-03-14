@@ -23,4 +23,9 @@ class School extends Model
     {
         return $this->belongsTo(Faculty::class);
     }
+
+    public function sections()
+    {
+        return $this->hasMany(Section::class);
+    }
 }

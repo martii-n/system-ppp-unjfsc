@@ -36,4 +36,13 @@ class Semester extends Model
     {
         return $this->hasMany(Assignment::class);
     }
+
+    /**
+     * @return Semester|null
+     */
+    public static function getActiveSemester(): ?Semester
+    {
+        return self::query()->where('status', 1)->first();
+    }
+
 }

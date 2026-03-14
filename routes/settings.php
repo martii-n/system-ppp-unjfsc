@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\ProfileDetailsController;
+use App\Http\Controllers\Settings\ProfileMediaController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,6 +13,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::post('settings/profile/media', [ProfileMediaController::class, 'update'])->name('profile.media.update');
+    Route::patch('settings/profile/details', [ProfileDetailsController::class, 'update'])->name('profile.details.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

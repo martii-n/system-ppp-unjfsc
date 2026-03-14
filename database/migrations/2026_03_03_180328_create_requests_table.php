@@ -26,7 +26,7 @@ return new class extends Migration
             $table->json('payload');
 
             $table->unsignedTinyInteger('approval_status')->default(2); // Controla el estado de la solicitud
-            $table->unsignedTinyInteger('status')->default(0); // Controla el estado del registro
+            $table->unsignedTinyInteger('status')->default(1); // Controla el estado del registro
             $table->timestamps();
         });
     }

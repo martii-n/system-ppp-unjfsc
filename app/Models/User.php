@@ -4,11 +4,13 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @mixin \Illuminate\Database\Eloquent\Builder
@@ -24,10 +26,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'authenticable_id',
+        'authenticable_type',
         'name',
         'email',
         'password',
-        'person_id'
+        'type_user_id',
+        'status',
     ];
 
     /**
@@ -57,11 +62,37 @@ class User extends Authenticatable
     }
 
     /**
-     * @return BelongsTo
+     * @@return Morphto
      */
-    public function person(): BelongsTo
+    public function authenticable(): MorphTo
     {
-        return $this->belongsTo(Person::class);
+        return $this->morphTo();
+    }
+
+    /**
+     * Alias for authenticable to maintain compatibility with 'person' naming.
+     * @return MorphTo
+     */
+    public function person(): MorphTo
+    {
+        return $this->morphTo('authenticable');
+    }
+
+    /**
+     * @return MorphTo
+     */
+    public function company(): MorphTo
+    {
+        return $this->morphTo('authenticable');
+    }
+
+
+    /**
+     * @return HasMany
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(Assignment::class);
     }
 
     /**
@@ -70,5 +101,13 @@ class User extends Authenticatable
     public function activeAssignment(): HasOne
     {
         return $this->hasOne(Assignment::class)->latestOfMany();
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function typeUser(): BelongsTo
+    {
+        return $this->belongsTo(TypeUser::class);
     }
 }

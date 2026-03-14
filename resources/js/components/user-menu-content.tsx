@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -31,6 +31,14 @@ export function UserMenuContent({ user }: Props) {
                     <UserInfo user={user} showEmail={true} />
                 </div>
             </DropdownMenuLabel>
+            <DropdownMenuGroup>
+                <div className="flex items-center gap-1.5 rounded-md border border-green-500/20 bg-green-500/10 px-2 py-1">
+                    <ShieldCheck className="h-3 w-3 text-green-500" />
+                    <span className="text-[10px] font-bold tracking-widest text-green-400 uppercase">
+                        {user.type}
+                    </span>
+                </div>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
                 <DropdownMenuItem asChild>

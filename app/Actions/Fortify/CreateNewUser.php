@@ -28,7 +28,8 @@ class CreateNewUser implements CreatesNewUsers
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
-            'person_id' => 1,
+            'authenticable_id' => 1, // This should probably be dynamic but keeping consistency with existing logic
+            'authenticable_type' => \App\Models\Person::class,
         ]);
     }
 }

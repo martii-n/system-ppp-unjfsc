@@ -18,9 +18,6 @@ return new class extends Migration
             $table->foreignId('semester_id')->constrained('semesters');
             $table->foreignId('section_id')->nullable()->constrained('sections');
 
-            // Life of the register
-            $table->unsignedTinyInteger('status')->default(1); // ACTIVE | INACTIVE
-
             // Access of the user
             $table->unsignedTinyInteger('access_status')->default(1); // FULL | LIMITED | READ_ONLY | BLOCKED
 
@@ -29,6 +26,12 @@ return new class extends Migration
 
             // Flow administrative
             $table->unsignedTinyInteger('review_status')->default(0); // NONE | UNDER_REVIEW | OBSERVED
+
+            // Life of the register
+            $table->unsignedTinyInteger('status')->default(1); // ACTIVE | INACTIVE
+
+            $table->boolean('is_select')->default(false);
+
             $table->timestamps();
         });
     }

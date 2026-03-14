@@ -37,6 +37,7 @@ class StepThreeRequest extends FormRequest
             'role_id' => 'required|exists:roles,id',
             'section_id' => 'required|exists:sections,id',
             'user_id' => 'nullable|exists:users,id',
+            'type_user_id' => 'nullable|exists:type_users,id',
             'person.id' => 'nullable|exists:people,id',
             'person.dni' => [
                     'required_if:user_id,null',

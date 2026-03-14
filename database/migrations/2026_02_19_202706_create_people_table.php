@@ -16,9 +16,10 @@ return new class extends Migration
             $table->string('dni')->unique();
             $table->string('names');
             $table->string('surnames');
-            $table->string('path_photo')->nullable();
             $table->string('phone')->nullable();
             $table->string('gender')->nullable();
+            $table->string('path_photo')->nullable();
+            $table->string('path_banner')->nullable();
             $table->unsignedTinyInteger('status')->default(1);
             $table->timestamps();
         });

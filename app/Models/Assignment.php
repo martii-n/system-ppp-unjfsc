@@ -16,10 +16,11 @@ class Assignment extends Model
         'role_id',
         'semester_id',
         'section_id',
-        'status',
         'access_status',
         'approval_status',
-        'review_status'
+        'review_status',
+        'status',
+        'is_select',
     ];
 
     /**
@@ -57,6 +58,14 @@ class Assignment extends Model
     /**
      * @return HasMany
      */
+    public function dosiers(): HasMany
+    {
+        return $this->hasMany(Dossier::class, 'assignment_id');
+    }
+
+    /**
+     * @return HasMany
+     */
     public function teacherGroups(): HasMany
     {
         return $this->hasMany(InternshipGroup::class, 'teacher_assignment_id');
@@ -84,5 +93,13 @@ class Assignment extends Model
     public function internships(): HasMany
     {
         return $this->hasMany(Internship::class, 'assignment_id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Dossier::class, 'assignment_id');
     }
 }

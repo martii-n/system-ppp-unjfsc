@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+
 
 class Person extends Model
 {
@@ -15,17 +16,18 @@ class Person extends Model
         'names',
         'surnames',
         'path_photo',
-        'celphone',
+        'path_banner',
+        'phone',
         'gender',
         'district_id',
         'status'
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return MorphMany
      */
-    public function user(): HasMany
+    public function user(): MorphMany
     {
-        return $this->hasMany(User::class);
+        return $this->morphMany(User::class, 'authenticable');
     }
 }

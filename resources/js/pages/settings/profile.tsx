@@ -8,6 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+
+import ProfileHero from '@/pages/settings/partials/profile-hero';
+import UpdateCompanyProfileForm from '@/pages/settings/partials/update-company-profile-form';
+import UpdatePersonProfileForm from '@/pages/settings/partials/update-person-profile-form';
 import type { BreadcrumbItem } from '@/types';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import { edit } from '@/routes/profile';
@@ -23,9 +27,13 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Profile({
     mustVerifyEmail,
     status,
+    profileData,
+    profileType,
 }: {
     mustVerifyEmail: boolean;
     status?: string;
+    profileData: any;
+    profileType: string;
 }) {
     const { auth } = usePage().props;
 
@@ -36,7 +44,16 @@ export default function Profile({
             <h1 className="sr-only">Profile Settings</h1>
 
             <SettingsLayout>
+                <ProfileHero profileData={profileData} />
                 <div className="space-y-6">
+                    {profileType === 'Person' && (
+                        <UpdatePersonProfileForm data={profileData} />
+                    )}
+                    {profileType === 'Company' && (
+                        <UpdateCompanyProfileForm data={profileData} />
+                    )}
+
+                    {/* 
                     <Heading
                         variant="small"
                         title="Profile information"
@@ -141,9 +158,10 @@ export default function Profile({
                             </>
                         )}
                     </Form>
+                    */}
                 </div>
 
-                <DeleteUser />
+                {/*<DeleteUser />*/}
             </SettingsLayout>
         </AppLayout>
     );

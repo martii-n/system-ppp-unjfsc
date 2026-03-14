@@ -16,6 +16,9 @@ Route::post('/registration/step-one', [UserRegistrationController::class, 'stepO
 Route::post('/registration/step-two', [UserRegistrationController::class, 'stepTwo']);
 Route::post('/registration/step-three', [UserRegistrationController::class, 'stepThree']);
 
+Route::post('/registration/user-academic', [UserRegistrationController::class, 'userAcademicRegistration']);
+Route::post('/registration/user-company', [UserRegistrationController::class, 'userCompanyRegistration']);
+
 
 Route::post('/documents/upload', [DocumentController::class, 'store']);
 Route::patch('documents/{document}/status', [DocumentController::class, 'updateStatus']);

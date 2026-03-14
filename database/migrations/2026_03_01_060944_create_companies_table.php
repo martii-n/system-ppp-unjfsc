@@ -19,8 +19,9 @@ return new class extends Migration
             $table->string('address');
             $table->string('phone');
             $table->string('email');
-            $table->string('website');
-            $table->string('logo');
+            $table->string('website')->nullable();
+            $table->string('path_photo')->nullable();
+            $table->string('path_banner')->nullable();
             $table->unsignedTinyInteger('status')->default(1);
             $table->timestamps();
         });

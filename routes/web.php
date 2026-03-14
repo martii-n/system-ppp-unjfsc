@@ -14,5 +14,14 @@ Route::get('dashboard', function () {
     return Inertia::render('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+use App\Http\Controllers\AcademicSessionController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::patch('semesters/{semester}/select', [AcademicSessionController::class, 'syncSemester'])->name('semesters.select');
+    Route::patch('assignments/{assignment}/select', [AcademicSessionController::class, 'syncAssignment'])->name('assignments.select');
+});
+
+// /semesters/${id}/select
+
 require __DIR__.'/settings.php';
 require __DIR__.'/registration.php';

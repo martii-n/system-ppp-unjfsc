@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Auth\SharedDataService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -15,6 +16,8 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    public function __construct(protected SharedDataService $sharedDataService) {}
 
     /**
      * Determines the current asset version.
@@ -35,12 +38,19 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
+        $authData = $user
+            ? $this->sharedDataService->getSharedPayload($user)
+            : ['user' => null];
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'auth' => [
-                'user' => $request->user(),
-            ],
+            'auth' => $authData,
+            'role' => fn () => $user && isset($authData['academic'])
+                ? session('assignment_id') ? \App\Models\Assignment::find(session('assignment_id'))?->role_id : null
+                : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

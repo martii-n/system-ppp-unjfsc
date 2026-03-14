@@ -61,6 +61,15 @@ class RequestService
             case 'CHANGE_INTERNSHIP_GRADE':
                 $target->update(['grade' => $payload['new_grade']]);
                 break;
+            case 'DELETE_ASSIGNMENT':
+                app(AssignmentService::class)->processEntityRemoval($target);
+                break;
+            case 'DISABLE_ASSIGNMENT':
+                $target->update(['access_status' => 3]);
+                break;
+            case 'ENABLE_ASSIGNMENT':
+                $target->update(['access_status' => 1]);
+                break;
             default:
                 throw new RequestUnsupportedTypeException();
         }

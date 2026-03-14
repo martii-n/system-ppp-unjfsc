@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Assignment;
+use App\Models\Semester;
+use App\Services\Auth\SyncAcademicSessionService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+
+class AcademicSessionController extends Controller
+{
+    public function __construct(protected SyncAcademicSessionService $syncService)
+    {
+    }
+
+    public function syncSemester(Semester $semester): RedirectResponse
+    {
+        $this->syncService->syncSemester(Auth::user(), $semester);
+
+        return back()->with([
+            'message' => 'Semestre sincronizado correctamente.',
+        ], 200);
+    }
+
+    public function syncAssignment(Assignment $assignment): RedirectResponse
+    {
+        $this->syncService->syncAssignment(Auth::user(), $assignment);
+
+        return back()->with([
+            'message' => 'Asignatura sincronizada correctamente.',
+        ], 200);
+    }
+}

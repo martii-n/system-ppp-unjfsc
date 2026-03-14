@@ -15,7 +15,8 @@ class Company extends Model
         'phone',
         'email',
         'website',
-        'logo',
+        'path_photo',
+        'path_banner',
         'status'
     ];
 
