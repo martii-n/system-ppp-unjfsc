@@ -7,10 +7,21 @@ import {
     Briefcase,
     Folder,
     LayoutDashboard,
+    UserPlus2,
     UserRoundCog,
 } from 'lucide-react';
 import { dashboard } from '@/routes';
 import { index as semestersIndex } from '@/routes/semesters';
+import { index as facultiesIndex } from '@/routes/faculties';
+import { index as schoolsIndex } from '@/routes/schools';
+import { index as sectionsIndex } from '@/routes/sections';
+import { index as registerIndex } from '@/routes/register';
+import { index as subadminsIndex } from '@/routes/subadmins';
+import { index as teachersIndex } from '@/routes/teachers';
+import { index as supervisorsIndex } from '@/routes/supervisors';
+import { index as studentsIndex } from '@/routes/students';
+import { submission as dossierSubmissionIndex } from '@/routes/dossiers';
+import { validation as dossierValidationIndex } from '@/routes/dossiers';
 
 export const ACADEMIC_NAV = [
     {
@@ -26,25 +37,31 @@ export const ACADEMIC_NAV = [
         items: [
             {
                 title: 'Mi validación',
-                href: '#',
-                roles: [3, 4],
+                href: dossierSubmissionIndex().url,
+                roles: [3, 4, 5],
             },
             {
                 title: 'Docente Titular',
-                href: '#',
+                href: dossierValidationIndex().url,
                 roles: [1, 2],
             },
             {
                 title: 'Docente Supervisor',
-                href: '#',
+                href: '/academic/dossier-validation',
                 roles: [1, 2, 3],
             },
             {
                 title: 'Estudiante',
-                href: '#',
+                href: '/academic/dossier-validation',
                 roles: [1, 2, 3],
             },
         ],
+    },
+    {
+        title: 'Mi validación',
+        href: dossierSubmissionIndex().url,
+        icon: BadgeCheck,
+        roles: [4, 5],
     },
     {
         title: 'Grupos',
@@ -95,7 +112,28 @@ export const ACADEMIC_NAV = [
         items: [
             {
                 title: 'Nuevo Usuario',
-                href: '#',
+                href: registerIndex().url,
+                icon: UserPlus2,
+                roles: [1, 2, 3],
+            },
+            {
+                title: 'L. de Subadmins',
+                href: subadminsIndex().url,
+                roles: [1],
+            },
+            {
+                title: 'L. de Docentes Titulares',
+                href: teachersIndex().url,
+                roles: [1, 2, 3],
+            },
+            {
+                title: 'L. de Docentes Supervisores',
+                href: supervisorsIndex().url,
+                roles: [1, 2, 3],
+            },
+            {
+                title: 'L. de Estudiantes',
+                href: studentsIndex().url,
                 roles: [1, 2, 3],
             },
         ],
@@ -113,17 +151,17 @@ export const ACADEMIC_NAV = [
             },
             {
                 title: 'Facultades',
-                href: '#',
+                href: facultiesIndex().url,
                 roles: [1, 2, 4],
             },
             {
                 title: 'Escuelas',
-                href: '#',
+                href: schoolsIndex().url,
                 roles: [1, 2],
             },
             {
                 title: 'Secciones',
-                href: '#',
+                href: sectionsIndex().url,
                 roles: [1, 2],
             },
         ],

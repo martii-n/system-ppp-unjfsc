@@ -31,16 +31,17 @@ class SchoolService
     /**
      * Update an existing school.
      *
-     * @param School $school
      * @param array $data
+     * @param School $school
+     * @param Faculty $faculty
      * @return School
      */
-    public function update(array $data, School $school): School
+    public function update(array $data, School $school, Faculty $faculty): School
     {
-        return DB::transaction(function () use ($data, $school) {
+        return DB::transaction(function () use ($data, $school, $faculty) {
             $school->update([
                 'name' => $data['name'],
-                'faculty_id' => $data['faculty_id'],
+                'faculty_id' => $faculty->id,
                 'status' => $data['status'],
             ]);
             return $school->load(['faculty']);

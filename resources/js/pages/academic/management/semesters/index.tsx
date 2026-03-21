@@ -19,12 +19,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-interface Semester {
-    id: number;
-    code: string;
-    cycle: string;
-    status: number;
-}
+import type { Semester } from '@/types';
 
 interface Props {
     semesters: Semester[];

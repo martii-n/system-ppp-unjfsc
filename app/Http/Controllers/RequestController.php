@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Request\UpdateManagementRequestStatusRequest;
+use App\Models\Assignment;
+use App\Models\Request;
 use App\Models\User;
 use App\Services\RequestService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
 class RequestController extends Controller
@@ -19,24 +21,42 @@ class RequestController extends Controller
     }
 
     /**
+     * Get the pending request for an assignment.
+     */
+    public function getRequestAssignment(Assignment $assignment): JsonResponse
+    {
+        $request = Request::query()
+            ->where('requestable_id', $assignment->id)
+            ->where('requestable_type', Assignment::class)
+            ->where('approval_status', 2) // PENDING
+            ->with('senderable')
+            ->first();
+
+        if (!$request) {
+            return response()->json(['data' => null], 200);
+        }
+
+        return response()->json(['data' => $request], 200);
+    }
+
+    /**
      * Update the management request status.
      *
      * @param UpdateManagementRequestStatusRequest $request
      * @param Request $model
-     * @return JsonResponse
+     * @return RedirectResponse
      */
-    public function updateManagementRequestStatus(UpdateManagementRequestStatusRequest $request, Request $model): JsonResponse
+    public function updateManagementRequestStatus(UpdateManagementRequestStatusRequest $validatedRequest, Request $request): RedirectResponse
     {
         $user = Auth::user() ?? User::first();
-        $assignment = $user->activeAssignment;
 
-        $data = $request->validated();
+        $assignmentId = session('assignment_id');
+        $assignment = Assignment::find($assignmentId);
 
-        $model = $this->requestService->managementRequestStatus($data, $model, $assignment);
+        $data = $validatedRequest->validated();
 
-        return response()->json([
-            'message' => 'Solicitud actualizada exitosamente.',
-            'data' => $model,
-        ], 201);
+        $result = $this->requestService->managementRequestStatus($data, $request, $assignment);
+
+        return back()->with('message', 'Solicitud actualizada exitosamente WAAA.');
     }
 }

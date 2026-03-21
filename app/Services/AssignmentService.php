@@ -16,28 +16,6 @@ class AssignmentService
         $this->requestService = $requestService;
     }
 
-    public function selectAssignment(User $user, Assignment $assignment): void
-    {
-        DB::transaction(function () use ($user, $assignment) {
-            if ($assignment->user_id !== $user->id) {
-                throw new \Exception('No puedes seleccionar esta asignación');
-            }
-
-            $oldAssignment = $user->assignments()->where('is_select', 1)->first();
-            if ($oldAssignment) {
-                $oldAssignment->update([
-                    'is_select' => 0,
-                ]);
-            }
-
-            $assignment->update([
-                'is_select' => 1,
-            ]);
-
-            session(['assignment_id' => $assignment->id]);
-        });
-    }
-
     public function requestAssignmentManage(array $data, Assignment $assignment, Assignment $sender): Request
     {
         return DB::transaction(function () use ($data, $assignment, $sender) {
@@ -45,13 +23,15 @@ class AssignmentService
 
             $type = '';
             $msj = '';
-            if ($data['action'] === 1) {
+            if ($data['action'] == 1) {
                 $type = 'DELETE_ASSIGNMENT';
                 $msj = 'Eliminar el usuario';
-            } elseif ($data['action'] === 2) {
+            }
+            elseif ($data['action'] == 2) {
                 $type = 'DISABLE_ASSIGNMENT';
                 $msj = 'Deshabilitar el usuario';
-            } elseif ($data['action'] === 3) {
+            }
+            elseif ($data['action'] == 3) {
                 $type = 'ENABLE_ASSIGNMENT';
                 $msj = 'Habilitar el usuario';
             }
@@ -63,9 +43,11 @@ class AssignmentService
                 $sender,
                 $assignment,
                 $type,
-                [
-                    'assignment_id' => $assignment->id,
-                ],
+            [
+                'assignment_id' => $assignment->id,
+                'access_status' => $assignment->access_status,
+                'approval_status' => $assignment->approval_status,
+            ],
                 $data['reason'] ?? $msj
             );
 
@@ -110,7 +92,7 @@ class AssignmentService
             $otherUsersExist = User::query()->where('authenticable_id', $authenticable->id)
                 ->where('authenticable_type', '<>', get_class($authenticable))
                 ->exists();
-            if (! $otherUsersExist) {
+            if (!$otherUsersExist) {
                 $authenticable->delete();
             }
         }

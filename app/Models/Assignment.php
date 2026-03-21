@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\Assignment\AssignmentAccessStatus;
 use App\Enums\Assignment\AssignmentApprovalStatus;
 use App\Enums\Assignment\AssignmentReviewStatus;
+use App\Enums\Assignment\AssignmentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,10 +28,10 @@ class Assignment extends Model
     ];
 
     protected $casts = [
-        'access_status' => AssignmentAccessStatus::class,
-        'approval_status' => AssignmentApprovalStatus::class,
-        'review_status' => AssignmentReviewStatus::class,
-        'status' => 'integer',
+        'access_status' => AssignmentAccessStatus::class ,
+        'approval_status' => AssignmentApprovalStatus::class ,
+        'review_status' => AssignmentReviewStatus::class ,
+        'status' => AssignmentStatus::class ,
         'is_select' => 'boolean',
     ];
 
@@ -69,9 +70,9 @@ class Assignment extends Model
     /**
      * @return HasMany
      */
-    public function dosiers(): HasMany
+    public function dossiers(): HasMany
     {
-        return $this->hasMany(Dossier::class, 'assignment_id');
+        return $this->hasMany(Dossier::class , 'assignment_id');
     }
 
     /**
@@ -79,7 +80,7 @@ class Assignment extends Model
      */
     public function teacherGroups(): HasMany
     {
-        return $this->hasMany(InternshipGroup::class, 'teacher_assignment_id');
+        return $this->hasMany(InternshipGroup::class , 'teacher_assignment_id');
     }
 
     /**
@@ -87,7 +88,7 @@ class Assignment extends Model
      */
     public function supervisorGroups(): HasMany
     {
-        return $this->hasMany(InternshipGroup::class, 'supervisor_assignment_id');
+        return $this->hasMany(InternshipGroup::class , 'supervisor_assignment_id');
     }
 
     /**
@@ -95,7 +96,7 @@ class Assignment extends Model
      */
     public function studentGroups(): HasMany
     {
-        return $this->hasMany(StudentGroup::class, 'student_assignment_id');
+        return $this->hasMany(StudentGroup::class , 'student_assignment_id');
     }
 
     /**
@@ -103,7 +104,7 @@ class Assignment extends Model
      */
     public function internships(): HasMany
     {
-        return $this->hasMany(Internship::class, 'assignment_id');
+        return $this->hasMany(Internship::class , 'assignment_id');
     }
 
     /**
@@ -111,6 +112,6 @@ class Assignment extends Model
      */
     public function documents(): HasMany
     {
-        return $this->hasMany(Dossier::class, 'assignment_id');
+        return $this->hasMany(Dossier::class , 'assignment_id');
     }
 }

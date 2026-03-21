@@ -15,18 +15,4 @@ class AssignmentController extends Controller
     {
         $this->assignmentService = $assignmentService;
     }
-
-    /**
-     * Select an assignment as active in the session and database.
-     *
-     * @return RedirectResponse
-     */
-    public function select(Assignment $assignment): RedirectResponse
-    {
-        $this->assignmentService->selectAssignment(Auth::user(), $assignment);
-
-        return back()->with([
-            'message' => 'Asignación seleccionada correctamente.',
-        ], 200);
-    }
 }

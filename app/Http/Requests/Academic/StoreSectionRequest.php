@@ -21,19 +21,19 @@ class StoreSectionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $school = $this->route('school');
+        $semesterId = session('semester_id');
+
         return [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                'unique:sections,name,' . $this->route('section') . ',id'
+                \Illuminate\Validation\Rule::unique('sections')->where(function ($query) use ($school, $semesterId) {
+                    return $query->where('school_id', $school->id)
+                                 ->where('semester_id', $semesterId);
+                })
             ],
-            'faculty_id' => [
-                'required',
-                'integer',
-                'exists:faculties,id'
-            ],
-            'status' => 'required|boolean'
         ];
     }
 }

@@ -13,12 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { update } from '@/routes/semesters';
 
-interface Semester {
-    id: number;
-    code: string;
-    cycle: string;
-    status: number;
-}
+import type { Semester } from '@/types';
 
 interface Props {
     semester: Semester | null;

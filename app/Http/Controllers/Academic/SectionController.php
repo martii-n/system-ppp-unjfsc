@@ -8,7 +8,9 @@ use App\Http\Requests\Academic\UpdateSectionRequest;
 use App\Models\School;
 use App\Models\Section;
 use App\Services\Academic\SectionService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SectionController extends Controller
 {
@@ -19,26 +21,30 @@ class SectionController extends Controller
         $this->sectionService = $sectionService;
     }
 
-    public function index(): JsonResponse
+    public function index(): Response
     {
-        $sections = Section::all();
+        $semesterId = session('semester_id');
 
-        return response()->json([
-            'message' => 'Sections retrieved successfully',
-            'data' => $sections
-        ], 200);
+        // Get all schools with their faculty and sections for the CURRENT semester
+        $schools = School::with(['faculty', 'sections' => function ($query) use ($semesterId) {
+            $query->where('semester_id', $semesterId);
+        }])->get();
+
+        return Inertia::render('academic/management/section/index', [
+            'schools' => $schools,
+        ]);
     }
 
-    public function store(StoreSectionRequest $request, School $school): JsonResponse
+    public function store(StoreSectionRequest $request, School $school): RedirectResponse
     {
+        $semesterId = session('semester_id');
         $data = $request->validated();
 
-        $section = $this->sectionService->create($data, $school);
+        $this->sectionService->create($data, $school, $semesterId);
 
-        return response()->json([
-            'message' => 'Section created successfully',
-            'data' => $section
-        ], 201);
+        return back()->with([
+            'message' => 'Sección añadida correctamente.',
+        ]);
     }
 
     public function update(UpdateSectionRequest $request, Section $section): JsonResponse
@@ -48,17 +54,17 @@ class SectionController extends Controller
         $section = $this->sectionService->update($section, $data);
 
         return response()->json([
-            'message' => 'Section updated successfully',
+            'message' => 'Sección actualizada correctamente.',
             'data' => $section
         ], 200);
     }
 
-    public function destroy(Section $section): JsonResponse
+    public function destroy(Section $section): RedirectResponse
     {
         $this->sectionService->delete($section);
 
-        return response()->json([
-            'message' => 'Section deleted successfully',
-        ], 200);
+        return back()->with([
+            'message' => 'Sección eliminada correctamente.',
+        ]);
     }
 }

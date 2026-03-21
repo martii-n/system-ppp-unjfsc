@@ -7,7 +7,9 @@ use App\Http\Requests\Academic\SchoolRequest;
 use App\Models\Faculty;
 use App\Models\School;
 use App\Services\Academic\SchoolService;
-use Illuminate\Http\JsonResponse;
+use Inertia\Inertia;
+use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
 
 class SchoolController extends Controller
 {
@@ -18,47 +20,38 @@ class SchoolController extends Controller
         $this->schoolService = $schoolService;
     }
 
-    public function index(): JsonResponse
+    public function index(): Response
     {
-        $schools = School::all();
-
-        return response()->json([
-            'message' => 'Schools retrieved successfully',
-            'data' => $schools
-        ], 200);
+        return Inertia::render('academic/management/school/index', [
+            'schools' => School::with('faculty')->get(),
+            'faculties' => Faculty::select('id', 'name')->get(),
+        ]);
     }
 
-    public function store(SchoolRequest $request, Faculty $faculty): JsonResponse
+    public function store(SchoolRequest $request, Faculty $faculty): RedirectResponse
     {
-        $data = $request->validated();
+        $this->schoolService->store($request->validated(), $faculty);
 
-        $school = $this->schoolService->store($data, $faculty);
-
-        return response()->json([
-            'message' => 'School created successfully',
-            'data' => $school
-        ], 201);
+        return back()->with([
+            'message' => 'Escuela creada correctamente.',
+        ]);
     }
 
-    public function update(SchoolRequest $request, School $school): JsonResponse
+    public function update(SchoolRequest $request, Faculty $faculty, School $school): RedirectResponse
     {
-        $data = $request->validated();
+        $this->schoolService->update($request->validated(), $school, $faculty);
 
-        $result = $this->schoolService->update($data, $school);
-
-        return response()->json([
-            'message' => 'School updated successfully',
-            'data' => $result
-        ], 200);
+        return back()->with([
+            'message' => 'Escuela actualizada correctamente.',
+        ]);
     }
 
-    public function destroy(School $school): JsonResponse
+    public function destroy(School $school): RedirectResponse
     {
         $this->schoolService->delete($school);
 
-        return response()->json([
-            'message' => 'School deleted successfully'
-        ], 200);
+        return back()->with([
+            'message' => 'Escuela eliminada correctamente.',
+        ]);
     }
-
 }

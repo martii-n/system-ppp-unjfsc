@@ -5,19 +5,33 @@ namespace App\Http\Controllers\Academic;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Academic\FacultyRequest;
 use App\Models\Faculty;
+use App\Services\Academic\FacultyService;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class FacultyController extends Controller
 {
-    //
+    public function __construct(protected FacultyService $facultyService)
+    {
+    }
+
+    public function index(): Response
+    {
+        $faculties = Faculty::all();
+        return Inertia::render('academic/management/faculty/index', ['faculties' => $faculties]);
+    }
+
     /**
     * Store a newly created resource in storage.
     */
     public function store(FacultyRequest $request): RedirectResponse
     {
-        Faculty::query()->create($request->validated());
+        $this->facultyService->store($request->validated());
 
-        return back();
+        return back()->with([
+            'message' => 'Facultad creada correctamente.',
+        ], 201);
     }
 
     /**
@@ -25,9 +39,11 @@ class FacultyController extends Controller
     */
     public function update(FacultyRequest $request, Faculty $faculty): RedirectResponse
     {
-        $faculty->update($request->validated());
+        $this->facultyService->update($request->validated(), $faculty);
 
-        return back();
+        return back()->with([
+            'message' => 'Facultad actualizada correctamente.',
+        ]);
     }
 
     /**
@@ -35,8 +51,10 @@ class FacultyController extends Controller
     */
     public function destroy(Faculty $faculty): RedirectResponse
     {
-        $faculty->delete();
+        $this->facultyService->delete($faculty);
 
-        return back();
+        return back()->with([
+            'message' => 'Facultad eliminada correctamente.',
+        ]);
     }
 }

@@ -40,7 +40,7 @@ class RequestService
                 'approval_status' => $data['approval_status']
             ]);
 
-            if ($data['approval_status'] === 1) {
+            if ($data['approval_status'] == 1) {
                 $this->applyRequestAction($request);
             }
 
@@ -65,10 +65,10 @@ class RequestService
                 app(AssignmentService::class)->processEntityRemoval($target);
                 break;
             case 'DISABLE_ASSIGNMENT':
-                $target->update(['access_status' => 3]);
+                $target->update(['access_status' => 3, 'review_status' => 0]);
                 break;
             case 'ENABLE_ASSIGNMENT':
-                $target->update(['access_status' => 1]);
+                $target->update(['access_status' => 1, 'review_status' => 0]);
                 break;
             default:
                 throw new RequestUnsupportedTypeException();

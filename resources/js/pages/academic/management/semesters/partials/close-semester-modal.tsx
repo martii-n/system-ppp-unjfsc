@@ -11,12 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { close } from '@/routes/semesters';
 
-interface Semester {
-    id: number;
-    code: string;
-    cycle: string;
-    status: number;
-}
+import type { Semester } from '@/types';
 
 interface Props {
     semester: Semester | null;

@@ -27,4 +27,17 @@ class StepOneRequest extends FormRequest
             'section_id' => 'required|exists:sections,id'
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'El email es obligatorio.',
+            'email.email' => 'El email debe ser un email valido.',
+            'email.unique' => 'El email ya esta registrado.',
+            'role_id.required' => 'El rol es obligatorio.',
+            'role_id.exists' => 'El rol no existe.',
+            'section_id.required' => 'La seccion es obligatoria.',
+            'section_id.exists' => 'La seccion no existe.',
+        ];
+    }
 }

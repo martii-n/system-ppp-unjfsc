@@ -2,6 +2,7 @@
 
 namespace App\Services\Academic;
 
+use App\Exceptions\Section\SectionHasRelatedRecordsException;
 use App\Models\School;
 use App\Models\Section;
 use Illuminate\Support\Facades\DB;
@@ -9,19 +10,21 @@ use Illuminate\Support\Facades\DB;
 class SectionService
 {
     /**
-     * Store a new section.
+     * Create a new section.
      *
      * @param  array  $data
      * @param  School  $school
      * @return Section
      */
-    public function store(array $data, School $school): Section
+    public function create(array $data, School $school, int $semesterId): Section
     {
-        return DB::transaction(function () use ($data, $school) {
+        return DB::transaction(function () use ($data, $school, $semesterId) {
             $section = Section::query()->create([
                 'name' => $data['name'],
-                'faculty_id' => $data['faculty_id'],
+                'faculty_id' => $school->faculty_id,
                 'school_id' => $school->id,
+                'semester_id' => $semesterId,
+                'status' => true,
             ]);
 
             return $section->load(['school', 'faculty']);
@@ -56,6 +59,10 @@ class SectionService
      */
     public function delete(Section $section): void
     {
+        if ($section->assignments()->exists()) {
+            throw new SectionHasRelatedRecordsException;
+        }
+
         $section->delete();
     }
 

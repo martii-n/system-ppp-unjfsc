@@ -84,10 +84,11 @@ class SupervisionService
         return DB::transaction(function () use ($data, $user, $supervision) {
             $oldEvaluation = Evaluation::query()->where('supervision_id', $supervision->id)
                 ->whereHas('documents', function ($query) use ($data) {
-                    $query->where('document_type_id', $data['document_type_id']);
-                })->latest()->first();
+                $query->where('document_type_id', $data['document_type_id']);
+            }
+            )->latest()->first();
 
-            if ($oldEvaluation && in_array($oldEvaluation->approval_status, [1,2])) {
+            if ($oldEvaluation && in_array($oldEvaluation->approval_status, [1, 2])) {
                 throw new EvaluationAlreadyApprovedException();
             }
 
@@ -121,7 +122,8 @@ class SupervisionService
                         $document = $this->documentService->updatePathDocument($documentData, $user);
                         break;
                 }
-            } else {
+            }
+            else {
                 $documentData['file'] = $data['file'];
                 $document = $this->documentService->registerDocument($documentData, $user);
             }
@@ -154,11 +156,12 @@ class SupervisionService
                     // y de disparar el progreso si el estado es 1.
                     $this->documentService->updateStatus($document, [
                         'approval_status' => $documentStatus,
-                        'comment'         => $data['comment']
+                        'comment' => $data['comment']
                     ]);
                 }
 
-                if ((int)$data['approval_status'] === 1) $this->processEvaluationProgress($evaluation);
+                if ((int)$data['approval_status'] === 1)
+                    $this->processEvaluationProgress($evaluation);
 
                 return [
                     'success' => true,
@@ -167,7 +170,8 @@ class SupervisionService
                 ];
             });
 
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return [
                 'success' => false,
                 'message' => 'Error al actualizar el estado de evaluación.',

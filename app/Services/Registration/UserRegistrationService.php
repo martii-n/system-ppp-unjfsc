@@ -8,9 +8,13 @@ use App\Enums\Assignment\AssignmentApprovalStatus;
 use App\Enums\Assignment\AssignmentReviewStatus;
 use App\Enums\Assignment\AssignmentStatus;
 use App\Enums\PersonStatus;
+use App\Exceptions\Registration\RegistrationAssignmentsMustBelongToSameFacultyException;
 use App\Exceptions\Registration\RegistrationNotAllowedException;
 use App\Exceptions\Registration\RegistrationRoleNotAllowedException;
 use App\Exceptions\Registration\RegistrationSectionNotAllowedException;
+use App\Exceptions\Registration\UserAlreadyAssignedInSemesterException;
+use App\Exceptions\Registration\UserAlreadyRegisteredInSectionException;
+use App\Exceptions\Registration\UserCannotBeSupervisorDueToExistingRoleException;
 use App\Models\Assignment;
 use App\Models\Person;
 use App\Models\Section;
@@ -30,21 +34,14 @@ class UserRegistrationService
      * @param  array  $data  The data to validate.
      * @return array An array of errors, if any.
      */
-    public function validateStepOne(array $data): array
+    public function validateStepOne(array $data, int $semesterId): array
     {
-        // El semestre debe obtenerse de forma dinámica.
-        $currentSemester = Semester::query()->where('status', SemesterStatus::ACTIVE)->first() ?? Semester::query()->latest('id')->first();
-        if (! $currentSemester) {
-            throw ValidationException::withMessages(['semester' => 'No se encontró un semestre activo para la operación.']);
-        }
-        $semesterId = $currentSemester->id;
-
         $user = User::query()->where('email', $data['email'])->first();
 
         $person = collect();
         if ($user) {
             $this->validateRoleRulesUserAcademic($user, $data['role_id'], $data['section_id'], $semesterId);
-            $person = Person::query()->where('id', $user->authenticable_id)->select('dni', 'names', 'surnames')->first() ?? collect();
+            $person = Person::query()->where('id', $user->authenticable_id)->select('id', 'dni', 'names', 'surnames')->first() ?? collect();
         }
 
         return [
@@ -133,55 +130,118 @@ class UserRegistrationService
      * @param  Assignment  $assignment.
      * @return Assignment The registered assignment.
      */
-    public function registerUserAcademic(array $data, int $currentSemesterId): Assignment
+    public function registerUserAcademic(array $data, int $currentSemesterId, int $assignmentId): void
     {
-        return DB::transaction(function () use ($data, $currentSemesterId) {
-            // $this->authorizeUserAction($assignment, $data['role_id'], $data['section_id']);
-
-            $user = $this->validateStepThree($data, $currentSemesterId);
-
-            $person = null;
-            if (! empty($data['person']['id'])) {
-                $person = Person::query()->findOrFail($data['person']['id']);
-            } else {
-                // Para una persona nueva, usamos los nombres del payload.
-                $person = Person::query()->create([
-                    'dni' => $data['person']['dni'],
-                    'names' => $data['person']['names'],
-                    'surnames' => $data['person']['surnames'],
-                    'status' => PersonStatus::ACTIVE,
-                ]);
-            }
-
-            $finalUser = $user; // Usamos el usuario ya verificado de la fase de seguridad.
-            $temporaryPassword = '12345678';
-            if (! $finalUser) {
-                // Si llegamos aquí, es porque el usuario no existía. Lo creamos.
-                // $temporaryPassword = Str::password(10, true, true, false, false);
-                $finalUser = User::query()->create([
-                    'authenticable_id' => $person->id,
-                    'authenticable_type' => Person::class,
-                    'name' => $data['person']['names'],
-                    'email' => $data['email'],
-                    'password' => Hash::make($temporaryPassword),
-                    'type_user_id' => $data['type_user_id'],
-                ]);
-            }
-
-            $assignment = Assignment::query()->create([
-                'user_id' => $finalUser->id,
-                'role_id' => $data['role_id'],
-                'section_id' => $data['section_id'],
-                'semester_id' => $currentSemesterId,
-                'status' => AssignmentStatus::ACTIVE,
-                'access_status' => AssignmentAccessStatus::LIMITED,
-                'approval_status' => AssignmentApprovalStatus::PENDING,
-                'review_status' => AssignmentReviewStatus::NONE,
-            ]);
-
-            return $assignment->load('user.person');
+        DB::transaction(function () use ($data, $currentSemesterId, $assignmentId) {
+            $this->processSingleAcademicRegistration($data, $currentSemesterId);
         });
     }
+
+    public function registerUserAcademicMassive(array $data, int $currentSemesterId, int $assignmentId): array
+    {
+        $report = [
+            'total' => count($data['rows']),
+            'success_count' => 0,
+            'failed_count' => 0,
+            'errors' => []
+        ];
+
+        foreach ($data['rows'] as $index => $row) {
+            try {
+                DB::transaction(function () use ($data, $row, $currentSemesterId) {
+                    $payload = [
+                        'email' => $row['email'],
+                        'role_id' => $data['role_id'],
+                        'section_id' => $data['section_id'],
+                        'person' => [
+                            'dni' => $row['dni'],
+                            'names' => $row['names'],
+                            'surnames' => $row['surnames'],
+                        ]
+                    ];
+
+                    $this->processSingleAcademicRegistration($payload, $currentSemesterId);
+                });
+
+                $report['success_count']++;
+            } catch (ValidationException $e) {
+                $report['failed_count']++;
+                $report['errors'][] = [
+                    'row' => $index + 1,
+                    'dni' => $row['dni'],
+                    'email' => $row['email'],
+                    'message' => collect($e->errors())->flatten()->first()
+                ];
+            } catch (\Exception $e) {
+                $report['failed_count']++;
+                $report['errors'][] = [
+                    'row' => $index + 1,
+                    'dni' => $row['dni'],
+                    'email' => $row['email'],
+                    'message' => $e->getMessage()
+                ];
+            }
+        }
+
+        return $report;
+    }
+
+
+    /**
+     * Internal method to process a single academic registration.
+     * Handles Person, User and Assignment creation with business rules validation.
+     */
+    private function processSingleAcademicRegistration(array $data, int $semesterId): void
+    {
+        // 1. Buscar Persona por DNI
+        $person = Person::where('dni', $data['person']['dni'])->first();
+
+        if (!$person) {
+            $person = Person::create([
+                'dni' => $data['person']['dni'],
+                'names' => $data['person']['names'],
+                'surnames' => $data['person']['surnames'],
+                'status' => PersonStatus::ACTIVE,
+            ]);
+        }
+
+        // 2. Buscar/Crear Usuario por Email
+        $user = User::where('email', $data['email'])->first();
+
+        if ($user) {
+            // SEGURIDAD: Si el usuario existe, debe pertenecer a la misma persona
+            if ($user->authenticable_id !== $person->id) {
+                throw ValidationException::withMessages([
+                    'email' => "El email {$data['email']} ya está registrado a otra persona con distinto DNI."
+                ]);
+            }
+        } else {
+            $user = User::create([
+                'authenticable_id' => $person->id,
+                'authenticable_type' => Person::class,
+                'name' => $person->names,
+                'email' => $data['email'],
+                'password' => Hash::make('12345678'), // Password temporal
+                'type_user_id' => 2, // Tipo Académico
+            ]);
+        }
+
+        // 3. Validar Reglas de Negocio (Roles, Secciones, Semestre)
+        $this->validateRoleRulesUserAcademic($user, (int)$data['role_id'], (int)$data['section_id'], $semesterId);
+
+        // 4. Crear Asignación
+        Assignment::create([
+            'user_id' => $user->id,
+            'role_id' => $data['role_id'],
+            'section_id' => $data['section_id'],
+            'semester_id' => $semesterId,
+            'access_status' => AssignmentAccessStatus::LIMITED,
+            'approval_status' => AssignmentApprovalStatus::PENDING,
+            'review_status' => AssignmentReviewStatus::NONE,
+            'status' => AssignmentStatus::ACTIVE,
+        ]);
+    }
+
 
     /**
      * Registers a user for a company.
@@ -249,8 +309,6 @@ class UserRegistrationService
 
     private function validateRoleRulesUserAcademic(User $user, int $newRoleId, int $newSectionId, int $semesterId): void
     {
-        // 1. Obtener todas las asignaciones actuales del usuario para este semestre
-        // Incluimos la relación 'section' para saber a qué facultad pertenecen
         $currentAssignments = Assignment::with(['section', 'role'])
             ->where('user_id', $user->id)
             ->where('semester_id', $semesterId)
@@ -261,55 +319,29 @@ class UserRegistrationService
             return; // Si no tiene asignaciones, puede registrarse en cualquier rol
         }
 
-        $roleNames = $currentAssignments->pluck('role.name')->unique()->toArray();
-
         $firstAssignment = $currentAssignments->first();
         $existingRoleName = $firstAssignment->role->name;
 
         // --- CASE 1: ROLES OF ASSIGNMENT UNIQUE (1, 2, 3, 5) ---
-        if (in_array($newRoleId, [1, 2, 3, 5])) {
+        if (in_array($newRoleId, [1, 2, 3, 4, 5])) {
             if ($firstAssignment->section_id === $newSectionId) {
-                throw ValidationException::withMessages([
-                    'section' => 'El usuario ya se encuentra registrado en esta sección como '.$existingRoleName.'. Revise la lista.',
-                ]);
+                throw new UserAlreadyRegisteredInSectionException($existingRoleName);
             }
-
-            throw ValidationException::withMessages([
-                'role' => 'El usuario ya cuenta con una asignación activa en este semestre como '.$existingRoleName.'.',
-            ]);
+            if ($newRoleId !== 4 && $firstAssignment->role_id !== 4) {
+                throw new UserAlreadyAssignedInSemesterException($existingRoleName);
+            }
         }
 
         // --- CASE 2: THE NEW ROLE IS SUPERVISOR (4), BUT THE USER HAS ANOTHER ROLE ---
         if ($newRoleId === 4) {
-            if ($firstAssignment->role_id !== 4) {
-                throw ValidationException::withMessages([
-                    'role' => "El usuario no puede ser Docente Supervisor porque ya está registrado como {$existingRoleName}.",
-                ]);
-            }
-
             $newSection = Section::query()->findOrFail($newSectionId);
             $newFacultyId = $newSection->faculty_id;
 
             foreach ($currentAssignments as $assignment) {
                 if ($assignment->section->faculty_id !== $newFacultyId) {
-                    throw ValidationException::withMessages([
-                        'section' => 'Como Docente Supervisor, todas sus asignaciones deben pertenecer a la misma Facultad.',
-                    ]);
-                }
-
-                if ($assignment->section_id === $newSectionId) {
-                    throw ValidationException::withMessages([
-                        'section_id' => 'El usuario ya se encuentra registrado en esta sección como Docente Supervisor.',
-                    ]);
+                    throw new RegistrationAssignmentsMustBelongToSameFacultyException();
                 }
             }
-        }
-
-        // --- CASE 3: THEY TRY TO REGISTER OTHER ROLE WHEN THE USER IS SUPERVISOR ---
-        if (in_array(4, $currentAssignments->pluck('role_id')->toArray()) && $newRoleId !== 4) {
-            throw ValidationException::withMessages([
-                'role' => 'El usuario ya está registrado como Docente Supervisor y no puede tener un rol diferente.',
-            ]);
         }
     }
 }
