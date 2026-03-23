@@ -13,7 +13,7 @@ export default function AppSidebarLayout({
 }: AppLayoutProps) {
     return (
         <AppShell variant="sidebar">
-            <Toaster position="top-right" richColors closeButton />
+            <Toaster position="top-center" richColors closeButton />
             <ExceptionHandler />
             <HistoricNotice />
             <AppSidebar />

@@ -22,6 +22,9 @@ import { index as supervisorsIndex } from '@/routes/supervisors';
 import { index as studentsIndex } from '@/routes/students';
 import { submission as dossierSubmissionIndex } from '@/routes/dossiers';
 import { validation as dossierValidationIndex } from '@/routes/dossiers';
+import { teacher as teacherDossierIndex } from '@/routes/dossiers';
+import { supervisor as supervisorDossierIndex } from '@/routes/dossiers';
+import { student as studentDossierIndex } from '@/routes/dossiers';
 
 export const ACADEMIC_NAV = [
     {
@@ -36,29 +39,29 @@ export const ACADEMIC_NAV = [
         roles: [1, 2, 3],
         items: [
             {
-                title: 'Mi validación',
+                title: 'Documentación',
                 href: dossierSubmissionIndex().url,
                 roles: [3, 4, 5],
             },
             {
                 title: 'Docente Titular',
-                href: dossierValidationIndex().url,
+                href: teacherDossierIndex().url,
                 roles: [1, 2],
             },
             {
                 title: 'Docente Supervisor',
-                href: '/academic/dossier-validation',
+                href: supervisorDossierIndex().url,
                 roles: [1, 2, 3],
             },
             {
                 title: 'Estudiante',
-                href: '/academic/dossier-validation',
+                href: studentDossierIndex().url,
                 roles: [1, 2, 3],
             },
         ],
     },
     {
-        title: 'Mi validación',
+        title: 'Documentación',
         href: dossierSubmissionIndex().url,
         icon: BadgeCheck,
         roles: [4, 5],
@@ -67,7 +70,7 @@ export const ACADEMIC_NAV = [
         title: 'Grupos',
         href: '#',
         icon: Boxes,
-        roles: [1, 2, 3, 4],
+        roles: [1, 2, 3],
         items: [
             {
                 title: 'Por Práctica',
@@ -77,7 +80,7 @@ export const ACADEMIC_NAV = [
             {
                 title: 'Por Estudiante',
                 href: '#',
-                roles: [1, 2, 3, 4],
+                roles: [1, 2, 3],
             },
         ],
     },
@@ -103,6 +106,12 @@ export const ACADEMIC_NAV = [
                 roles: [1, 2, 3],
             },
         ],
+    },
+    {
+        title: 'Pasantía',
+        href: '#',
+        icon: Folder,
+        roles: [5],
     },
     {
         title: 'Usuarios',

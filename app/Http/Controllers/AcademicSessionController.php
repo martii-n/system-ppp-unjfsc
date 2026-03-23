@@ -20,7 +20,7 @@ class AcademicSessionController extends Controller
 
         return back()->with([
             'message' => 'Semestre sincronizado correctamente.',
-        ], 200);
+        ]);
     }
 
     public function syncAssignment(Assignment $assignment): RedirectResponse
@@ -29,6 +29,6 @@ class AcademicSessionController extends Controller
 
         return back()->with([
             'message' => 'Asignatura sincronizada correctamente.',
-        ], 200);
+        ]);
     }
 }

@@ -9,7 +9,9 @@ export function ExceptionHandler() {
 
     useEffect(() => {
         if (success) {
-            toast.success(success);
+            toast.success(success, {
+                id: `flash-success-${success}`, // Evita duplicados con el mismo contenido
+            });
         }
     }, [success]);
 

@@ -47,18 +47,6 @@ class SectionController extends Controller
         ]);
     }
 
-    public function update(UpdateSectionRequest $request, Section $section): JsonResponse
-    {
-        $data = $request->validated();
-
-        $section = $this->sectionService->update($section, $data);
-
-        return response()->json([
-            'message' => 'Sección actualizada correctamente.',
-            'data' => $section
-        ], 200);
-    }
-
     public function destroy(Section $section): RedirectResponse
     {
         $this->sectionService->delete($section);

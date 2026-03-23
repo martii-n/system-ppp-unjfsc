@@ -10,6 +10,7 @@ use App\Models\Dossier;
 use App\Models\User;
 use App\Services\DossierService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -29,7 +30,7 @@ class DossierController extends Controller
      * @param UploadDocumentDossierRequest $request
      * @return JsonResponse
      */
-    public function storeDocumentDossier(UploadDocumentDossierRequest $request): JsonResponse
+    public function storeDocumentDossier(UploadDocumentDossierRequest $request): RedirectResponse
     {
         $user = Auth::user() ?? User::first();
         $assignmentId = session('assignment_id');
@@ -37,12 +38,9 @@ class DossierController extends Controller
 
         $data = $request->validated();
 
-        $document = $this->dossierService->storeDocumentDossier($data, $assignment);
+        $this->dossierService->storeDocumentDossier($data, $assignment);
 
-        return response()->json([
-            'message' => 'Documento del dossier registrado correctamente.',
-            'data' => $document
-        ], 201);
+        return back()->with('message', 'Documento del dossier registrado correctamente.');
     }
 
     /**
@@ -72,32 +70,62 @@ class DossierController extends Controller
      * 
      * @return Response
      */
-    public function myDossier(): Response
+    public function SubmissionIndex(): Response
     {
         $assignmentId = session('assignment_id');
-        $assignment = Assignment::with(['role', 'dossiers.documents.documentType'])->findOrFail($assignmentId);
+        $assignment = Assignment::with(['role'])->findOrFail($assignmentId);
 
-        // Create dossier if it doesn't exist
-        if (!$assignment->dossier) {
-            $assignment->dossiers()->create([
-                'approval_status' => 2,
-                'status' => 1
-            ]);
-            $assignment->load(['dossiers.documents.documentType']);
-        }
-
-        $types = [
-            [
-                "code" => "ficha",
-            ],
-            [
-                "code" => "record",
-            ],
-        ];
+        $requirements = $this->dossierService->getDossierData($assignment);
 
         return Inertia::render('academic/dossier/submission/index', [
             'assignment' => $assignment,
-            'dossier' => $assignment->dossiers
+            'requirements' => $requirements,
+            'dossier' => $assignment->dossiers->first()?->id
+        ]);
+    }
+
+    public function TeacherDossierIndex(): Response
+    {
+        return $this->renderValidationView(3, 'Validación de Docentes Titulares');
+    }
+
+    public function SupervisorDossierIndex(): Response
+    {
+        return $this->renderValidationView(4, 'Validación de Supervisores');
+    }
+
+    public function StudentDossierIndex(): Response
+    {
+        return $this->renderValidationView(5, 'Validación de Estudiantes');
+    }
+
+    /**
+     * Helper para renderizar la vista de validación con los filtros correctos.
+     */
+    private function renderValidationView(int $roleId, string $title): Response
+    {
+        $assignments = Assignment::with(['user.authenticable', 'section.school.faculty', 'section.faculty', 'dossiers'])
+            ->where('role_id', $roleId)
+            ->get();
+
+        return Inertia::render('academic/dossier/validation/index', [
+            'assignments' => $assignments,
+            'title' => $title
+        ]);
+    }
+
+    public function getDetailDossier(Assignment $assignment): JsonResponse
+    {
+        // Cargar las relaciones necesarias para el frontend
+        $assignment->load(['user.authenticable', 'section.school.faculty', 'section.faculty']);
+        
+        // Usamos el servicio exacto que ya da la estructura con history, latest, etc.
+        $requirements = $this->dossierService->getDossierData($assignment);
+
+        return response()->json([
+            'assignment' => $assignment,
+            'requirements' => $requirements,
+            'dossier' => $assignment->dossiers->first()?->id
         ]);
     }
 
