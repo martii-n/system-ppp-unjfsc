@@ -9,7 +9,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { destroy } from '@/routes/faculties';
+import { destroy } from '@/routes/academic/faculties';
 
 import type { Faculty } from '@/types';
 

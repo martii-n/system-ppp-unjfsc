@@ -27,7 +27,7 @@ import DocumentViewer from './components/DocumentViewer';
 import FileDetailsContent from './components/FileDetailsContent';
 import FileHistory from './components/FileHistory';
 
-import dossiers from '@/routes/dossiers';
+import dossiers from '@/routes/academic/dossiers';
 import { toast } from 'sonner';
 import RequirementsList from '@/components/dossier/requirements-list';
 

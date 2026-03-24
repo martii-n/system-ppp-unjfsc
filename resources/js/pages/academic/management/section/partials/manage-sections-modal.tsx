@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Plus, X } from 'lucide-react';
-import { store, destroy } from '@/routes/sections';
+import { store, destroy } from '@/routes/academic/sections';
 import type { School } from '@/types';
 
 interface Props {

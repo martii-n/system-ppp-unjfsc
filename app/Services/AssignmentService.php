@@ -77,7 +77,7 @@ class AssignmentService
         $user = $assignment->user;
         $authenticable = $user->authenticable;
 
-        if ($assignment->internships()->exists() || $assignment->dosiers()->exists() || $assignment->documents()->exists()) {
+        if ($assignment->internships()->exists() || $assignment->dossiers()->exists() || $assignment->documents()->exists()) {
             $assignment->update(['status' => 0]);
             $user->update(['status' => 0]);
 

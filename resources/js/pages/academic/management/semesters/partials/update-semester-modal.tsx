@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { update } from '@/routes/semesters';
+import { update } from '@/routes/academic/semesters';
 
 import type { Semester } from '@/types';
 

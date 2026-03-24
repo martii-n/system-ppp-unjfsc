@@ -10,6 +10,7 @@ use App\Http\Requests\Registration\StepTwoRequest;
 use App\Http\Requests\Registration\StepThreeRequest;
 use App\Http\Requests\Registration\StoreCompanyRequest;
 use App\Http\Requests\Registration\StorePersonMassiveRequest;
+use App\Models\Assignment;
 use App\Models\Faculty;
 use App\Models\Role;
 use App\Models\School;
@@ -49,8 +50,12 @@ class UserRegistrationController extends Controller
     public function stepOne(StepOneRequest $request, UserRegistrationService $service): JsonResponse
     {
         $semesterId = session('semester_id');
+        $assignmentId = session('assignment_id');
+
+        $authAssignment = Assignment::find($assignmentId);
 
         $result = $service->validateStepOne(
+            $authAssignment,
             $request->validated(),
             $semesterId
         );

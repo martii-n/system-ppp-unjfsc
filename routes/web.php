@@ -23,8 +23,25 @@ Route::middleware(['auth'])->group(function () {
 
 // /semesters/${id}/select
 
+// Rutas para el área Académica
+Route::middleware(['auth', 'type:1,2'])
+    //->prefix('academic')
+    ->name('academic.')
+    ->group(function () {
+        require __DIR__ . '/academic/general.php';
+        require __DIR__ . '/academic/dossier.php';
+        require __DIR__ . '/academic/groups.php';
+    });
+
+// Rutas para el área de Empresas (placeholder para cuando las crees)
+Route::middleware(['auth', 'type:1,3'])
+    ->prefix('company')
+    ->name('company.')
+    ->group(function () {
+        require __DIR__ . '/company/general.php';
+    });
+
+// Rutas compartidas o de configuración
 require __DIR__ . '/settings.php';
 require __DIR__ . '/user.php';
-require __DIR__ . '/academic.php';
 require __DIR__ . '/request.php';
-require __DIR__ . '/dossier.php';

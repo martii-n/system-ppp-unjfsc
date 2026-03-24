@@ -34,8 +34,10 @@ class UserRegistrationService
      * @param  array  $data  The data to validate.
      * @return array An array of errors, if any.
      */
-    public function validateStepOne(array $data, int $semesterId): array
+    public function validateStepOne(Assignment $authAssignment, array $data, int $semesterId): array
     {
+        $this->authorizeUserAction($authAssignment, $data['role_id'], $data['section_id']);
+
         $user = User::query()->where('email', $data['email'])->first();
 
         $person = collect();

@@ -12,7 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { update } from '@/routes/faculties';
+import { update } from '@/routes/academic/faculties';
 
 import type { Faculty } from '@/types';
 

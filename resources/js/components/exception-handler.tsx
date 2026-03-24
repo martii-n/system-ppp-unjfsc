@@ -9,14 +9,16 @@ export function ExceptionHandler() {
 
     useEffect(() => {
         if (success) {
-            toast.success(success, {
-                id: `flash-success-${success}`, // Evita duplicados con el mismo contenido
-            });
+            toast.success(success, { id: `flash-success-${success}` });
         }
-    }, [success]);
+        // Solo si el error es un STRING, lo manejamos aquí
+        if (typeof error === 'string') {
+            toast.error(error, { id: `flash-error-${error}` });
+        }
+    }, [success, error]);
 
     useEffect(() => {
-        if (!error) return;
+        if (!error || typeof error !== 'object' || !error.message) return;
 
         // Lógica por familias (Status)
         switch (error.status) {

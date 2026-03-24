@@ -19,7 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { store } from '@/routes/schools';
+import { store } from '@/routes/academic/schools';
 import type { Faculty } from '@/types';
 
 interface Props {
@@ -37,7 +37,7 @@ export default function CreateSchoolModal({ faculties, open, onOpenChange }: Pro
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        
+
         post(store({ faculty: Number(data.faculty_id) }).url, {
             onSuccess: () => {
                 onOpenChange(false);

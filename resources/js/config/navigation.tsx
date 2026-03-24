@@ -11,20 +11,21 @@ import {
     UserRoundCog,
 } from 'lucide-react';
 import { dashboard } from '@/routes';
-import { index as semestersIndex } from '@/routes/semesters';
-import { index as facultiesIndex } from '@/routes/faculties';
-import { index as schoolsIndex } from '@/routes/schools';
-import { index as sectionsIndex } from '@/routes/sections';
+import { index as semestersIndex } from '@/routes/academic/semesters';
+import { index as facultiesIndex } from '@/routes/academic/faculties';
+import { index as schoolsIndex } from '@/routes/academic/schools';
+import { index as sectionsIndex } from '@/routes/academic/sections';
 import { index as registerIndex } from '@/routes/register';
-import { index as subadminsIndex } from '@/routes/subadmins';
-import { index as teachersIndex } from '@/routes/teachers';
-import { index as supervisorsIndex } from '@/routes/supervisors';
-import { index as studentsIndex } from '@/routes/students';
-import { submission as dossierSubmissionIndex } from '@/routes/dossiers';
-import { validation as dossierValidationIndex } from '@/routes/dossiers';
-import { teacher as teacherDossierIndex } from '@/routes/dossiers';
-import { supervisor as supervisorDossierIndex } from '@/routes/dossiers';
-import { student as studentDossierIndex } from '@/routes/dossiers';
+import { index as subadminsIndex } from '@/routes/academic/subadmins';
+import { index as teachersIndex } from '@/routes/academic/teachers';
+import { index as supervisorsIndex } from '@/routes/academic/supervisors';
+import { index as studentsIndex } from '@/routes/academic/students';
+import { submission as dossierSubmissionIndex } from '@/routes/academic/dossiers';
+import { teacher as teacherDossierIndex } from '@/routes/academic/dossiers';
+import { supervisor as supervisorDossierIndex } from '@/routes/academic/dossiers';
+import { student as studentDossierIndex } from '@/routes/academic/dossiers';
+import { internship as internshipIndex } from '@/routes/academic/groups';
+import { student as studentIndex } from '@/routes/academic/groups';
 
 export const ACADEMIC_NAV = [
     {
@@ -74,12 +75,12 @@ export const ACADEMIC_NAV = [
         items: [
             {
                 title: 'Por Práctica',
-                href: '#',
+                href: internshipIndex().url,
                 roles: [1, 2, 3],
             },
             {
                 title: 'Por Estudiante',
-                href: '#',
+                href: studentIndex().url,
                 roles: [1, 2, 3],
             },
         ],
@@ -133,7 +134,7 @@ export const ACADEMIC_NAV = [
             {
                 title: 'L. de Docentes Titulares',
                 href: teachersIndex().url,
-                roles: [1, 2, 3],
+                roles: [1, 2],
             },
             {
                 title: 'L. de Docentes Supervisores',

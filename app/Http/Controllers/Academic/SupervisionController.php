@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Academic;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Supervision\StoreEvaluationRequest;
 use App\Http\Requests\Supervision\UpdateEvaluationStatusRequest;
 use App\Models\Supervision;

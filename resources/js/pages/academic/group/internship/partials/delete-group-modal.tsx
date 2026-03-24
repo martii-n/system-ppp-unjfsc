@@ -9,23 +9,22 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { destroy } from '@/routes/academic/schools';
-import type { School } from '@/types';
+import groups from '@/routes/academic/groups';
 
 interface Props {
-    school: School | null;
+    group: any | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-export default function DeleteSchoolModal({ school, open, onOpenChange }: Props) {
+export default function DeleteGroupModal({ group, open, onOpenChange }: Props) {
     const { delete: destroyRequest, processing } = useForm();
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        if (!school) return;
+        if (!group) return;
 
-        destroyRequest(destroy(school.id).url, {
+        destroyRequest(groups.delete(group.id).url, {
             onSuccess: () => {
                 onOpenChange(false);
             },
@@ -34,20 +33,20 @@ export default function DeleteSchoolModal({ school, open, onOpenChange }: Props)
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-106.25">
-                <form onSubmit={handleSubmit}>
-                    <DialogHeader>
-                        <DialogTitle>Eliminar Escuela</DialogTitle>
-                        <DialogDescription>
-                            ¿Estás seguro de que deseas eliminar la escuela{' '}
-                            <span className="font-bold text-foreground">
-                                {school?.name}
-                            </span>
-                            ? Esta acción no se puede deshacer.
-                        </DialogDescription>
-                    </DialogHeader>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Eliminar Grupo de Prácticas</DialogTitle>
+                    <DialogDescription>
+                        ¿Estás seguro de que deseas eliminar el grupo{' '}
+                        <span className="font-bold text-foreground">
+                            {group?.name}
+                        </span>
+                        ? Esta acción no se puede deshacer y solo es posible si el grupo no tiene estudiantes asignados.
+                    </DialogDescription>
+                </DialogHeader>
 
-                    <DialogFooter className="mt-4">
+                <form onSubmit={handleSubmit}>
+                    <DialogFooter>
                         <Button
                             type="button"
                             variant="ghost"
@@ -60,7 +59,7 @@ export default function DeleteSchoolModal({ school, open, onOpenChange }: Props)
                             variant="destructive"
                             disabled={processing}
                         >
-                            {processing ? 'Eliminando...' : 'Eliminar Escuela'}
+                            {processing ? 'Eliminando...' : 'Eliminar Facultad'}
                         </Button>
                     </DialogFooter>
                 </form>

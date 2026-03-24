@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Heading from "@/components/heading";
 import { Input } from "@/components/ui/input";
-import dossiers from "@/routes/dossiers";
+import dossiers from "@/routes/academic/dossiers";
 import { toast } from "sonner";
 import RequirementsList from "@/components/dossier/requirements-list";
 import { TabsDossier } from "@/pages/academic/dossier/components/tabs-dossier";

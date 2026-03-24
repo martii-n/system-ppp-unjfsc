@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public registration routes
 
-Route::prefix('register')->name('register.')->middleware(['auth', 'verified'])->group(function () {
+Route::prefix('register')->name('register.')->middleware(['auth', 'verified', 'role:1,2,3'])->group(function () {
     Route::get('/', [UserRegistrationController::class , 'index'])->name('index');
     Route::post('/step-one', [UserRegistrationController::class , 'stepOne'])->name('step-one');
     Route::post('/step-one-massive', [UserRegistrationController::class , 'stepOneMassive'])->name('step-one-massive');

@@ -19,7 +19,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { update } from '@/routes/schools';
+import { update } from '@/routes/academic/schools';
 import type { Faculty, School } from '@/types';
 
 interface Props {

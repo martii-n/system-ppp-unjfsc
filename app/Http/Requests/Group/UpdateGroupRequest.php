@@ -4,7 +4,7 @@ namespace App\Http\Requests\Group;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreGroupRequest extends FormRequest
+class UpdateGroupRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,12 +22,17 @@ class StoreGroupRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'supervisor_id' => 'nullable|exists:assignments,id',
             'name' => 'required|string|max:255',
-            'teacher_assignment_id' => 'required|exists:assignments,id',
-            'supervisor_assignment_id' => 'required|exists:assignments,id',
-            'section_id' => 'required|exists:sections,id',
-            'student_ids' => 'nullable|array',
-            'student_ids.*' => 'exists:assignments,id',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'supervisor_id.exists' => 'El supervisor seleccionado no existe.',
+            'name.required' => 'El nombre del grupo es obligatorio.',
+            'name.max' => 'El nombre del grupo no puede exceder los 255 caracteres.',
         ];
     }
 }

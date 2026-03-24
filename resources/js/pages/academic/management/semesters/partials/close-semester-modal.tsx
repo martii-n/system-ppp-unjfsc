@@ -9,7 +9,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { close } from '@/routes/semesters';
+import { close } from '@/routes/academic/semesters';
 
 import type { Semester } from '@/types';
 
