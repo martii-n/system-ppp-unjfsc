@@ -45,7 +45,7 @@ export default function Faculties({ faculties }: Props) {
 
     return (
         <AppLayout>
-            <Head title="Faculties" />
+            <Head title="Facultades" />
             <div className="flex h-full flex-1 flex-col gap-8 p-8">
                 <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
                     <Heading

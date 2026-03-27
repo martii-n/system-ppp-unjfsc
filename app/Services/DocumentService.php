@@ -20,9 +20,9 @@ class DocumentService
 {
 
     protected array $contextMap = [
-        'dossier' => Dossier::class,
-        'evaluation' => Evaluation::class,
-        'internship' => Internship::class,
+        'dossier' => Dossier::class ,
+        'evaluation' => Evaluation::class ,
+        'internship' => Internship::class ,
     ];
 
     /**
@@ -90,13 +90,12 @@ class DocumentService
         }
 
         /*$modelAssignmentId = $model->assignment_id ?? ($model->assignment->id ?? null);
-
-        // Validamos: Si no es admin/subadmin (1,2) Y el ID no coincide, fuera.
-        if (!in_array($userAssignment->role, [1, 2])) {
-            if ($modelAssignmentId !== $userAssignment->id) {
-                throw new AssignmentNotAllowedException();
-            }
-        }*/
+         // Validamos: Si no es admin/subadmin (1,2) Y el ID no coincide, fuera.
+         if (!in_array($userAssignment->role, [1, 2])) {
+         if ($modelAssignmentId !== $userAssignment->id) {
+         throw new AssignmentNotAllowedException();
+         }
+         }*/
 
         return $model;
     }
@@ -116,7 +115,7 @@ class DocumentService
         $typeDocument = DocumentType::query()->where('id', $typeId)->firstOrFail();
 
         $folder = "{$context}s/{$semester}/{$identifier}/{$typeDocument->code}";
-        $filename = "type_{$typeDocument->code}_".time().".{$file->extension()}";
+        $filename = "type_{$typeDocument->code}_" . time() . ".{$file->extension()}";
 
         return $file->storeAs($folder, $filename, 'public');
     }
@@ -142,7 +141,7 @@ class DocumentService
             'name' => $data['name'], //$data['file']->getClientOriginalName(),
             'uploaded_by' => $assignment->id,
             'approval_status' => 2,
-            'comment' => '',
+            'comment' => $data['comment'] ?? '',
         ]);
     }
 
@@ -170,10 +169,10 @@ class DocumentService
             $this->handleDossierCompletion($document->documentable);
         }
 
-        /*if ($document->documentable_type === Evaluation::class) {
-            // Lazy loading del service para evitar recursión infinita en el constructor
-            app(\App\Services\SupervisionService::class)->processEvaluationProgress($document->documentable);
-        }*/
+    /*if ($document->documentable_type === Evaluation::class) {
+     // Lazy loading del service para evitar recursión infinita en el constructor
+     app(\App\Services\SupervisionService::class)->processEvaluationProgress($document->documentable);
+     }*/
     }
 
     /**
@@ -186,11 +185,11 @@ class DocumentService
     {
         $roleId = $dossier->assignment->role_id;
         $required = match ((int)$roleId) {
-            3 => 2,
-            4 => 3,
-            5 => 2,
-            default => 99, // A value that is not possible to reach
-        };
+                3 => 2,
+                4 => 3,
+                5 => 2,
+                default => 99, // A value that is not possible to reach
+            };
         $approvedCount = $dossier->documents()->where('approval_status', 1)->count();
 
         if ($approvedCount >= $required) {

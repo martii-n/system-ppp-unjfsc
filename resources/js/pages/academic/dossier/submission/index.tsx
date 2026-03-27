@@ -5,31 +5,21 @@ import { BreadcrumbItem } from '@/types';
 import Heading from '@/components/heading';
 import {
     FileText,
-    UploadCloud,
     Maximize2,
-    RotateCcw,
-    Trash2,
-    Clock,
     ArrowRight,
-    ShieldCheck,
-    FileCheck,
-    Eye,
-    History,
-    FileUp,
     AlertCircle,
-    CheckCircle2,
     Download,
     FileDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import DocumentViewer from './components/DocumentViewer';
-import FileDetailsContent from './components/FileDetailsContent';
-import FileHistory from './components/FileHistory';
+import DocumentViewer from '@/components/document/DocumentViewer';
+import FileDetailsContent from './FileDetailsContent';
+import FileHistory from '@/components/document/FileHistory';
 
 import dossiers from '@/routes/academic/dossiers';
 import { toast } from 'sonner';
-import RequirementsList from '@/components/dossier/requirements-list';
+import RequirementsList from '@/components/academic/requirements-list';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -45,17 +35,6 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
     const [isEditing, setIsEditing] = useState(false);
     const [tempFile, setTempFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-    const getIcon = (code: string) => {
-        const icons: Record<string, any> = {
-            horario: Clock,
-            carga_lectiva: FileText,
-            resolucion: ShieldCheck,
-            ficha: FileCheck,
-            record: FileText,
-        }
-        return icons[code] || FileText;
-    }
 
     const currentFile = requirements[selectedType];
 
@@ -204,7 +183,7 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
                         )}
 
                         {/* Header del Card (Dinamizado y Compacto) */}
-                        <div className="flex flex-row items-center justify-between h-[68px] px-6 border-b bg-white/50 backdrop-blur-sm">
+                        <div className="flex flex-row items-center justify-between px-4 py-3 border-b backdrop-blur-sm">
                             <div className="flex items-center gap-3">
                                 {/* Ícono más pequeño y sutil */}
                                 <div className={`flex h-8 w-8 items-center justify-center rounded-md border ${tempFile || currentFile?.latest ? 'bg-primary/5 border-primary/20' : 'bg-muted/50'
@@ -252,7 +231,7 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
 
                         {/* Shadcn Tabs Card */}
                         <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
-                            <div className="h-[68px] flex items-center px-4 border-b">
+                            <div className="px-4 py-3 flex items-center border-b">
                                 {/* Componente TabsList imitado */}
                                 <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
                                     <button

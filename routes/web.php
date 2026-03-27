@@ -31,6 +31,7 @@ Route::middleware(['auth', 'type:1,2'])
         require __DIR__ . '/academic/general.php';
         require __DIR__ . '/academic/dossier.php';
         require __DIR__ . '/academic/groups.php';
+        require __DIR__ . '/academic/supervision.php';
     });
 
 // Rutas para el área de Empresas (placeholder para cuando las crees)

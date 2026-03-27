@@ -1,4 +1,5 @@
-import { AlertCircle, CheckCircle2, Clock, FileText, ShieldCheck, FileCheck, Circle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, FileText, ShieldCheck, FileCheck, Circle, Info } from "lucide-react";
+import { Badge } from "../ui/badge";
 
 export interface RequirementItem {
     code: string;
@@ -27,6 +28,13 @@ export const getIcon = (code: string) => {
     return icons[code] || FileText;
 }
 
+const statusConfig: Record<number, { label: string; icon: any; className: string; badgeClass: string }> = {
+    0: { label: 'Sin iniciar', icon: Info, className: 'text-muted-foreground', badgeClass: 'bg-muted/60 text-muted-foreground border-transparent' },
+    1: { label: 'Aprobado', icon: CheckCircle2, className: 'text-green-600', badgeClass: 'bg-green-500/10 text-green-700 border-green-200' },
+    2: { label: 'Pendiente', icon: Clock, className: 'text-amber-600', badgeClass: 'bg-amber-500/10 text-amber-700 border-amber-200' },
+    3: { label: 'Observado', icon: AlertCircle, className: 'text-red-600', badgeClass: 'bg-red-500/10 text-red-700 border-red-200' },
+};
+
 export default function RequirementsList({
     requirements,
     selectedType,
@@ -41,14 +49,15 @@ export default function RequirementsList({
     );
 
     return (
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
-            <div className="flex flex-col space-y-1.5 p-6 shrink-0">
-                <h3 className="font-semibold leading-none tracking-tight">Requisitos</h3>
-                <p className="text-sm text-muted-foreground">Seleccione un tipo de documento</p>
+        <div className="rounded-xl border bg-card text-card-foreground">
+            <div className="px-4 py-3 border-b">
+                <h3 className="font-semibold text-sm leading-none">Archivos requeridos</h3>
+                <p className="text-xs text-muted-foreground mt-1">Selecciona un archivo para gestionar</p>
             </div>
-            <div className="p-6 pt-0 space-y-1">
+            <div className="px-3 py-2 space-y-2">
                 {requirements.map((req, idx) => {
                     const isActive = selectedType === idx;
+                    const cfg = statusConfig[req.status > 3 ? 3 : req.status] ?? statusConfig[0];
                     const Icon = getIcon(req.code);
                     return (
                         <button
@@ -63,33 +72,27 @@ export default function RequirementsList({
                                 <Icon className={`mr-2 h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                                 <span className="truncate max-w-[150px]">{req.title}</span>
                             </div>
-                            {req.status === 1 && (
-                                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                            )}
-                            {req.status === 3 && req.latest && (
-                                <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
-                            )}
-                            {req.status === 2 && (
-                                <AlertCircle className="size-4 text-amber-500 shrink-0" />
-                            )}
+                            <div className="flex items-center">
+                                <Badge variant="outline" className={`text-[9px] font-bold h-4 px-1.5 shrink-0 ${cfg.badgeClass}`}>
+                                    {cfg.label}
+                                </Badge>
+                            </div>
                         </button>
                     );
                 })}
             </div>
-            <div className="p-4 border-t flex items-center justify-between bg-muted/50">
-                <label htmlFor="preview-mode" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
+            <div className="px-4 py-3 border-t flex items-center justify-between bg-muted/30">
+                <label htmlFor="preview-toggle" className="text-xs font-medium cursor-pointer">
                     Previsualización
                 </label>
                 <button
-                    id="preview-mode"
+                    id="preview-toggle"
                     onClick={onTogglePreview}
-                    className={`peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 ${previewEnabled ? 'bg-primary' : 'bg-input'
+                    className={`inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${previewEnabled ? 'bg-primary' : 'bg-input'
                         }`}
                 >
-                    <span
-                        className={`pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform ${previewEnabled ? 'translate-x-4' : 'translate-x-0'
-                            }`}
-                    />
+                    <span className={`pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg transition-transform ${previewEnabled ? 'translate-x-4' : 'translate-x-0'
+                        }`} />
                 </button>
             </div>
         </div>

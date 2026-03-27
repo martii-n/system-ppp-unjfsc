@@ -10,15 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import {
     Search, X, User, ChevronRight, FileText,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    Filter
 } from "lucide-react";
 import Heading from "@/components/heading";
 import { Input } from "@/components/ui/input";
 import dossiers from "@/routes/academic/dossiers";
 import { toast } from "sonner";
-import RequirementsList from "@/components/dossier/requirements-list";
-import { TabsDossier } from "@/pages/academic/dossier/components/tabs-dossier";
-import FilePreview from "@/pages/academic/dossier/submission/components/FilePreview";
+import RequirementsList from "@/components/academic/requirements-list";
+import { TabsDossier } from "@/pages/academic/dossier/validation/tabs-dossier";
+import FilePreview from "@/components/document/FilePreview"
 
 // --- Props (Asumiendo que vienen de Laravel) ---
 interface Props {
@@ -26,7 +27,7 @@ interface Props {
     title: string;
 }
 
-export default function DossierValidationIndex({ assignments, title }: Props) {
+export default function DossierValidationIndex({ assignments = [], title }: Props) {
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [search, setSearch] = useState("");
 
@@ -36,7 +37,7 @@ export default function DossierValidationIndex({ assignments, title }: Props) {
     const [previewEnabled, setPreviewEnabled] = useState(false);
     const [isSavingValidation, setIsSavingValidation] = useState(false);
     // Buscamos el objeto seleccionado
-    const selectedAssignment = assignments.find(a => a.id === selectedId);
+    const selectedAssignment = assignments?.find(a => a.id === selectedId);
 
     useEffect(() => {
         if (selectedId) {
@@ -116,7 +117,13 @@ export default function DossierValidationIndex({ assignments, title }: Props) {
                         ${selectedId ? 'w-[350px] lg:w-[400px]' : 'w-full'}
                     `}>
                         {/* Buscador Superior */}
-                        <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-4">
+                            <Button
+                                variant="outline"
+                            >
+                                <Filter className="size-4" />
+                                {!selectedId && 'Filtro academico'}
+                            </Button>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                                 <Input
@@ -145,7 +152,7 @@ export default function DossierValidationIndex({ assignments, title }: Props) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {assignments.map((item) => (
+                                    {assignments?.map((item) => (
                                         <TableRow
                                             key={item.id}
                                             onClick={() => setSelectedId(item.id)}
@@ -196,17 +203,17 @@ export default function DossierValidationIndex({ assignments, title }: Props) {
                                             <TableCell className="text-center">
                                                 {/* Badge de estado del dossier total */}
 
-                                                {item.dossiers[0].approval_status === 1 && (
+                                                {item.dossiers?.[0]?.approval_status === 1 && (
                                                     <Badge variant="outline" className="text-[9px] uppercase bg-green-500 text-white tracking-tighter h-5 px-1.5 font-bold">
                                                         Aprobado
                                                     </Badge>
                                                 )}
-                                                {item.dossiers[0].approval_status === 3 && item.dossiers[0].latest && (
+                                                {item.dossiers?.[0]?.approval_status === 3 && item.dossiers?.[0]?.latest && (
                                                     <Badge variant="outline" className="text-[9px] uppercase bg-red-500 text-white tracking-tighter h-5 px-1.5 font-bold">
                                                         Rechazado
                                                     </Badge>
                                                 )}
-                                                {item.dossiers[0].approval_status === 2 && (
+                                                {item.dossiers?.[0]?.approval_status === 2 && (
                                                     <Badge variant="outline" className="text-[9px] uppercase bg-amber-500 text-white tracking-tighter h-5 px-1.5 font-bold">
                                                         Pendiente
                                                     </Badge>
@@ -287,6 +294,7 @@ export default function DossierValidationIndex({ assignments, title }: Props) {
                                             onSaveValidation={handleSaveValidation}
                                             isSaving={isSavingValidation}
                                         />
+
                                     </div>
                                 </div>
                             </div>

@@ -235,8 +235,8 @@ class UserRegistrationService
         Assignment::create([
             'user_id' => $user->id,
             'role_id' => $data['role_id'],
-            'section_id' => $data['section_id'],
             'semester_id' => $semesterId,
+            'section_id' => $data['section_id'],
             'access_status' => AssignmentAccessStatus::LIMITED,
             'approval_status' => AssignmentApprovalStatus::PENDING,
             'review_status' => AssignmentReviewStatus::NONE,

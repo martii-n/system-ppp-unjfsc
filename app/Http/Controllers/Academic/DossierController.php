@@ -131,23 +131,6 @@ class DossierController extends Controller
     }
 
     /**
-     * Render the list of dossiers to validate.
-     * 
-     * @return Response
-     */
-    public function indexValidation(): Response
-    {
-        // Simple implementation for now: show all dossiers with pending/observed documents
-        $dossiers = Dossier::with(['assignment.user', 'assignment.role', 'documents.type'])
-            ->latest()
-            ->get();
-
-        return Inertia::render('academic/dossier/validation/index', [
-            'dossiers' => $dossiers
-        ]);
-    }
-
-    /**
      * Render the detailed view for validating a specific dossier.
      * 
      * @param Dossier $dossier

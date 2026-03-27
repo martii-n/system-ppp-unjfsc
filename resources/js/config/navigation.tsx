@@ -26,6 +26,8 @@ import { supervisor as supervisorDossierIndex } from '@/routes/academic/dossiers
 import { student as studentDossierIndex } from '@/routes/academic/dossiers';
 import { internship as internshipIndex } from '@/routes/academic/groups';
 import { student as studentIndex } from '@/routes/academic/groups';
+import { submission as supervisionSubmissionIndex } from '@/routes/academic/supervision';
+import { validation as supervisionValidationIndex } from '@/routes/academic/supervision';
 
 export const ACADEMIC_NAV = [
     {
@@ -98,12 +100,12 @@ export const ACADEMIC_NAV = [
             },
             {
                 title: 'Eval. Prácticas',
-                href: '#',
+                href: supervisionSubmissionIndex().url,
                 roles: [1, 2, 3],
             },
             {
                 title: 'Rev. Prácticas',
-                href: '#',
+                href: supervisionValidationIndex().url,
                 roles: [1, 2, 3],
             },
         ],

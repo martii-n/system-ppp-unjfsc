@@ -17,7 +17,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import assignments from '@/routes/assignments';
+import assignments from '@/routes/academic/assignments';
 
 interface Assignment {
     id: number;
