@@ -9,23 +9,50 @@ use Illuminate\Support\Facades\DB;
 class UserAssignmentService
 {
     /**
-     * Obtener asignaciones por rol y semestre.
+     * Obtener asignaciones por rol y semestre, con soporte opcional para filtros completos (estilo Dossier).
      *
      * @param int $roleId
      * @param int $semesterId
-     * @return Collection
+     * @param array $filters
+     * @param bool $paginate
+     * @return mixed
      */
-    public function getAssignmentsByRole(int $roleId, int $semesterId): Collection
+    public function getAssignmentsByRole(int $roleId, int $semesterId, array $filters = [], bool $paginate = true)
     {
-        return Assignment::query()
+        $query = Assignment::query()
             ->with([
-            'user.authenticable', // Carga Person o Company según sea el caso
-            'role',
-            'section.school.faculty', // Jerarquía académica para estudiantes/docentes
-            'section.faculty', // Para casos donde la sección está ligada directamente a facultad
-        ])
+                'user.person',
+                'role',
+                'section.school.faculty',
+                'section.faculty',
+            ])
             ->where('role_id', $roleId)
-            ->where('semester_id', $semesterId)
-            ->get();
+            ->where('semester_id', $semesterId);
+
+        // Filtro por Facultad/Escuela/Sección
+        if (!empty($filters['section_id'])) {
+            $query->where('section_id', $filters['section_id']);
+        } elseif (!empty($filters['school_id'])) {
+            $query->whereHas('section', fn($q) => $q->where('school_id', $filters['school_id']));
+        } elseif (!empty($filters['faculty_id'])) {
+            $query->where(function($q) use ($filters) {
+                $q->whereHas('section.school', fn($sq) => $sq->where('faculty_id', $filters['faculty_id']))
+                  ->orWhereHas('section.faculty', fn($sq) => $sq->where('id', $filters['faculty_id']));
+            });
+        }
+
+        // Búsqueda por Email o Nombre
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('email', 'like', "%{$search}%")
+                    ->orWhereHas('person', function ($q2) use ($search) {
+                        $q2->where('names', 'like', "%{$search}%")
+                            ->orWhere('surnames', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $paginate ? $query->paginate(15) : $query->get();
     }
 }

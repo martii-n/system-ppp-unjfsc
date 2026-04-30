@@ -2,7 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Company;
+use App\Models\Faculty;
 use App\Models\Resource;
+use App\Models\School;
+use App\Models\Section;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -58,7 +62,9 @@ class ResourceService
      */
     public function listResourcesForUser(int $roleId, ?int $semesterId, array $locations = [])
     {
-        $query = Resource::query()->where('role_id', $roleId)
+        $query = Resource::query()->where(function ($q) use ($roleId) {
+            $q->where('role_id', $roleId)->orWhereNull('role_id');
+        })
             ->where('status', 1)
             ->where(function ($q) use ($semesterId) {
                 $q->where('semester_id', $semesterId)->orWhereNull('semester_id');
@@ -68,13 +74,38 @@ class ResourceService
             $q->where('level', 1);
 
             foreach ($locations as $loc) {
+                if (!isset($loc['type']) || !isset($loc['id']))
+                    continue;
+
                 $q->orWhere(function ($q) use ($loc) {
-                    $q->where('location_id', $loc);
-                    $q->orWhere('location_type', $loc);
+                    $q->where('location_type', $loc['type'])
+                        ->where('location_id', $loc['id']);
                 });
             }
         });
 
         return $query->with('documents')->get();
+    }
+
+    public function registerResourceAcademic(Model $uploader, array $data): void
+    {
+        DB::transaction(function () use ($uploader, $data) {
+            $levelModels = [
+                2 => Faculty::class,
+                3 => School::class,
+                4 => Section::class,
+                5 => Company::class,
+            ];
+            $data['location_type'] = $levelModels[$data['level']] ?? null;
+
+            // Si role_id es null, es un recurso público de sistema
+            if (is_null($data['role_id'])) {
+                $data['level'] = 1; // Forzamos Global
+                $data['location_id'] = null;
+                $data['location_type'] = null;
+            }
+
+            $this->storeResource($data, $uploader);
+        });
     }
 }

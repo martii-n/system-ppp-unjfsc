@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Assignment\StoreAssignmentManageRequest;
 use App\Models\Assignment;
+use App\Models\Faculty;
 use App\Services\AssignmentService;
 use App\Services\UserAssignmentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -54,16 +56,47 @@ class UserAssignmentController extends Controller
      */
     private function renderList(Request $request, int $roleId, string $title): Response
     {
-        // El semester_id lo obtenemos de la sesión (como en otros controladores)
         $semesterId = session('semester_id');
+        $currentAssignmentId = session('assignment_id');
+        $currentAssignment = Assignment::find($currentAssignmentId);
 
-        $assignments = $this->assignmentService->getAssignmentsByRole($roleId, $semesterId);
+        // Lógica Híbrida:
+        // Admin/Subadmin (1, 2) o Estudiantes (5) -> Lista vacía al inicio (Server-side)
+        // Docentes/Supervisores (3, 4) -> Cargamos data de su sección (Local-side)
+        $assignments = [
+            'data' => [],
+            'current_page' => 1,
+            'last_page' => 1,
+            'total' => 0,
+            'links' => []
+        ];
+
+        if ($currentAssignment && in_array($currentAssignment->role_id, [3, 4])) {
+            $assignments = $this->assignmentService->getAssignmentsByRole($roleId, $semesterId, ['section_id' => $currentAssignment->section_id], false);
+        }
+
+        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
 
         return Inertia::render('academic/user/management/index', [
             'assignments' => $assignments,
+            'faculties' => $faculties,
             'roleId' => $roleId,
             'title' => $title,
         ]);
+    }
+
+    /**
+     * Endpoint API para filtrado de usuarios (Estilo Dossier).
+     */
+    public function getAssignmentsByFilter(Request $request): JsonResponse
+    {
+        $semesterId = session('semester_id');
+        $roleId = $request->input('target_role_id');
+        $filters = $request->only(['faculty_id', 'school_id', 'section_id', 'search']);
+
+        $assignments = $this->assignmentService->getAssignmentsByRole($roleId, $semesterId, $filters, true);
+
+        return response()->json(['assignments' => $assignments]);
     }
 
     public function storeAssignmentManage(StoreAssignmentManageRequest $request, Assignment $assignment, AssignmentService $assignmentService): RedirectResponse

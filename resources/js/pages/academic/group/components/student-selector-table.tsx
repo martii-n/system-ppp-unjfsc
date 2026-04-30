@@ -38,7 +38,7 @@ interface StudentSelectorProps {
     emptyMessage?: string;
 }
 
-export function StudentSelector({
+export function StudentSelectorTable({
     students,
     selectedIds,
     onSelectionChange,

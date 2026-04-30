@@ -25,7 +25,9 @@ class EnsureUserType
         $typeId = $user->type_user_id;
 
         if (!in_array($typeId, $types)) {
-            abort(403, 'No tienes permiso para acceder a esta área según tu tipo de usuario.');
+            // abort(403, 'No tienes permiso para acceder a esta área según tu tipo de usuario.');
+            $request->session()->flash('error', 'No tienes permiso para acceder a esta área según tu tipo de usuario.');
+            return redirect()->route('dashboard');
         }
 
         return $next($request);

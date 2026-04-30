@@ -26,8 +26,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'authenticable_id',
-        'authenticable_type',
+        'person_id',
         'name',
         'email',
         'password',
@@ -62,20 +61,12 @@ class User extends Authenticatable
     }
 
     /**
-     * @@return Morphto
-     */
-    public function authenticable(): MorphTo
-    {
-        return $this->morphTo();
-    }
-
-    /**
      * Alias for authenticable to maintain compatibility with 'person' naming.
-     * @return MorphTo
+     * @return BelongsTo
      */
-    public function person(): MorphTo
+    public function person(): BelongsTo
     {
-        return $this->morphTo('authenticable');
+        return $this->belongsTo(Person::class);
     }
 
     /**
@@ -109,5 +100,21 @@ class User extends Authenticatable
     public function typeUser(): BelongsTo
     {
         return $this->belongsTo(TypeUser::class);
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function staffs(): HasMany
+    {
+        return $this->hasMany(Staff::class, 'user_id', 'id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function notificationRecipients(): HasMany
+    {
+        return $this->hasMany(NotificationRecipient::class);
     }
 }

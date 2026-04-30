@@ -14,12 +14,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import DocumentViewer from '@/components/document/DocumentViewer';
-import FileDetailsContent from './FileDetailsContent';
 import FileHistory from '@/components/document/FileHistory';
 
 import dossiers from '@/routes/academic/dossiers';
 import { toast } from 'sonner';
 import RequirementsList from '@/components/academic/requirements-list';
+import { AlertHelp } from '@/components/document/AlertHelp';
+import ContentDetailsDocument from '@/components/document/content-details-document';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -159,14 +160,7 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
                             </div>
                         )}
 
-                        {/* Alerta de Ayuda estilo Shadcn Alert */}
-                        <div className="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground bg-background text-foreground">
-                            <AlertCircle className="h-4 w-4" />
-                            <h5 className="mb-1 font-medium leading-none tracking-tight">¿Necesitas ayuda?</h5>
-                            <div className="text-sm [&_p]:leading-relaxed text-muted-foreground">
-                                Asegúrate de subir archivos PDF menores a 10MB.
-                            </div>
-                        </div>
+                        <AlertHelp />
                     </div>
 
                     {/* 2. PANEL CENTRAL (Visor del Documento) */}
@@ -227,7 +221,7 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
 
 
                     {/* 3. PANEL DERECHO (Detalles y Acciones) */}
-                    <div className="w-full xl:w-80 lg:w-72 flex flex-col gap-6 shrink-0">
+                    <div className="w-full lg:w-64 xl:w-72 flex flex-col gap-6 shrink-0">
 
                         {/* Shadcn Tabs Card */}
                         <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
@@ -254,7 +248,7 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
                             <div className="p-4 space-y-6">
                                 {activeTab === 'estado' ? (
                                     <>
-                                        <FileDetailsContent
+                                        <ContentDetailsDocument
                                             currentFile={currentFile}
                                             tempFile={tempFile}
                                             isEditing={isEditing}

@@ -13,23 +13,26 @@ use App\Models\Dossier;
 use App\Models\Evaluation;
 use App\Models\User;
 use App\Models\Internship;
+use App\Models\Placement;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Storage;
 
 class DocumentService
 {
 
     protected array $contextMap = [
-        'dossier' => Dossier::class ,
-        'evaluation' => Evaluation::class ,
-        'internship' => Internship::class ,
+        'dossier' => Dossier::class,
+        'evaluation' => Evaluation::class,
+        'internship' => Internship::class,
+        'placement' => Placement::class,
     ];
 
     /**
      * Register a new document.
      *
      * @param array $data
-     * @param User $user
+     * @param Assignment $assignment
      * @return Document
      */
     public function registerDocument(array $data, Assignment $assignment, Model $model): Document
@@ -55,8 +58,7 @@ class DocumentService
      * Update the path of an existing document.
      *
      * @param array $data
-     * @param string $path
-     * @param User $user
+     * @param Assignment $assignment
      * @return Document
      */
     public function updatePathDocument(array $data, Assignment $assignment): Document
@@ -103,7 +105,6 @@ class DocumentService
     /**
      * Upload a physical file to the storage.
      *
-     * @param UploadedFile $file
      * @param string $context
      * @param string $identifier
      * @param int $typeId
@@ -156,11 +157,19 @@ class DocumentService
     {
         $document->update($data);
 
-        if ((int)($data['approval_status'] ?? 0) === 1) {
+        if ((int) ($data['approval_status'] ?? 0) === 1) {
             $this->handlePostApprovalLogic($document);
         }
 
         return $document;
+    }
+
+    public function removerDocument(Document $document): void
+    {
+        // remove phisical file
+        Storage::disk('public')->delete($document->path);
+        // remove document from database
+        $document->delete();
     }
 
     private function handlePostApprovalLogic(Document $document): void
@@ -169,10 +178,10 @@ class DocumentService
             $this->handleDossierCompletion($document->documentable);
         }
 
-    /*if ($document->documentable_type === Evaluation::class) {
-     // Lazy loading del service para evitar recursión infinita en el constructor
-     app(\App\Services\SupervisionService::class)->processEvaluationProgress($document->documentable);
-     }*/
+        /*if ($document->documentable_type === Evaluation::class) {
+         // Lazy loading del service para evitar recursión infinita en el constructor
+         app(\App\Services\SupervisionService::class)->processEvaluationProgress($document->documentable);
+         }*/
     }
 
     /**
@@ -184,12 +193,12 @@ class DocumentService
     private function handleDossierCompletion(Dossier $dossier): void
     {
         $roleId = $dossier->assignment->role_id;
-        $required = match ((int)$roleId) {
-                3 => 2,
-                4 => 3,
-                5 => 2,
-                default => 99, // A value that is not possible to reach
-            };
+        $required = match ((int) $roleId) {
+            3 => 2,
+            4 => 3,
+            5 => 2,
+            default => 99, // A value that is not possible to reach
+        };
         $approvedCount = $dossier->documents()->where('approval_status', 1)->count();
 
         if ($approvedCount >= $required) {

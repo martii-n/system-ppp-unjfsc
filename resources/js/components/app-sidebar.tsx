@@ -46,14 +46,14 @@ export function AppSidebar() {
     ];
 
     // Asumiendo que NavItem es tu interfaz
-    const filterItems = (items: NavItem[], userRole: number): NavItem[] => { // <--- Agregamos : NavItem[]
+    const filterItems = (items: NavItem[], userRole: number): NavItem[] => {
         return items
             .filter((item) => !item.roles || item.roles.includes(userRole))
             .map((item) => {
                 if (item.items) {
                     return {
                         ...item,
-                        items: filterItems(item.items, userRole), // Ahora TS ya sabe qué devuelve esto
+                        items: filterItems(item.items, userRole),
                     };
                 }
                 return item;

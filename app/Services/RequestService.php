@@ -44,6 +44,10 @@ class RequestService
                 $this->applyRequestAction($request);
             }
 
+            if ($data['approval_status'] == 3) { // REJECTED
+                $request->requestable->update(['application_status' => 0]);
+            }
+
             return $request;
         });
     }
@@ -55,11 +59,17 @@ class RequestService
 
         switch ($request->type) {
             case 'CHANGE_INTERNSHIP_TYPE':
-                $target->update(['internship_type' => $payload['new_type']]);
+                $target->update([
+                    'internship_type' => $payload['new_type'],
+                    'application_status' => 0
+                ]);
                 break;
 
             case 'CHANGE_INTERNSHIP_GRADE':
-                $target->update(['grade' => $payload['new_grade']]);
+                $target->update([
+                    'grade' => $payload['new_grade'],
+                    'application_status' => 0
+                ]);
                 break;
             case 'DELETE_ASSIGNMENT':
                 app(AssignmentService::class)->processEntityRemoval($target);

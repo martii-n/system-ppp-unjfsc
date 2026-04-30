@@ -29,18 +29,117 @@ class SupervisionController extends Controller
 
     public function submissionIndex(): Response
     {
+        $assignment = Assignment::query()->find(session('assignment_id'));
+        $role = $assignment?->role_id;
+
+        $raId = request('a');
+        $rmId = request('m');
+
         $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+
+        $students = [];
+        $groups = [];
+        if (in_array($role, [3, 4]) && $assignment) {
+            $groups = $this->supervisionService->getGroupsByFilter([
+                'section_id' => $assignment->section_id,
+            ]);
+        }
+
+        if ($raId && $rmId) {
+            $rsa = Assignment::query()->find($raId);
+            $students = Supervision::query()->where('assignment_id', $rsa->id)
+                ->where('module_id', $rmId)
+                ->get()
+                ->map(function ($supervision) use ($rsa) {
+                    return [
+                        'id' => $supervision->id,
+                        'user' => [
+                            'email' => $rsa->user->email,
+                            'person' => [
+                                'names' => $rsa->user->person->names,
+                                'surnames' => $rsa->user->person->surnames,
+                            ],
+                        ],
+                        'section' => [
+                            'name' => $rsa->section->name,
+                            'school' => [
+                                'name' => $rsa->section->school->name,
+                                'faculty' => ['name' => $rsa->section->school->faculty->name],
+                            ],
+                        ],
+                        'supervision' => [
+                            'id' => $supervision->id,
+                            'module_id' => $supervision->module_id,
+                            'approval_status' => $supervision->approval_status,
+                        ],
+                    ];
+                });
+        }
 
         return Inertia::render('academic/supervision/submission/index', [
             'faculties' => $faculties,
+            'groups' => $groups,
+            'students' => $students,
+            'role' => $role
         ]);
     }
 
     public function validationIndex(): Response
     {
-        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+        $assignment = Assignment::query()->find(session('assignment_id'));
+        $role = $assignment->role_id;
+
+        $raId = request('a');
+        $rmId = request('m');
+
+        $faculties = [];
+        if (in_array($role, [1, 2])) {
+            $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+        }
+
+        $students = [];
+        $groups = [];
+        if (in_array($role, [3]) && $assignment) {
+            $groups = $this->supervisionService->getGroupsByFilter([
+                'section_id' => $assignment->section_id,
+            ]);
+        }
+
+        if ($raId && $rmId) {
+            $rsa = Assignment::query()->find($raId);
+            $students = Supervision::query()->where('assignment_id', $rsa->id)
+                ->where('module_id', $rmId)
+                ->get()
+                ->map(function ($supervision) use ($rsa) {
+                    return [
+                        'id' => $supervision->id,
+                        'user' => [
+                            'email' => $rsa->user->email,
+                            'person' => [
+                                'names' => $rsa->user->person->names,
+                                'surnames' => $rsa->user->person->surnames,
+                            ],
+                        ],
+                        'section' => [
+                            'name' => $rsa->section->name,
+                            'school' => [
+                                'name' => $rsa->section->school->name,
+                                'faculty' => ['name' => $rsa->section->school->faculty->name],
+                            ],
+                        ],
+                        'supervision' => [
+                            'id' => $supervision->id,
+                            'module_id' => $supervision->module_id,
+                            'approval_status' => $supervision->approval_status,
+                        ],
+                    ];
+                });
+        }
+
         return Inertia::render('academic/supervision/validation/index', [
-            'faculties' => $faculties
+            'faculties' => $faculties,
+            'groups' => $groups,
+            'students' => $students,
         ]);
     }
 
@@ -50,28 +149,51 @@ class SupervisionController extends Controller
      */
     public function getGroupsByFilter(Request $request): JsonResponse
     {
-        $data = $request->validate([
+        $request->validate([
             'faculty_id' => 'required|integer|exists:faculties,id',
             'school_id' => 'nullable|integer|exists:schools,id',
             'section_id' => 'nullable|integer|exists:sections,id',
+            'search' => 'nullable|string',
         ]);
 
-        $groups = $this->supervisionService->getGroupsByFilter($data);
+        $groups = $this->supervisionService->getGroupsByFilter($request->all());
 
         return response()->json(['groups' => $groups]);
     }
 
     /**
-     * API: Returns students of a group with their supervision status for a given module.
-     * GET /supervision/api/groups/{group}/students?module_id={n}
+     * API: Returns students of a group with their supervision status for a given module (Paginated).
+     * GET /supervision/api/groups/{group}/students/filter
      */
-    public function getStudentsByGroupAndModule(InternshipGroup $group, Request $request): JsonResponse
+    public function getStudentsByFilter(InternshipGroup $group, Request $request): JsonResponse
     {
         $request->validate([
             'module_id' => 'required|integer|min:1|max:4',
         ]);
 
-        $students = $this->supervisionService->getStudentsByGroupAndModule($group, (int)$request->module_id);
+        $assignment = Assignment::query()->find(session('assignment_id'));
+        $paginate = $assignment && in_array($assignment->role_id, [1, 2]);
+
+        $students = $this->supervisionService->getStudentsByFilter(
+            $group,
+            (int) $request->module_id,
+            $paginate
+        );
+
+        return response()->json(['students' => $students]);
+    }
+
+    /**
+     * API: Global student search by user code.
+     * GET /supervision/api/students/search?code=xxxx
+     */
+    public function searchStudents(Request $request): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string|min:2',
+        ]);
+
+        $students = $this->supervisionService->searchStudentsGlobal($request->code);
 
         return response()->json(['students' => $students]);
     }
@@ -103,8 +225,11 @@ class SupervisionController extends Controller
 
     public function updateEvaluationStatus(UpdateEvaluationStatusRequest $request, Evaluation $evaluation): RedirectResponse
     {
+        $assignmentId = session('assignment_id');
+        $assignment = Assignment::find($assignmentId);
+
         $data = $request->validated();
-        $this->supervisionService->updateEvaluationStatus($evaluation, $data);
+        $this->supervisionService->updateEvaluationStatus($evaluation, $data, $assignment);
 
         return back()->with([
             'message' => 'Evaluación actualizada correctamente.',

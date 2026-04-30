@@ -33,7 +33,7 @@ import {
 import { storeGroupSchema, StoreGroupValues } from "./store.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus } from "lucide-react";
-import { StudentSelector } from "../../partials/student-selector";
+import { StudentSelectorTable } from "../../components/student-selector-table";
 
 interface Faculty {
     id: number;
@@ -56,12 +56,14 @@ interface CreateGroupModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     faculties: Faculty[];
+    onSuccess?: () => void;
 }
 
 export default function CreateGroupModal({
     open,
     onOpenChange,
     faculties,
+    onSuccess
 }: CreateGroupModalProps) {
     const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -141,6 +143,7 @@ export default function CreateGroupModal({
                 form.reset();
                 setShowStudents(false);
                 setAvailableStudents([]);
+                if (onSuccess) onSuccess();
             },
             onFinish: () => setIsSubmitting(false)
         });
@@ -277,7 +280,7 @@ export default function CreateGroupModal({
                                                     <SelectContent>
                                                         {teachers.map((t) => (
                                                             <SelectItem key={t.id} value={t.id.toString()}>
-                                                                {t.user?.authenticable?.surnames} {t.user?.authenticable?.names}
+                                                                {t.user?.person?.surnames} {t.user?.person?.names}
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -306,7 +309,7 @@ export default function CreateGroupModal({
                                                     <SelectContent>
                                                         {supervisors.map((s) => (
                                                             <SelectItem key={s.id} value={s.id.toString()}>
-                                                                {s.user?.authenticable?.surnames} {s.user?.authenticable?.names}
+                                                                {s.user?.person?.surnames} {s.user?.person?.names}
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -319,23 +322,23 @@ export default function CreateGroupModal({
                             )}
 
                             {/* Nombre del Grupo */}
-                             <FormField
-                                 control={form.control}
-                                 name="name"
-                                 render={({ field }) => (
-                                     <FormItem>
-                                         <FormLabel>Nombre del Grupo</FormLabel>
-                                         <FormControl>
-                                             <Input
-                                                 {...field}
-                                                 placeholder="Ej: Grupo de Prácticas - Sección A"
-                                                 disabled={!sectionId}
-                                             />
-                                         </FormControl>
-                                         <FormMessage />
-                                     </FormItem>
-                                 )}
-                             />
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Nombre del Grupo</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                {...field}
+                                                placeholder="Ej: Grupo de Prácticas - Sección A"
+                                                disabled={!sectionId}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                             {/* Sección opcional de Estudiantes */}
                             {sectionId && (
@@ -376,7 +379,7 @@ export default function CreateGroupModal({
                                                     Cancelar selección
                                                 </Button>
                                             </div>
-                                            <StudentSelector
+                                            <StudentSelectorTable
                                                 students={availableStudents}
                                                 selectedIds={form.watch("student_ids") || []}
                                                 onSelectionChange={(ids) => form.setValue("student_ids", ids)}

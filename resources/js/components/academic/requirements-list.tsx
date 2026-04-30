@@ -1,10 +1,11 @@
-import { AlertCircle, CheckCircle2, Clock, FileText, ShieldCheck, FileCheck, Circle, Info } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, FileText, ShieldCheck, FileCheck, Circle, Info, Lock as LockIcon } from "lucide-react";
 import { Badge } from "../ui/badge";
 
 export interface RequirementItem {
     code: string;
     title: string;
     status: number;
+    locked?: boolean;
     latest?: any;
     [key: string]: any;
 }
@@ -63,19 +64,21 @@ export default function RequirementsList({
                         <button
                             key={req.code}
                             onClick={() => onSelectType(idx)}
+                            disabled={req.locked}
                             className={`inline-flex items-center justify-between whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 w-full ${isActive
-                                ? 'bg-muted hover:bg-muted text-foreground'
+                                ? 'bg-primary hover:bg-primary text-primary-foreground'
                                 : 'hover:bg-muted/50 hover:text-accent-foreground text-muted-foreground'
-                                }`}
+                                } ${req.locked ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}
                         >
                             <div className="flex items-center">
-                                <Icon className={`mr-2 h-4 w-4 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                                <span className="truncate max-w-[150px]">{req.title}</span>
+                                <Icon className={`mr-2 h-4 w-4 shrink-0 ${isActive && !req.locked ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                                <span className="truncate max-w-[150px] text-xs">{req.title}</span>
                             </div>
-                            <div className="flex items-center">
+                            <div className="flex items-center gap-2">
                                 <Badge variant="outline" className={`text-[9px] font-bold h-4 px-1.5 shrink-0 ${cfg.badgeClass}`}>
                                     {cfg.label}
                                 </Badge>
+                                {req.locked && <LockIcon className="h-3 w-3 text-muted-foreground" />}
                             </div>
                         </button>
                     );

@@ -12,6 +12,9 @@ Route::middleware(['auth', 'role:1,2,3'])->group(function () {
     Route::get('/groups/api/sections/{section}/dependencies', [InternshipGroupController::class , 'getDependencies'])->name('groups.api.dependencies');
     Route::get('/groups/api/sections/{section}/students', [InternshipGroupController::class , 'getStudents'])->name('groups.api.students');
     Route::get('/groups/api/groups/{group}/students', [InternshipGroupController::class , 'getGroupStudents'])->name('groups.api.group_students');
+    // Filter APIs (for Admin roles)
+    Route::get('/api/groups/internship/filter', [InternshipGroupController::class , 'getGroupsByFilter'])->name('groups.api.internship.filter');
+    Route::get('/api/groups/student/filter', [InternshipGroupController::class , 'getStudentsByFilter'])->name('groups.api.student.filter');
 
     // Operations
     Route::post('/groups', [InternshipGroupController::class , 'store'])->name('groups.store');

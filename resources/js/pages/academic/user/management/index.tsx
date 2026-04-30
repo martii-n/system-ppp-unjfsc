@@ -18,11 +18,15 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, UserCog, Settings2, Clock, Book, FilePen } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useAcademicTable } from "@/hooks/use-academic-table";
+import { AcademicFilter, type AcademicFilterValues } from "@/components/academic/academic-filter";
+import AcademicSearch from "@/components/academic/academic-search";
+import AcademicPagination from "@/components/academic/academic-pagination";
+import { MoreHorizontal, UserCog, Settings2, Clock, Info } from "lucide-react";
 import Heading from "@/components/heading";
 import ManageAssignmentModal from "./partials/manage-assignment-modal";
 import PendingRequestModal from "./partials/pending-request-modal";
-import { useState } from "react";
 
 interface Assignment {
     id: number;
@@ -31,7 +35,7 @@ interface Assignment {
     review_status: number;
     user: {
         email: string;
-        authenticable: {
+        person: {
             names: string;
             surnames: string;
         };
@@ -54,16 +58,44 @@ interface Assignment {
 }
 
 interface Props {
-    assignments: Assignment[];
+    assignments: any;
+    faculties: any[];
     roleId: number;
     title: string;
 }
 
-export default function UserManagementIndex({ assignments, roleId, title }: Props) {
+export default function UserManagementIndex({ assignments: initialAssignments, faculties, roleId, title }: Props) {
     const { role } = usePage().props as any;
     const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
     const [isManageModalOpen, setIsManageModalOpen] = useState(false);
     const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
+
+    const isAdmin = [1, 2].includes(Number(role));
+
+    const {
+        data: backendData,
+        displayData: list,
+        search,
+        setSearch,
+        isSearching,
+        bodyVisible,
+        handleFilter,
+        handleBackendSearch,
+        handlePageChange,
+        localPage,
+        localTotalPages,
+        setLocalPage
+    } = useAcademicTable<Assignment>({
+        endpoint: '/users/filter',
+        initialData: initialAssignments,
+        isAdmin: isAdmin,
+        responseKey: 'assignments',
+        extraParams: { target_role_id: roleId },
+        localSearchFn: (a, term) => {
+            const fullName = `${a.user?.person?.surnames || ''} ${a.user?.person?.names || ''}`.toLowerCase();
+            return fullName.includes(term) || (a.user?.email || '').toLowerCase().includes(term);
+        }
+    });
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -82,7 +114,7 @@ export default function UserManagementIndex({ assignments, roleId, title }: Prop
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={title} />
 
-            <div className="flex flex-col gap-4 p-4 lg:p-6">
+            <div className="flex flex-col gap-6 p-4 lg:p-6">
                 <div className="flex items-center justify-between">
                     <Heading
                         variant="small"
@@ -91,7 +123,25 @@ export default function UserManagementIndex({ assignments, roleId, title }: Prop
                     />
                 </div>
 
-                <div className="rounded-md border bg-card">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                    {isAdmin && (
+                        <AcademicFilter
+                            faculties={faculties}
+                            onFilter={handleFilter}
+                            isLoading={isSearching}
+                        />
+                    )}
+                    <AcademicSearch
+                        role={role}
+                        search={search}
+                        setSearch={setSearch}
+                        onSearch={isAdmin ? handleBackendSearch : undefined}
+                        isLoading={isSearching}
+                        placeholder={isAdmin ? "Buscar por email o nombre..." : "Filtrar en esta lista..."}
+                    />
+                </div>
+
+                <div className="rounded-md border bg-card overflow-hidden">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -108,10 +158,17 @@ export default function UserManagementIndex({ assignments, roleId, title }: Prop
                                 <TableHead className="text-right">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
-                            {assignments.length > 0 ? (
-                                assignments.map((assignment, index) => {
-                                    const person = assignment.user.authenticable;
+                        <TableBody className={`transition-opacity duration-300 ${bodyVisible ? 'opacity-100' : 'opacity-0'}`}>
+                            {isSearching ? (
+                                <TableRow>
+                                    <TableCell colSpan={isSubadmin ? 5 : 7} className="h-24 text-center text-sm italic text-muted-foreground opacity-50 animate-pulse">
+                                        Cargando usuarios...
+                                    </TableCell>
+                                </TableRow>
+                            ) : list.length > 0 ? (
+                                list.map((assignment, index) => {
+                                    const user = assignment.user;
+                                    const person = user.person;
                                     const section = assignment.section;
 
                                     const isReview = assignment.review_status === 1;
@@ -123,8 +180,10 @@ export default function UserManagementIndex({ assignments, roleId, title }: Prop
 
                                     return (
                                         <TableRow key={assignment.id}>
-                                            <TableCell className="font-medium">{index + 1}</TableCell>
-                                            <TableCell>{assignment.user.email}</TableCell>
+                                            <TableCell className="font-medium text-muted-foreground">
+                                                {(localPage - 1) * 15 + index + 1}
+                                            </TableCell>
+                                            <TableCell className="font-medium">{user.email}</TableCell>
                                             <TableCell className="capitalize">
                                                 {person.surnames} {person.names}
                                             </TableCell>
@@ -195,6 +254,18 @@ export default function UserManagementIndex({ assignments, roleId, title }: Prop
                         </TableBody>
                     </Table>
                 </div>
+
+                <AcademicPagination
+                    isAdmin={isAdmin}
+                    isLoading={isSearching}
+                    links={backendData?.links}
+                    total={isAdmin ? (backendData?.total || 0) : initialAssignments.length}
+                    showing={list.length}
+                    onPageChange={handlePageChange}
+                    currentPage={localPage}
+                    totalPages={localTotalPages}
+                    onLocalPageChange={setLocalPage}
+                />
             </div>
 
             <ManageAssignmentModal

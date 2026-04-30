@@ -3,6 +3,8 @@ import axios from "axios";
 import { toast } from "sonner";
 import { FileText, Eye, EyeOff } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import DocumentViewer from "@/components/document/DocumentViewer";
 import FileHistory from "@/components/document/FileHistory";
 import RequirementsList from "@/components/academic/requirements-list";
@@ -33,9 +35,10 @@ export interface AnnexRequirement {
 
 interface StudentEvaluationPanelProps {
     supervisionId: number;
+    onSuccess?: () => void;
 }
 
-export default function StudentEvaluationPanel({ supervisionId }: StudentEvaluationPanelProps) {
+export default function StudentEvaluationPanel({ supervisionId, onSuccess }: StudentEvaluationPanelProps) {
     const [annexes, setAnnexes] = useState<AnnexRequirement[]>([]);
     const [selectedIdx, setSelectedIdx] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -85,6 +88,7 @@ export default function StudentEvaluationPanel({ supervisionId }: StudentEvaluat
         setTempFile(null);
         setIsEditing(false);
         loadAnnexes();
+        if (onSuccess) onSuccess();
     };
 
     const canUpload = !!currentFile && !tempFile && (!currentFile.latest || (isEditing && currentFile.status !== 4));

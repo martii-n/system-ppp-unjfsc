@@ -46,12 +46,11 @@ export default function Profile({
             <SettingsLayout>
                 <ProfileHero profileData={profileData} />
                 <div className="space-y-6">
-                    {profileType === 'Person' && (
-                        <UpdatePersonProfileForm data={profileData} />
-                    )}
-                    {profileType === 'Company' && (
+                    <UpdatePersonProfileForm data={profileData} />
+
+                    {/*profileType === 'Company' && (
                         <UpdateCompanyProfileForm data={profileData} />
-                    )}
+                    )*/}
 
                     {/* 
                     <Heading

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assignment;
+use App\Models\Staff;
 use App\Models\Semester;
 use App\Services\Auth\SyncAcademicSessionService;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,15 @@ class AcademicSessionController extends Controller
 
         return back()->with([
             'message' => 'Asignatura sincronizada correctamente.',
+        ]);
+    }
+
+    public function syncStaff(Staff $staff): RedirectResponse
+    {
+        $this->syncService->syncStaff(Auth::user(), $staff);
+
+        return back()->with([
+            'message' => 'Perfil de empresa actualizado.',
         ]);
     }
 }

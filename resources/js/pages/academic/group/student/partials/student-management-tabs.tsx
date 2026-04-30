@@ -1,4 +1,3 @@
-import { useState, useEffect, useMemo } from "react";
 import {
     Tabs,
     TabsContent,
@@ -11,9 +10,6 @@ import {
     UserMinus,
     Loader2,
     Info,
-    UserCircle,
-    CheckSquare,
-    Square
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,117 +19,37 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import axios from "axios";
-import { toast } from "sonner";
-import groups from "@/routes/academic/groups";
 import { Badge } from "@/components/ui/badge";
-import { router } from "@inertiajs/react";
-import { StudentSelector } from "../../partials/student-selector";
-
+import { StudentSelectorTable } from "../../components/student-selector-table";
+import { useStudentManagement } from "../../hooks/use-student-management";
 interface StudentManagementTabsProps {
     group: any;
     allGroups: any[];
 }
 
 export default function StudentManagementTabs({ group, allGroups }: StudentManagementTabsProps) {
-    const [loading, setLoading] = useState(false);
-    const [loadingGroupStudents, setLoadingGroupStudents] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [availableStudents, setAvailableStudents] = useState<any[]>([]);
-    const [groupStudents, setGroupStudents] = useState<any[]>([]);
-    const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
-    const [targetGroupId, setTargetGroupId] = useState<string>("");
-    const [currentTab, setCurrentTab] = useState("add");
-
-    // Limpiar selección al cambiar de grupo o de tab
-    useEffect(() => {
-        setSelectedStudents([]);
-        setTargetGroupId("");
-
-        if (group?.id) {
-            if (currentTab === "add") {
-                fetchAvailableStudents();
-            } else {
-                fetchGroupStudents();
-            }
-        }
-    }, [group?.id, currentTab]);
-
-    const fetchAvailableStudents = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get(groups.api.students.url(group.section.id));
-            setAvailableStudents(response.data.students || []);
-        } catch (error) {
-            console.error("Error fetching available students:", error);
-            toast.error("No se pudieron cargar los estudiantes disponibles");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchGroupStudents = async () => {
-        setLoadingGroupStudents(true);
-        try {
-            // Usamos la URL directa ya que es una ruta nueva
-            const response = await axios.get(`/groups/api/groups/${group.id}/students`);
-            setGroupStudents(response.data.students || []);
-        } catch (error) {
-            console.error("Error fetching group students:", error);
-            toast.error("No se pudieron cargar los estudiantes del grupo");
-        } finally {
-            setLoadingGroupStudents(false);
-        }
-    };
-
-    const handleAddStudents = () => {
-        setIsSubmitting(true);
-        router.post(groups.attach(group.id).url, {
-            student_assignment_ids: selectedStudents
-        }, {
-            onSuccess: () => {
-                setSelectedStudents([]);
-                fetchAvailableStudents();
-            },
-            onFinish: () => setIsSubmitting(false)
-        });
-    };
-
-    const handleDetachStudents = () => {
-        setIsSubmitting(true);
-        router.post(groups.detach(group.id).url, {
-            student_assignment_ids: selectedStudents
-        }, {
-            onSuccess: () => {
-                setSelectedStudents([]);
-                fetchGroupStudents();
-            },
-            onFinish: () => setIsSubmitting(false)
-        });
-    };
-
-    const handleMoveStudents = () => {
-        if (!targetGroupId) return;
-        setIsSubmitting(true);
-        router.post(groups.move(group.id).url, {
-            target_group_id: targetGroupId,
-            student_assignment_ids: selectedStudents
-        }, {
-            onSuccess: () => {
-                setSelectedStudents([]);
-                setTargetGroupId("");
-                fetchGroupStudents();
-            },
-            onFinish: () => setIsSubmitting(false)
-        });
-    };
-
-    const otherGroups = useMemo(() =>
-        allGroups.filter(g => g.id !== group.id && g.section.id === group.section.id)
-        , [allGroups, group]);
+    // --- USAMOS EL NUEVO HOOK ---
+    const {
+        loading,
+        isSubmitting,
+        availableStudents,
+        groupStudents,
+        selectedStudents,
+        setSelectedStudents,
+        targetGroupId,
+        setTargetGroupId,
+        currentTab,
+        setCurrentTab,
+        otherGroups,
+        actions
+    } = useStudentManagement({ group, allGroups });
 
     return (
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full flex flex-col h-full bg-card rounded-xl border border-border shadow-sm overflow-hidden min-h-[500px]">
+        <Tabs
+            value={currentTab}
+            onValueChange={setCurrentTab}
+            className="w-full flex flex-col h-full bg-card rounded-xl border border-border shadow-sm overflow-hidden min-h-[500px]"
+        >
             <TabsList className="grid grid-cols-3 w-full p-1 bg-muted/50 rounded-none border-b border-border h-12 shrink-0">
                 <TabsTrigger value="add" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-none border-none h-full transition-all">
                     <UserPlus className="size-4" />
@@ -172,7 +88,7 @@ export default function StudentManagementTabs({ group, allGroups }: StudentManag
                                 <Loader2 className="size-6 animate-spin text-primary" />
                             </div>
                         ) : (
-                            <StudentSelector
+                            <StudentSelectorTable
                                 students={availableStudents}
                                 selectedIds={selectedStudents}
                                 onSelectionChange={setSelectedStudents}
@@ -184,7 +100,7 @@ export default function StudentManagementTabs({ group, allGroups }: StudentManag
                     </div>
                     <div className="flex items-center justify-center">
                         <Button
-                            onClick={handleAddStudents}
+                            onClick={actions.handleAdd}
                             className=""
                             disabled={selectedStudents.length === 0 || isSubmitting}
                         >
@@ -232,12 +148,12 @@ export default function StudentManagementTabs({ group, allGroups }: StudentManag
                                 )}
                             </div>
 
-                            {loadingGroupStudents ? (
+                            {loading ? (
                                 <div className="flex justify-center py-10">
                                     <Loader2 className="size-6 animate-spin text-amber-500" />
                                 </div>
                             ) : (
-                                <StudentSelector
+                                <StudentSelectorTable
                                     students={groupStudents}
                                     selectedIds={selectedStudents}
                                     onSelectionChange={setSelectedStudents}
@@ -251,7 +167,7 @@ export default function StudentManagementTabs({ group, allGroups }: StudentManag
                     </div>
                     <div className="flex items-center justify-center">
                         <Button
-                            onClick={handleMoveStudents}
+                            onClick={actions.handleMove}
                             className="bg-amber-500 hover:bg-amber-600"
                             disabled={selectedStudents.length === 0 || !targetGroupId || isSubmitting}
                         >
@@ -278,12 +194,12 @@ export default function StudentManagementTabs({ group, allGroups }: StudentManag
                             )}
                         </div>
 
-                        {loadingGroupStudents ? (
+                        {loading ? (
                             <div className="flex justify-center py-10">
                                 <Loader2 className="size-6 animate-spin text-red-500" />
                             </div>
                         ) : (
-                            <StudentSelector
+                            <StudentSelectorTable
                                 students={groupStudents}
                                 selectedIds={selectedStudents}
                                 onSelectionChange={setSelectedStudents}
@@ -296,7 +212,7 @@ export default function StudentManagementTabs({ group, allGroups }: StudentManag
 
                     <div className="flex items-center justify-center">
                         <Button
-                            onClick={handleDetachStudents}
+                            onClick={actions.handleDetach}
                             className="bg-red-600 hover:bg-red-700"
                             disabled={selectedStudents.length === 0 || isSubmitting}
                         >
@@ -309,6 +225,3 @@ export default function StudentManagementTabs({ group, allGroups }: StudentManag
         </Tabs>
     );
 }
-
-// Helper fetch outside for reuse or logic cleanup if needed
-// const fetchStudents = ...

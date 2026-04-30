@@ -32,17 +32,41 @@ class UserRegistrationController extends Controller
     public function index(): Response
     {
         $semesterId = session('semester_id');
+        $assignmentId = session('assignment_id');
+        $assignment = Assignment::find($assignmentId);
 
-        $roles = Role::whereNotIn('id', [1, 6])->get();
+        $queryRoles = Role::query();
+
+        $queryRoles->whereNotIn('id', [1, 6]);
+
+        if ($assignment->role_id === 3) {
+            $queryRoles->whereNotIn('id', [2, 3]);
+        }
+
+        $roles = $queryRoles->get();
         $faculties = Faculty::all();
         $schools = School::all();
         $sections = Section::where('semester_id', $semesterId)->get();
+
+        $initialFilters = [];
+        if ($assignment->role_id === 3) {
+            $section = $assignment->section;
+            if ($section) {
+                $initialFilters = [
+                    'faculty_id' => $section->school->faculty_id,
+                    'school_id' => $section->school_id,
+                    'section_id' => $section->id,
+                ];
+            }
+        }
 
         return Inertia::render('academic/user/register/index', [
             'roles' => $roles,
             'faculties' => $faculties,
             'schools' => $schools,
             'sections' => $sections,
+            'initialFilters' => $initialFilters,
+            'role' => $assignment->role_id,
         ]);
     }
 
@@ -62,8 +86,8 @@ class UserRegistrationController extends Controller
 
         return response()->json([
             'message' => $result['user_exists']
-            ? 'La persona ya existe en el sistema'
-            : 'Completa los datos de la persona',
+                ? 'La persona ya existe en el sistema'
+                : 'Completa los datos de la persona',
             'data' => $result,
         ]);
     }
@@ -79,8 +103,8 @@ class UserRegistrationController extends Controller
 
         return response()->json([
             'message' => $result['user_exists']
-            ? 'La persona ya existe en el sistema'
-            : 'Completa los datos de la persona',
+                ? 'La persona ya existe en el sistema'
+                : 'Completa los datos de la persona',
             'data' => $result,
         ]);
     }
@@ -93,8 +117,8 @@ class UserRegistrationController extends Controller
 
         return response()->json([
             'message' => $result['person_exists']
-            ? 'La persona ya existe en el sistema'
-            : 'No se ha encontrado la persona con DNI: ' . $data['dni'] . '. Por favor, complete los datos de la persona.',
+                ? 'La persona ya existe en el sistema'
+                : 'No se ha encontrado la persona con DNI: ' . $data['dni'] . '. Por favor, complete los datos de la persona.',
             'data' => $result
         ]);
     }

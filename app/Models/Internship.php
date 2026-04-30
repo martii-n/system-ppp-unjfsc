@@ -10,15 +10,12 @@ class Internship extends Model
 {
     protected $fillable = [
         'assignment_id',
-        'boss_id',
-        'internship_type',
-        'start_date',
-        'end_date',
+        'placement_id',
         'grade',
         'comment',
         'internship_step',
         'approval_status',
-        'review_status',
+        'application_status',
         'status'
     ];
 
@@ -56,5 +53,14 @@ class Internship extends Model
     public function requests(): MorphMany
     {
         return $this->morphMany(Request::class, 'requestable');
+    }
+
+    /**
+     * Get the placement that owns the internship.
+     * @return BelongsTo
+     */
+    public function placement(): BelongsTo
+    {
+        return $this->belongsTo(Placement::class);
     }
 }

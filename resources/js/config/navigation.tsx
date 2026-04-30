@@ -7,6 +7,8 @@ import {
     Briefcase,
     Folder,
     LayoutDashboard,
+    NotebookPen,
+    Settings,
     UserPlus2,
     UserRoundCog,
 } from 'lucide-react';
@@ -28,6 +30,10 @@ import { internship as internshipIndex } from '@/routes/academic/groups';
 import { student as studentIndex } from '@/routes/academic/groups';
 import { submission as supervisionSubmissionIndex } from '@/routes/academic/supervision';
 import { validation as supervisionValidationIndex } from '@/routes/academic/supervision';
+import { index as resourceIndex } from '@/routes/resource';
+import { submission as internshipSubmissionIndex } from '@/routes/academic/internship';
+import { validation as internshipValidationIndex } from '@/routes/academic/internship';
+import { settings as internshipSettingsIndex } from '@/routes/academic/internship';
 
 export const ACADEMIC_NAV = [
     {
@@ -95,7 +101,7 @@ export const ACADEMIC_NAV = [
         items: [
             {
                 title: 'Est. Prácticas',
-                href: '#',
+                href: internshipValidationIndex().url,
                 roles: [1, 2, 3],
             },
             {
@@ -112,9 +118,15 @@ export const ACADEMIC_NAV = [
     },
     {
         title: 'Pasantía',
-        href: '#',
+        href: internshipSubmissionIndex().url,
         icon: Folder,
         roles: [5],
+    },
+    {
+        title: 'Evaluación',
+        href: supervisionSubmissionIndex().url,
+        icon: NotebookPen,
+        roles: [4]
     },
     {
         title: 'Usuarios',
@@ -177,7 +189,7 @@ export const ACADEMIC_NAV = [
                 roles: [1, 2],
             },
         ],
-    },
+    }
 ];
 
 export const COMPANY_NAV = [
@@ -208,20 +220,33 @@ export const ADMIN_NAV = [
 
 export const FOOTER_NAV = [
     {
-        title: 'Recursos Administrativos',
+        title: 'Solicitudes',
         href: '#',
+        icon: Folder,
+        roles: [1, 2],
+    },
+    {
+        title: 'Config. Prácticas',
+        href: internshipSettingsIndex().url,
+        icon: Settings,
+        userTypes: [1, 2],
+        roles: [1, 2, 3],
+    },
+    {
+        title: 'Recursos Administrativos',
+        href: resourceIndex().url,
         icon: Archive,
         userTypes: [1],
     },
     {
         title: 'Recursos Académicos',
-        href: '#',
+        href: resourceIndex().url,
         icon: Archive,
         userTypes: [2],
     },
     {
         title: 'Recursos Empresariales',
-        href: '#',
+        href: resourceIndex().url,
         icon: Archive,
         userTypes: [3],
     },
@@ -238,21 +263,3 @@ export const FOOTER_NAV = [
         userTypes: [1],
     },
 ];
-
-export const RESOURCE_BY_TYPE = {
-    1: {
-        title: 'Recursos Admin',
-        href: '#',
-        icon: Archive,
-    },
-    2: {
-        title: 'Recursos Académico',
-        href: '#',
-        icon: Archive,
-    },
-    3: {
-        title: 'Recursos Empresa',
-        href: '#',
-        icon: Archive,
-    },
-};

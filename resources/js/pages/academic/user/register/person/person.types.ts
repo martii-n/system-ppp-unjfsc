@@ -4,6 +4,7 @@ export interface PersonFlowProps {
     schools: any[];
     sections: any[];
     mode: 'individual' | 'masivo';
+    initialFilters?: any;
     onBack: () => void;
 }
 

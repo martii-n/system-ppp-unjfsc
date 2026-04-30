@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Academic;
 
 use App\Http\Controllers\Controller;
@@ -8,6 +7,7 @@ use App\Http\Requests\Document\UpdateDocumentStatusRequest;
 use App\Models\Assignment;
 use App\Models\Document;
 use App\Models\Dossier;
+use App\Models\Faculty;
 use App\Models\User;
 use App\Services\DossierService;
 use Illuminate\Http\JsonResponse;
@@ -33,7 +33,6 @@ class DossierController extends Controller
      */
     public function storeDocumentDossier(UploadDocumentDossierRequest $request): RedirectResponse
     {
-        $user = Auth::user() ?? User::first();
         $assignmentId = session('assignment_id');
         $assignment = Assignment::query()->find($assignmentId);
 
@@ -51,7 +50,7 @@ class DossierController extends Controller
      * @param Document $document
      * @return JsonResponse
      */
-    public function updateDossierStatus(UpdateDocumentStatusRequest $request, Document $document): JsonResponse
+    public function updateDossierStatus(UpdateDocumentStatusRequest $request, Document $document): RedirectResponse
     {
         $user = Auth::user() ?? User::first();
         $assignment = $user->activeAssignment;
@@ -60,15 +59,12 @@ class DossierController extends Controller
 
         $document = $this->dossierService->updateDossierStatus($data, $document, $assignment);
 
-        return response()->json([
-            'message' => 'Estado del documento del dossier actualizado correctamente.',
-            'data' => $document
-        ], 200);
+        return back()->with('message', 'Estado del documento del dossier actualizado correctamente.');
     }
 
     /**
      * Render the view for the user's submission.
-     * 
+     *
      * @return Response
      */
     public function SubmissionIndex(): Response
@@ -105,21 +101,84 @@ class DossierController extends Controller
      */
     private function renderValidationView(int $roleId, string $title): Response
     {
-        $assignments = Assignment::with(['user.authenticable', 'section.school.faculty', 'section.faculty', 'dossiers'])
-            ->where('role_id', $roleId)
-            ->get();
+        $currentAssignmentId = session('assignment_id');
+        $currentAssignment = Assignment::query()->find($currentAssignmentId);
+
+        $raId = request('a');
+
+        $assignments = [
+            'data' => [],
+            'current_page' => 1,
+            'last_page' => 1,
+            'total' => 0,
+            'links' => []
+        ];
+
+        if ($raId) {
+            $assignments = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
+                ->where('id', $raId)
+                ->get();
+        } else {
+            if ($currentAssignment && in_array($currentAssignment->role_id, [3, 4])) {
+                $assignments = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
+                    ->where('role_id', $roleId)
+                    ->where('section_id', $currentAssignment->section_id)
+                    ->get();
+            }
+        }
+
+        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
 
         return Inertia::render('academic/dossier/validation/index', [
             'assignments' => $assignments,
-            'title' => $title
+            'title' => $title,
+            'faculties' => $faculties,
+            'target_role_id' => $roleId
         ]);
+    }
+
+    public function getAssignmentsByFilter(\Illuminate\Http\Request $request): JsonResponse
+    {
+        $request->validate([
+            'target_role_id' => 'required|integer',
+            'faculty_id' => 'nullable|integer',
+            'school_id' => 'nullable|integer',
+            'section_id' => 'nullable|integer',
+            'search' => 'nullable|string'
+        ]);
+
+        $query = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
+            ->where('role_id', $request->target_role_id);
+
+        if ($request->filled('faculty_id')) {
+            $query->whereHas('section.school.faculty', function ($q) use ($request) {
+                $q->where('id', $request->faculty_id);
+            });
+        }
+        if ($request->filled('school_id')) {
+            $query->whereHas('section.school', function ($q) use ($request) {
+                $q->where('id', $request->school_id);
+            });
+        }
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->section_id);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('email', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%");
+            });
+        }
+
+        return response()->json(['assignments' => $query->paginate(5)]);
     }
 
     public function getDetailDossier(Assignment $assignment): JsonResponse
     {
         // Cargar las relaciones necesarias para el frontend
-        $assignment->load(['user.authenticable', 'section.school.faculty', 'section.faculty']);
-        
+        $assignment->load(['user.person', 'section.school.faculty', 'section.faculty']);
+
         // Usamos el servicio exacto que ya da la estructura con history, latest, etc.
         $requirements = $this->dossierService->getDossierData($assignment);
 
@@ -132,7 +191,7 @@ class DossierController extends Controller
 
     /**
      * Render the detailed view for validating a specific dossier.
-     * 
+     *
      * @param Dossier $dossier
      * @return Response
      */

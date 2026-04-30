@@ -25,7 +25,7 @@ interface Assignment {
     access_status: number;
     review_status: number;
     user: {
-        authenticable: {
+        person: {
             names: string;
             surnames: string;
         };
@@ -143,8 +143,8 @@ export default function PendingRequestModal({ assignment, open, onOpenChange }: 
                                     Usuario
                                 </Label>
                                 <p className="font-medium">
-                                    {assignment?.user.authenticable.surnames}{' '}
-                                    {assignment?.user.authenticable.names}
+                                    {assignment?.user.person.surnames}{' '}
+                                    {assignment?.user.person.names}
                                 </p>
                             </div>
 

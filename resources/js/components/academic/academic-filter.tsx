@@ -1,84 +1,102 @@
-import { useState } from "react";
-import { Filter, X, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Filter, X, ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-
-interface Section {
-    id: number;
-    name: string;
-}
-
-interface School {
-    id: number;
-    name: string;
-    sections: Section[];
-}
-
-interface Faculty {
-    id: number;
-    name: string;
-    schools: School[];
-}
+} from '@/components/ui/select';
+import { Faculty } from '@/types';
 
 export interface AcademicFilterValues {
     faculty_id: string;
     school_id: string;
     section_id: string;
+    [key: string]: unknown;
 }
 
 interface AcademicFilterProps {
     faculties: Faculty[];
     onFilter: (values: AcademicFilterValues) => void;
     isLoading?: boolean;
+    /** Incrementar este valor desde el padre para forzar un reset interno del filtro */
+    //clearKey?: number;
+    initialValues?: AcademicFilterValues;
+    disabled?: boolean;
 }
 
-export function AcademicFilter({ faculties, onFilter, isLoading = false }: AcademicFilterProps) {
+export function AcademicFilter({
+    faculties,
+    onFilter,
+    isLoading = false,
+    //clearKey = 0,
+    initialValues,
+    disabled = false,
+}: AcademicFilterProps) {
     const [open, setOpen] = useState(false);
-    const [facultyId, setFacultyId] = useState("");
-    const [schoolId, setSchoolId] = useState("");
-    const [sectionId, setSectionId] = useState("");
+    const [facultyId, setFacultyId] = useState(initialValues?.faculty_id ?? '');
+    const [schoolId, setSchoolId] = useState(initialValues?.school_id ?? '');
+    const [sectionId, setSectionId] = useState(initialValues?.section_id ?? '');
 
-    const [applied, setApplied] = useState<AcademicFilterValues | null>(null);
+    const [applied, setApplied] = useState<AcademicFilterValues | null>(
+        initialValues ?? null,
+    );
 
-    const selectedFaculty = faculties.find(f => f.id.toString() === facultyId);
-    const selectedSchool = selectedFaculty?.schools.find(s => s.id.toString() === schoolId);
+    const selectedFaculty = Array.isArray(faculties)
+        ? faculties.find((f) => f.id.toString() === facultyId)
+        : undefined;
+    const selectedSchool = selectedFaculty?.schools.find(
+        (s) => s.id.toString() === schoolId,
+    );
 
     const handleFilter = () => {
-        const values: AcademicFilterValues = { faculty_id: facultyId, school_id: schoolId, section_id: sectionId };
+        const values: AcademicFilterValues = {
+            faculty_id: facultyId,
+            school_id: schoolId,
+            section_id: sectionId,
+        };
         setApplied(values);
         onFilter(values);
         setOpen(false);
     };
 
     const handleClear = () => {
-        setFacultyId("");
-        setSchoolId("");
-        setSectionId("");
-        const empty: AcademicFilterValues = { faculty_id: "", school_id: "", section_id: "" };
+        setFacultyId('');
+        setSchoolId('');
+        setSectionId('');
+        const empty: AcademicFilterValues = {
+            faculty_id: '',
+            school_id: '',
+            section_id: '',
+        };
         setApplied(null);
         onFilter(empty);
         setOpen(false);
     };
 
-    const hasFilter = applied && (applied.faculty_id || applied.school_id || applied.section_id);
+    const hasFilter =
+        applied &&
+        (applied.faculty_id || applied.school_id || applied.section_id);
 
     const appliedLabel = () => {
         if (!applied) return null;
-        const fac = faculties.find(f => f.id.toString() === applied.faculty_id);
-        const sch = fac?.schools.find(s => s.id.toString() === applied.school_id);
-        const sec = sch?.sections.find(s => s.id.toString() === applied.section_id);
+        const fac = faculties.find(
+            (f) => f.id.toString() === applied.faculty_id,
+        );
+        const sch = fac?.schools.find(
+            (s) => s.id.toString() === applied.school_id,
+        );
+        const sec = sch?.sections.find(
+            (s) => s.id.toString() === applied.section_id,
+        );
         return sec?.name ?? sch?.name ?? fac?.name ?? null;
     };
 
@@ -86,18 +104,20 @@ export function AcademicFilter({ faculties, onFilter, isLoading = false }: Acade
         <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
                 <Button
-                    variant={hasFilter ? "default" : "outline"}
-                    size="sm"
-                    className={`gap-2 transition-all ${hasFilter ? "pr-2" : ""}`}
+                    variant={hasFilter ? 'default' : 'outline'}
+                    className={`gap-2 transition-all ${hasFilter ? 'pr-2' : ''}`}
+                    disabled={disabled}
                 >
                     <Filter className="size-3.5 shrink-0" />
                     <span className="text-xs font-semibold">
-                        {hasFilter ? appliedLabel() ?? "Filtrado" : "Filtro académico"}
+                        {hasFilter
+                            ? (appliedLabel() ?? 'Filtrado')
+                            : 'Filtro académico'}
                     </span>
                     {hasFilter ? (
                         <Badge
                             variant="secondary"
-                            className="ml-1 h-4 w-4 p-0 flex items-center justify-center rounded-full text-[9px] bg-white/20 text-inherit cursor-pointer hover:bg-white/30"
+                            className="ml-1 flex h-4 w-4 cursor-pointer items-center justify-center rounded-full bg-white/20 p-0 text-[9px] text-inherit hover:bg-white/30"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 handleClear();
@@ -113,17 +133,26 @@ export function AcademicFilter({ faculties, onFilter, isLoading = false }: Acade
 
             <DropdownMenuContent
                 align="start"
-                className="w-80 p-4 space-y-4"
+                className="w-80 space-y-4 p-4"
                 onCloseAutoFocus={(e) => e.preventDefault()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between pb-2 border-b">
+                <div className="flex items-center justify-between border-b pb-2">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Filtro académico</p>
-                        <p className="text-[10px] text-muted-foreground/70 mt-0.5">Selecciona hasta nivel sección</p>
+                        <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
+                            Filtro académico
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                            Selecciona hasta nivel sección
+                        </p>
                     </div>
                     {(facultyId || schoolId || sectionId) && (
-                        <Button variant="ghost" size="sm" className="h-6 text-[10px] text-muted-foreground" onClick={handleClear}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 text-[10px] text-muted-foreground"
+                            onClick={handleClear}
+                        >
                             Limpiar
                         </Button>
                     )}
@@ -133,21 +162,27 @@ export function AcademicFilter({ faculties, onFilter, isLoading = false }: Acade
                 <div className="space-y-3">
                     {/* Facultad */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Facultad</label>
+                        <label className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                            Facultad
+                        </label>
                         <Select
                             value={facultyId}
                             onValueChange={(v) => {
                                 setFacultyId(v);
-                                setSchoolId("");
-                                setSectionId("");
+                                setSchoolId('');
+                                setSectionId('');
                             }}
                         >
-                            <SelectTrigger className="h-8 text-xs">
+                            <SelectTrigger className="h-8 text-sm">
                                 <SelectValue placeholder="Seleccionar facultad..." />
                             </SelectTrigger>
                             <SelectContent>
-                                {faculties.map(f => (
-                                    <SelectItem key={f.id} value={f.id.toString()} className="text-xs">
+                                {faculties.map((f) => (
+                                    <SelectItem
+                                        key={f.id}
+                                        value={f.id.toString()}
+                                        className="text-sm"
+                                    >
                                         {f.name}
                                     </SelectItem>
                                 ))}
@@ -157,21 +192,33 @@ export function AcademicFilter({ faculties, onFilter, isLoading = false }: Acade
 
                     {/* Escuela */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Escuela</label>
+                        <label className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                            Escuela
+                        </label>
                         <Select
                             value={schoolId}
                             disabled={!facultyId}
                             onValueChange={(v) => {
                                 setSchoolId(v);
-                                setSectionId("");
+                                setSectionId('');
                             }}
                         >
-                            <SelectTrigger className="h-8 text-xs">
-                                <SelectValue placeholder={!facultyId ? "Primero selecciona facultad" : "Seleccionar escuela..."} />
+                            <SelectTrigger className="h-8 text-sm">
+                                <SelectValue
+                                    placeholder={
+                                        !facultyId
+                                            ? 'Primero selecciona facultad'
+                                            : 'Seleccionar escuela...'
+                                    }
+                                />
                             </SelectTrigger>
                             <SelectContent>
-                                {selectedFaculty?.schools.map(s => (
-                                    <SelectItem key={s.id} value={s.id.toString()} className="text-xs">
+                                {selectedFaculty?.schools.map((s) => (
+                                    <SelectItem
+                                        key={s.id}
+                                        value={s.id.toString()}
+                                        className="text-sm"
+                                    >
                                         {s.name}
                                     </SelectItem>
                                 ))}
@@ -181,18 +228,30 @@ export function AcademicFilter({ faculties, onFilter, isLoading = false }: Acade
 
                     {/* Sección */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sección</label>
+                        <label className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+                            Sección
+                        </label>
                         <Select
                             value={sectionId}
                             disabled={!schoolId}
                             onValueChange={setSectionId}
                         >
-                            <SelectTrigger className="h-8 text-xs">
-                                <SelectValue placeholder={!schoolId ? "Primero selecciona escuela" : "Seleccionar sección..."} />
+                            <SelectTrigger className="h-8 text-sm">
+                                <SelectValue
+                                    placeholder={
+                                        !schoolId
+                                            ? 'Primero selecciona escuela'
+                                            : 'Seleccionar sección...'
+                                    }
+                                />
                             </SelectTrigger>
                             <SelectContent>
-                                {selectedSchool?.sections.map(sec => (
-                                    <SelectItem key={sec.id} value={sec.id.toString()} className="text-xs">
+                                {selectedSchool?.sections.map((sec) => (
+                                    <SelectItem
+                                        key={sec.id}
+                                        value={sec.id.toString()}
+                                        className="text-sm"
+                                    >
                                         {sec.name}
                                     </SelectItem>
                                 ))}
@@ -202,22 +261,22 @@ export function AcademicFilter({ faculties, onFilter, isLoading = false }: Acade
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-1 border-t">
+                <div className="flex gap-2 border-t pt-1">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 text-xs h-8"
+                        className="h-8 flex-1 text-xs"
                         onClick={() => setOpen(false)}
                     >
                         Cancelar
                     </Button>
                     <Button
                         size="sm"
-                        className="flex-1 text-xs h-8 font-bold"
+                        className="h-8 flex-1 text-xs font-bold"
                         onClick={handleFilter}
                         disabled={!facultyId || isLoading}
                     >
-                        {isLoading ? "Filtrando..." : "Aplicar filtro"}
+                        {isLoading ? 'Filtrando...' : 'Aplicar filtro'}
                     </Button>
                 </div>
             </DropdownMenuContent>

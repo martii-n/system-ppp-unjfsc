@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\Role;
 use App\Models\Assignment;
 use App\Models\Document;
 use App\Models\DocumentType;
@@ -12,15 +13,12 @@ use Illuminate\Support\Facades\Storage;
 class DossierService
 {
     protected DocumentService $documentService;
+    protected NotificationService $notificationService;
 
-    public function __construct(DocumentService $documentService)
+    public function __construct(DocumentService $documentService, NotificationService $notificationService)
     {
         $this->documentService = $documentService;
-    }
-
-    public function getDossierByAssignment(Assignment $assignment): Dossier
-    {
-        return $assignment->dossiers()->first();
+        $this->notificationService = $notificationService;
     }
 
     public function getDossierData(Assignment $assignment)
@@ -37,30 +35,31 @@ class DossierService
             ->get();
 
         return collect($requerimentsConfig)->map(function ($item) use ($allDocuments) {
-            $docsOfType = $allDocuments->filter(function ($doc) use ($item) {
+            $docsOfType = $allDocuments->filter(
+                function ($doc) use ($item) {
                     return $doc->documentType->code === $item['code'];
                 }
-                );
+            );
 
-                $transform = function ($doc) {
-                    if (!$doc)
-                        return null;
-                    $data = $doc->toArray();
-                    // Transformamos el path a una URL pública
-                    $data['path'] = Storage::url($doc->path);
-                    return $data;
-                }
-                    ;
+            $transform = function ($doc) {
+                if (!$doc)
+                    return null;
+                $data = $doc->toArray();
+                // Transformamos el path a una URL pública
+                $data['path'] = Storage::url($doc->path);
+                return $data;
+            }
+            ;
 
-                return [
-                    'code' => $item['code'],
-                    'title' => $item['title'],
-                    'has_template' => $item['has_template'] ?? false,
-                    'latest' => $transform($docsOfType->first()),
-                    'history' => $docsOfType->map(fn($d) => $transform($d))->values()->all(),
-                    'status' => $docsOfType->first()->approval_status ?? 0,
-                ];
-            });
+            return [
+                'code' => $item['code'],
+                'title' => $item['title'],
+                'has_template' => $item['has_template'] ?? false,
+                'latest' => $transform($docsOfType->first()),
+                'history' => $docsOfType->map(fn($d) => $transform($d))->values()->all(),
+                'status' => $docsOfType->first()->approval_status ?? 0,
+            ];
+        });
     }
 
     private function getRequirementsByRole(int $roleId)
@@ -100,7 +99,38 @@ class DossierService
             $data['context'] = 'dossier';
             $data['document_type_id'] = DocumentType::where('code', $data['code'])->first()->id;
 
-            return $this->documentService->registerDocument($data, $assignment, $model);
+            $document = $this->documentService->registerDocument($data, $assignment, $model);
+
+            // La ruta de destino y los roles receptores dependen del rol del actor
+            [$route, $recipientRoles] = match ($assignment->role_id) {
+                Role::DTITULAR->value => ['academic.dossiers.teacher', [Role::ADMIN, Role::SUBADMIN]],
+                Role::DSUPERVISOR->value => ['academic.dossiers.supervisor', [Role::ADMIN, Role::SUBADMIN, Role::DTITULAR]],
+                Role::ESTUDIANTE->value => ['academic.dossiers.student', [Role::ADMIN, Role::SUBADMIN, Role::DTITULAR, Role::DSUPERVISOR]],
+                default => ['dashboard', []],
+            };
+
+            $this->notificationService->notify(
+                type: 'DOSSIER_UPLOAD',
+                actor: $assignment,
+                subject: $model,
+                payload: [
+                    'action' => [
+                        'route' => $route,
+                        'params' => ['a' => $assignment->id],
+                    ],
+                    'meta' => [
+                        'message' => 'subió un documento al dossier',
+                        'sender' => $assignment->user->name ?? 'Usuario',
+                        'entity' => 'dossier',
+                    ],
+                ],
+                resolver: fn($subject, $actor) => $this->notificationService->resolveAcademicRoles(
+                    $actor->section_id,
+                    $recipientRoles
+                )
+            );
+
+            return $document;
         });
     }
 
@@ -120,6 +150,28 @@ class DossierService
                 'approval_status' => $data['approval_status'],
                 'comment' => $data['comment'] ?? ''
             ]);
+
+            $docType = $result->documentType->name;
+            $msj = $data['approval_status'] == 1 ? 'El archivo ' . $docType . ' fue aprobado' : 'El archivo ' . $docType . ' fue rechazado';
+
+            $this->notificationService->notify(
+                type: 'DOSSIER_VALIDATION',
+                actor: $assignment,
+                subject: $document,
+                payload: [
+                    'action' => [
+                        'route' => 'academic.dossiers.submission',
+                        'params' => [],
+                    ],
+                    'meta' => [
+                        'message' => $msj,
+                        'entity' => 'dossier',
+                    ],
+                ],
+                resolver: function ($subject, $actor) {
+                    return collect([$subject->documentable->assignment->user]);
+                }
+            );
 
             return $result;
         });

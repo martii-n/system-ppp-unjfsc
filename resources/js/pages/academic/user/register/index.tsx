@@ -18,6 +18,7 @@ interface PageProps {
     faculties: any[];
     schools: any[];
     sections: any[];
+    initialFilters?: any;
 }
 
 export default function UserRegistration(props: PageProps) {

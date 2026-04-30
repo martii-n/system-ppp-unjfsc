@@ -7,7 +7,7 @@ export const storeGroupSchema = z.object({
     section_id: z.string().min(1, "La sección es requerida"),
     faculty_id: z.string().min(1, "La facultad es requerida"),
     school_id: z.string().min(1, "La escuela es requerida"),
-    student_ids: z.array(z.number()).min(1, "Debe seleccionar al menos un estudiante"),
+    student_ids: z.array(z.number()).optional(),
 });
 
 export type StoreGroupValues = z.infer<typeof storeGroupSchema>;

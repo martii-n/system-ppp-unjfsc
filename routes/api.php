@@ -1,10 +1,10 @@
 <?php
 
-use App\Http\Controllers\InternshipController;
+use App\Http\Controllers\Academic\InternshipController;
 use App\Http\Controllers\Registration\UserRegistrationController;
 use App\Http\Controllers\DocumentController;
-use App\Http\Controllers\InternshipGroupController;
-use App\Http\Controllers\SupervisionController;
+use App\Http\Controllers\Academic\InternshipGroupController;
+use App\Http\Controllers\Academic\SupervisionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 

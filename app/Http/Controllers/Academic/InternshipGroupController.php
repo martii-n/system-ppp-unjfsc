@@ -13,7 +13,7 @@ use App\Models\InternshipGroup;
 use App\Models\Section;
 use App\Services\InternshipGroupService;
 use Illuminate\Http\JsonResponse;
-
+use Illuminate\Http\Request;
 use App\Models\Assignment;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -30,35 +30,136 @@ class InternshipGroupController extends Controller
 
     /**
      * Display a listing of internship groups (By Practice).
+     * - Roles 1/2 (Admin): empty state, load via API filter
+     * - Roles 3/4 (Docente/Supervisor): their section's groups pre-loaded
      */
     public function indexByInternship(): Response
     {
-        $groups = $this->groupService->getInternshipGroups();
+        $currentAssignmentId = session('assignment_id');
+        $currentAssignment = Assignment::find($currentAssignmentId);
+
+        $groups = [];
+        if ($currentAssignment && in_array($currentAssignment->role_id, [3, 4])) {
+            $groups = $this->groupService->getInternshipGroupsBySection($currentAssignment->section_id);
+        }
+
         $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
 
         return Inertia::render('academic/group/internship/index', [
             'groups' => $groups,
-            'faculties' => $faculties
+            'faculties' => $faculties,
         ]);
     }
 
-    /**
-     * Get teachers and suggested name for a specific section (By School).
-     */
     public function getDependencies(Section $section): JsonResponse
     {
         return response()->json($this->groupService->getSectionDependencies($section));
     }
 
     /**
+     * API: Filter/search internship groups for Admin roles.
+     */
+    public function getGroupsByFilter(Request $request): JsonResponse
+    {
+        $request->validate([
+            'faculty_id' => 'nullable|integer',
+            'school_id' => 'nullable|integer',
+            'section_id' => 'nullable|integer',
+            'search' => 'nullable|string',
+        ]);
+
+        $query = InternshipGroup::with([
+            'section.school.faculty',
+            'teacher.user.person',
+            'supervisor.user.person',
+            'module',
+        ]);
+
+        if ($request->filled('faculty_id')) {
+            $query->whereHas('section.school.faculty', fn($q) => $q->where('id', $request->faculty_id));
+        }
+        if ($request->filled('school_id')) {
+            $query->whereHas('section.school', fn($q) => $q->where('id', $request->school_id));
+        }
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->section_id);
+        }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")
+                    ->orWhereHas('teacher.user', fn($q2) => $q2->where('email', 'like', "%{$s}%")->orWhere('name', 'like', "%{$s}%"))
+                    ->orWhereHas('supervisor.user', fn($q2) => $q2->where('email', 'like', "%{$s}%")->orWhere('name', 'like', "%{$s}%"));
+            });
+        }
+
+        // Transformamos cada grupo con el mismo mapper del service
+        // para garantizar la misma estructura que reciben los roles 3/4
+        $paginator = $query->paginate(15);
+        $paginator->getCollection()->transform(
+            fn($group) => $this->groupService->formatGroupData($group)
+        );
+
+        return response()->json(['groups' => $paginator]);
+    }
+
+    /**
      * Display a listing of students and their groups (By Student).
+     * - Roles 1/2: empty state, load via filter
+     * - Roles 3/4: their section pre-loaded
      */
     public function indexByStudent(): Response
     {
+        $currentAssignmentId = session('assignment_id');
+        $currentAssignment = Assignment::find($currentAssignmentId);
+
+        $groups = [];
+        $students = [];
+
+        if ($currentAssignment && in_array($currentAssignment->role_id, [3, 4])) {
+            $groups = $this->groupService->getInternshipGroupsBySection($currentAssignment->section_id);
+            $students = $this->groupService->getStudentsAndGroupsBySection($currentAssignment->section_id);
+        }
+
+        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+
         return Inertia::render('academic/group/student/index', [
-            'groups' => $this->groupService->getInternshipGroups(),
-            'students' => $this->groupService->getStudentsAndGroups()
+            'groups' => $groups,
+            'students' => $students,
+            'faculties' => $faculties,
         ]);
+    }
+
+    /**
+     * API: Filter/search students by academic location for Admin roles.
+     */
+    public function getStudentsByFilter(Request $request): JsonResponse
+    {
+        $request->validate([
+            'faculty_id' => 'nullable|integer',
+            'school_id' => 'nullable|integer',
+            'section_id' => 'nullable|integer',
+            'search' => 'nullable|string',
+        ]);
+
+        $query = Assignment::with(['user.person', 'internshipGroup.module', 'section.school.faculty'])
+            ->where('role_id', 5);
+
+        if ($request->filled('faculty_id')) {
+            $query->whereHas('section.school.faculty', fn($q) => $q->where('id', $request->faculty_id));
+        }
+        if ($request->filled('school_id')) {
+            $query->whereHas('section.school', fn($q) => $q->where('id', $request->school_id));
+        }
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->section_id);
+        }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->whereHas('user', fn($q) => $q->where('email', 'like', "%{$s}%")->orWhere('name', 'like', "%{$s}%"));
+        }
+
+        return response()->json(['students' => $query->paginate(15)]);
     }
 
     public function getStudents(Section $section): JsonResponse

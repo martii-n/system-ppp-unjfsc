@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PersonFlowProps, PersonInitialState } from './person.types';
 import { getRegistrationSteps } from '../components/steps.config';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import { personService } from './person.service';
 import { toast } from 'sonner';
 import { Stepper } from '../components/Stepper';
@@ -25,6 +25,7 @@ export function PersonFlow({
     schools,
     sections,
     mode,
+    initialFilters,
     onBack,
 }: PersonFlowProps) {
     const [step, setStep] = useState(1);
@@ -36,9 +37,9 @@ export function PersonFlow({
 
     const { data, setData, processing, reset } = useForm<PersonInitialState>({
         role_id: '',
-        faculty_id: '',
-        school_id: '',
-        section_id: '',
+        faculty_id: initialFilters?.faculty_id?.toString() || '',
+        school_id: initialFilters?.school_id?.toString() || '',
+        section_id: initialFilters?.section_id?.toString() || '',
 
         email: '',
         dni: '',

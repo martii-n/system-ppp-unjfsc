@@ -22,4 +22,10 @@ class DocumentType extends Model
     {
         return $this->hasMany(Document::class);
     }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'document_type_roles')
+                    ->wherePivot('status', 1);
+    }
 }

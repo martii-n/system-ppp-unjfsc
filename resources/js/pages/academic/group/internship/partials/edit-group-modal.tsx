@@ -38,12 +38,14 @@ interface EditGroupModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     group: any | null;
+    onSuccess?: () => void;
 }
 
 export default function EditGroupModal({
     open,
     onOpenChange,
     group,
+    onSuccess
 }: EditGroupModalProps) {
     const [loading, setLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,6 +100,7 @@ export default function EditGroupModal({
             onSuccess: () => {
                 onOpenChange(false);
                 form.reset();
+                if (onSuccess) onSuccess();
             },
             onFinish: () => setIsSubmitting(false)
         });

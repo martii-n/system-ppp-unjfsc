@@ -5,6 +5,10 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import AcademicSearch from '@/components/academic/academic-search';
+import AcademicPagination from '@/components/academic/academic-pagination';
+import { useAcademicTable } from '@/hooks/use-academic-table';
+import { usePage } from '@inertiajs/react';
 
 import CreateFacultyModal from './partials/create-faculty-modal';
 import UpdateFacultyModal from './partials/update-faculty-modal';
@@ -26,10 +30,29 @@ interface Props {
 }
 
 export default function Faculties({ faculties }: Props) {
+    const { role } = usePage().props as any;
     const [selectedFaculty, setSelectedFaculty] = useState<Faculty | null>(null);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+    const {
+        displayData: list,
+        search,
+        setSearch,
+        localPage,
+        setLocalPage,
+        localTotalPages,
+        handlePageChange
+    } = useAcademicTable<Faculty>({
+        endpoint: '',
+        initialData: faculties,
+        isAdmin: false,
+        pageSize: 10,
+        localSearchFn: (faculty, search) =>
+            faculty.name.toLowerCase().includes(search) ||
+            `#${faculty.id}`.includes(search)
+    });
 
     const formatId = (id: number) => `#${id.toString().padStart(3, '0')}`;
 
@@ -60,6 +83,15 @@ export default function Faculties({ faculties }: Props) {
                         <Plus className="mr-2 h-4 w-4" /> Nueva Facultad
                     </Button>
                 </div>
+
+                <div className="flex items-center justify-start">
+                    <AcademicSearch
+                        role={role}
+                        search={search}
+                        setSearch={setSearch}
+                        placeholder="Buscar facultad por nombre o ID..."
+                    />
+                </div>
                 <div className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-xs">
                     <Table>
                         <TableHeader className="border-b bg-muted/50">
@@ -79,8 +111,8 @@ export default function Faculties({ faculties }: Props) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {faculties.length > 0 ? (
-                                faculties.map((faculty) => (
+                            {list.length > 0 ? (
+                                list.map((faculty) => (
                                     <TableRow
                                         key={faculty.id}
                                         className="group h-16 border-b transition-colors hover:bg-muted/30"
@@ -155,6 +187,16 @@ export default function Faculties({ faculties }: Props) {
                         </TableBody>
                     </Table>
                 </div>
+
+                <AcademicPagination
+                    isAdmin={false}
+                    total={faculties.length}
+                    showing={list.length}
+                    onPageChange={handlePageChange}
+                    currentPage={localPage}
+                    totalPages={localTotalPages}
+                    onLocalPageChange={setLocalPage}
+                />
             </div>
 
             <CreateFacultyModal

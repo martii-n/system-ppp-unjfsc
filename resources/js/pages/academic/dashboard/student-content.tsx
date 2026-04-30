@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function StudentDashboardContent() {
     return (
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+        <div className="flex flex-1 flex-col gap-4 p-4">
             <div className="grid auto-rows-min gap-4 md:grid-cols-3 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -110,13 +110,12 @@ export default function StudentDashboardContent() {
                                         </p>
                                     </div>
                                     <div
-                                        className={`h-2 w-2 rounded-full ${
-                                            task.priority === 'high'
+                                        className={`h-2 w-2 rounded-full ${task.priority === 'high'
                                                 ? 'bg-red-500'
                                                 : task.priority === 'medium'
-                                                  ? 'bg-orange-500'
-                                                  : 'bg-gray-400'
-                                        }`}
+                                                    ? 'bg-orange-500'
+                                                    : 'bg-gray-400'
+                                            }`}
                                     />
                                 </div>
                             ))}

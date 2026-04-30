@@ -1,67 +1,60 @@
 import AppLayout from "@/layouts/app-layout";
-import { Head } from "@inertiajs/react";
-import { useState } from "react";
+import { Head, usePage } from "@inertiajs/react";
+import { useEffect, useRef, useState } from "react";
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
-    Search, X, Users, ChevronRight
+    X, Users, ChevronRight
 } from "lucide-react";
 import Heading from "@/components/heading";
-import { Input } from "@/components/ui/input";
 import StudentManagementTabs from "./partials/student-management-tabs";
-
-interface Person {
-    names: string;
-    surnames: string;
-}
-
-interface User {
-    email: string;
-    person: Person;
-}
-
-interface InternshipGroup {
-    id: number;
-    name: string;
-    module?: {
-        id: number;
-        name: string;
-    } | null;
-    teacher: {
-        user: User;
-    };
-    supervisor: {
-        user: User;
-    };
-    section: {
-        id: number;
-        name: string;
-        school: {
-            name: string;
-            faculty: {
-                name: string;
-            }
-        }
-    };
-}
+import { AcademicFilter, AcademicFilterValues } from "@/components/academic/academic-filter";
+import AcademicSearch from "@/components/academic/academic-search";
+import AcademicPagination from "@/components/academic/academic-pagination";
+import { useConfigTable } from "@/hooks/use-config-table";
 
 interface Props {
-    groups: InternshipGroup[];
+    groups: any[];
     students: any[];
+    faculties?: any[];
 }
 
-export default function StudentGroupIndex({ groups, students }: Props) {
+export default function StudentGroupIndex({ groups = [], students = [], faculties = [] }: Props) {
+    const { role } = usePage().props as any;
+    const isAdmin = [1, 2].includes(Number(role));
+
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [search, setSearch] = useState("");
+    const {
+        data: localGroups,
+        displayData,
+        allLocalFiltered,
+        isSearching,
+        search,
+        setSearch,
+        activeFilters,
+        filterClearKey,
+        handleFilter,
+        handleBackendSearch,
+        localPage,
+        setLocalPage,
+        localTotalPages,
+        handlePageChange,
+    } = useConfigTable({
+        endpoint: '/api/groups/internship/filter',
+        initialData: groups,
+        isAdmin,
+        pageSize: 15,
+        onLocalSearch: (a, term) => {
+            return a.name.toLowerCase().includes(term) ||
+                a.section?.school?.name?.toLowerCase().includes(term) ||
+                (a.module?.name ?? '').toLowerCase().includes(term);
+        },
+    });
 
-    const selectedGroup = groups.find(g => g.id === selectedId);
-
-    const filteredGroups = groups.filter(group =>
-        group.name.toLowerCase().includes(search.toLowerCase()) ||
-        group.section.school.name.toLowerCase().includes(search.toLowerCase()) ||
-        (group.module?.name ?? '').toLowerCase().includes(search.toLowerCase())
+    const selectedItem = displayData.find((item) =>
+        item.id === selectedId
     );
 
     const breadcrumbs = [
@@ -88,18 +81,43 @@ export default function StudentGroupIndex({ groups, students }: Props) {
                         flex flex-col transition-all duration-300 ease-in-out shrink-0
                         ${selectedId ? 'w-[350px] lg:w-[400px]' : 'w-full'}
                     `}>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Buscar por nombre de grupo o escuela..."
-                                className="pl-9 h-9"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                        {/* Filtro + Buscador */}
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                            {isAdmin && (
+                                <AcademicFilter
+                                    key={filterClearKey}
+                                    faculties={faculties}
+                                    onFilter={handleFilter}
+                                    isLoading={isSearching}
+                                />
+                            )}
+                            <AcademicSearch
+                                isAdmin={isAdmin}
+                                search={search}
+                                setSearch={setSearch}
+                                onSearch={handleBackendSearch}
+                                isLoading={isSearching}
                             />
                         </div>
 
-                        <div className="rounded-md border bg-card mt-6 overflow-hidden">
-                            <Table>
+                        <div className="rounded-md border bg-card mt-6 overflow-hidden relative">
+                            {isSearching && (
+                                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-[1px] rounded-md flex items-center justify-center">
+                                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                                        <div className="size-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                                        Cargando...
+                                    </div>
+                                </div>
+                            )}
+                            <Table className="table-fixed w-full">
+                                <colgroup>
+                                    <col className="w-[20%]" />
+                                    {!selectedId && <col className="w-[10%]" />}
+                                    {!selectedId && <col className="w-[20%]" />}
+                                    {!selectedId && <col className="w-[20%]" />}
+                                    {!selectedId && <col className="w-[10%]" />}
+                                    <col className="w-[5%]" />
+                                </colgroup>
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Grupo / Info</TableHead>
@@ -111,12 +129,12 @@ export default function StudentGroupIndex({ groups, students }: Props) {
                                                 <TableHead>Sección</TableHead>
                                             </>
                                         )}
-                                        <TableHead className="text-right pr-4">Acciones</TableHead>
+                                        <TableHead className="text-center pr-4">Acciones</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredGroups.length > 0 ? (
-                                        filteredGroups.map((group) => (
+                                    {displayData.length > 0 ? (
+                                        displayData.map((group: any) => (
                                             <TableRow
                                                 key={group.id}
                                                 onClick={() => setSelectedId(group.id)}
@@ -177,13 +195,28 @@ export default function StudentGroupIndex({ groups, students }: Props) {
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={selectedId ? 2 : 5} className="h-24 text-center text-muted-foreground italic">
-                                                No se encontraron resultados
+                                            <TableCell colSpan={selectedId ? 2 : 6} className="h-24 text-center text-muted-foreground italic">
+                                                {isAdmin && displayData.length === 0 && !search && !activeFilters
+                                                    ? "Usa el filtro o buscador para cargar grupos."
+                                                    : "No se encontraron resultados"}
                                             </TableCell>
                                         </TableRow>
                                     )}
                                 </TableBody>
                             </Table>
+                            <AcademicPagination
+                                isAdmin={isAdmin}
+                                isLoading={isSearching}
+                                links={(localGroups as any)?.links}
+                                total={(localGroups as any)?.total}
+                                showing={(localGroups as any)?.data?.length}
+                                onPageChange={handlePageChange}
+                                currentPage={localPage}
+                                totalPages={localTotalPages}
+                                localShowing={displayData.length}
+                                localTotal={allLocalFiltered.length}
+                                onLocalPageChange={setLocalPage}
+                            />
                         </div>
                     </aside>
 
@@ -192,7 +225,7 @@ export default function StudentGroupIndex({ groups, students }: Props) {
                         flex-1 flex flex-col transition-all duration-500 ease-in-out min-w-0
                         ${selectedId ? 'translate-x-0 opacity-100' : 'translate-x-[50px] opacity-0 pointer-events-none'}
                     `}>
-                        {selectedId ? (
+                        {selectedItem ? (
                             <div className="flex-1 flex flex-col overflow-hidden">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-2 overflow-hidden mr-4">
@@ -201,12 +234,12 @@ export default function StudentGroupIndex({ groups, students }: Props) {
                                         </div>
                                         <div className="flex flex-col min-w-0">
                                             <h2 className="text-sm font-bold truncate leading-tight tracking-tight">
-                                                {selectedGroup?.name}
+                                                {selectedItem?.name}
                                             </h2>
                                             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">
-                                                <span>{selectedGroup?.section.school.name}</span>
+                                                <span>{selectedItem?.section.school.name}</span>
                                                 <ChevronRight className="size-3" />
-                                                <span className="text-primary font-bold">{selectedGroup?.section.name}</span>
+                                                <span className="text-primary font-bold">{selectedItem?.section.name}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -217,8 +250,8 @@ export default function StudentGroupIndex({ groups, students }: Props) {
 
                                 <div className="flex-1 overflow-hidden">
                                     <StudentManagementTabs
-                                        group={selectedGroup}
-                                        allGroups={groups}
+                                        group={selectedItem}
+                                        allGroups={(localGroups as any)?.data || localGroups}
                                     />
                                 </div>
                             </div>

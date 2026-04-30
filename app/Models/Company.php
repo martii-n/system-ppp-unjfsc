@@ -28,4 +28,14 @@ class Company extends Model
     {
         return $this->hasMany(Boss::class);
     }
+
+    public function placements(): HasMany
+    {
+        return $this->hasMany(Placement::class);
+    }
+
+    public function area(): HasMany
+    {
+        return $this->hasMany(Area::class);
+    }
 }

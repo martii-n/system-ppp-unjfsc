@@ -22,38 +22,6 @@ export default function FileDetailsContent({
     const latest = currentFile?.latest;
     const status = currentFile?.status;
 
-    /*
-        <div className="space-y-3">
-            <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold">Archivo Cargado</h4>
-                <span className="inline-flex items-center justify-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                    Procesando
-                </span>
-            </div>
-
-            <div className="rounded-md border p-3 flex items-start gap-3 bg-muted/40">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-background">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="space-y-1 overflow-hidden">
-                    <p className="text-sm font-medium leading-none truncate">mi_ficha_oficial_2024.pdf</p>
-                    <p className="text-xs text-muted-foreground">1.2 MB</p>
-                </div>
-            </div>
-        </div>
-
-        <div className="flex gap-2">
-            <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3 flex-1">
-                <RotateCcw className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                Cambiar
-            </button>
-            <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent text-destructive hover:text-destructive h-8 px-3 flex-1">
-                <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" />
-                Eliminar
-            </button>
-        </div>
-    */
-
     // CASO 1: Subida Pendiente (Pantalla Inicial)
     if (!latest && !tempFile) {
         return (

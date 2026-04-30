@@ -15,6 +15,7 @@ import { AcademicSelectorRHF } from '@/pages/academic/user/register/components/A
 import { useState, useEffect } from 'react'; // 👈 Añadido useEffect
 import { CsvUploader } from './components/CsvUploader';
 import { CsvPreview } from './components/CsvPreview';
+import { usePage } from '@inertiajs/react';
 
 interface MassivePersonInitProps {
     roles: any[];
@@ -34,9 +35,9 @@ export function MassiveVStepOne({
     sections,
     initialValues,
     onSubmit,
-    isLoading
+    isLoading,
 }: MassivePersonInitProps) {
-
+    const { role } = usePage().props as any;
     const [previewData, setPreviewData] = useState<any[]>([]);
     const [csvErrors, setCsvErrors] = useState<any[]>([]);
 
@@ -96,6 +97,7 @@ export function MassiveVStepOne({
                 </div>
                 <AcademicSelectorRHF
                     roleId={form.watch("role_id")}
+                    roleUser={role}
                     faculties={faculties}
                     schools={schools}
                     sections={sections}

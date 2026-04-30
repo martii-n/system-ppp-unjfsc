@@ -15,9 +15,10 @@ interface Props {
     group: any | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onSuccess?: () => void;
 }
 
-export default function DeleteGroupModal({ group, open, onOpenChange }: Props) {
+export default function DeleteGroupModal({ group, open, onOpenChange, onSuccess }: Props) {
     const { delete: destroyRequest, processing } = useForm();
 
     const handleSubmit = (e: FormEvent) => {
@@ -27,6 +28,7 @@ export default function DeleteGroupModal({ group, open, onOpenChange }: Props) {
         destroyRequest(groups.delete(group.id).url, {
             onSuccess: () => {
                 onOpenChange(false);
+                if (onSuccess) onSuccess();
             },
         });
     };

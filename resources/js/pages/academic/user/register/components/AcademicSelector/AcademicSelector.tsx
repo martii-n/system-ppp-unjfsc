@@ -12,19 +12,23 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { usePage } from "@inertiajs/react";
 
 import { useFormContext, useWatch } from "react-hook-form";
 
 export function AcademicSelectorRHF({
     roleId,
+    roleUser,
     faculties,
     schools,
     sections,
 }: any) {
+    const { auth, role } = usePage().props as any;
 
     const { control, setValue } = useFormContext();
 
     const isSubadmin = roleId === "2";
+    const isTeacher = roleUser === 3;
 
     const facultyId = useWatch({ control, name: "faculty_id" });
     const schoolId = useWatch({ control, name: "school_id" });
@@ -60,6 +64,7 @@ export function AcademicSelectorRHF({
                                 setValue("section_id", "");
                             }}
                             value={field.value}
+                            disabled={isTeacher}
                         >
                             <FormControl>
                                 <SelectTrigger>
@@ -92,7 +97,7 @@ export function AcademicSelectorRHF({
                                     setValue("section_id", "");
                                 }}
                                 value={field.value}
-                                disabled={!facultyId}
+                                disabled={!facultyId || isTeacher}
                             >
                                 <FormControl>
                                     <SelectTrigger>
@@ -123,7 +128,7 @@ export function AcademicSelectorRHF({
                             <Select
                                 onValueChange={field.onChange}
                                 value={field.value}
-                                disabled={!schoolId}
+                                disabled={!schoolId || isTeacher}
                             >
                                 <FormControl>
                                     <SelectTrigger>

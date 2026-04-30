@@ -67,7 +67,7 @@ class UserRegistrationService
     {
         $person = Person::query()->where('dni', $data['dni'])->first();
 
-        if (! $person) {
+        if (!$person) {
             return [
                 'person_exists' => false,
                 'dni' => $data['dni'],
@@ -99,7 +99,7 @@ class UserRegistrationService
         // --- INICIO DEL BLOQUE DE SEGURIDAD Y COHERENCIA ---
 
         $user = null;
-        if (! empty($data['user_id'])) {
+        if (!empty($data['user_id'])) {
             $user = User::find($data['user_id']);
             // Verificación: El email del payload debe coincidir con el del user_id encontrado.
             if ($user && $user->email !== $data['email']) {
@@ -116,7 +116,7 @@ class UserRegistrationService
             $this->validateRoleRulesUserAcademic($user, $data['role_id'], $data['section_id'], $currentSemesterId);
 
             // Verificación de Coherencia: El person_id del usuario debe coincidir con el del payload.
-            if (! empty($data['person']['id']) && $user->authenticable_id != $data['person']['id']) {
+            if (!empty($data['person']['id']) && $user->authenticable_id != $data['person']['id']) {
                 throw ValidationException::withMessages(['person' => 'Inconsistencia de datos: La persona indicada no corresponde al usuario existente.']);
             }
         }
@@ -129,8 +129,6 @@ class UserRegistrationService
      *
      * @param  array  $data  The registration data.
      * @param  int  $currentSemesterId  The current semester ID.
-     * @param  Assignment  $assignment.
-     * @return Assignment The registered assignment.
      */
     public function registerUserAcademic(array $data, int $currentSemesterId, int $assignmentId): void
     {
@@ -218,10 +216,11 @@ class UserRegistrationService
                 ]);
             }
         } else {
+            // extrear el name del email maria@gmail.com -> maria
+            $code = explode('@', $data['email'])[0];
             $user = User::create([
-                'authenticable_id' => $person->id,
-                'authenticable_type' => Person::class,
-                'name' => $person->names,
+                'person_id' => $person->id,
+                'name' => $code,
                 'email' => $data['email'],
                 'password' => Hash::make('12345678'), // Password temporal
                 'type_user_id' => 2, // Tipo Académico
@@ -229,7 +228,7 @@ class UserRegistrationService
         }
 
         // 3. Validar Reglas de Negocio (Roles, Secciones, Semestre)
-        $this->validateRoleRulesUserAcademic($user, (int)$data['role_id'], (int)$data['section_id'], $semesterId);
+        $this->validateRoleRulesUserAcademic($user, (int) $data['role_id'], (int) $data['section_id'], $semesterId);
 
         // 4. Crear Asignación
         Assignment::create([
@@ -299,7 +298,7 @@ class UserRegistrationService
         }
 
         if ($myRole === 3) {
-            if (! in_array($targetRoleId, [4, 5])) {
+            if (!in_array($targetRoleId, [4, 5])) {
                 throw new RegistrationRoleNotAllowedException;
             }
 

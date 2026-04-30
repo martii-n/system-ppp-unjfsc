@@ -24,6 +24,7 @@ import {
 import { AcademicSelectorRHF } from '../../../../components/AcademicSelector/AcademicSelector';
 
 import { personInitSchema, PersonInitValues } from './schema';
+import { usePage } from '@inertiajs/react';
 
 interface PersonInitProps {
     roles: any[];
@@ -45,6 +46,7 @@ export function PersonVStepOne({
     onSubmit,
     isLoading,
 }: PersonInitProps) {
+    const { role } = usePage().props as any;
     const form = useForm<PersonInitValues>({
         resolver: zodResolver(personInitSchema),
         defaultValues: {
@@ -112,6 +114,7 @@ export function PersonVStepOne({
 
                 <AcademicSelectorRHF
                     roleId={form.watch('role_id')}
+                    roleUser={role}
                     faculties={faculties}
                     schools={schools}
                     sections={sections}

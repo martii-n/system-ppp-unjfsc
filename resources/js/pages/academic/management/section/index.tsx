@@ -1,9 +1,12 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import AcademicSearch from '@/components/academic/academic-search';
+import AcademicPagination from '@/components/academic/academic-pagination';
+import { useAcademicTable } from '@/hooks/use-academic-table';
 import {
     Table,
     TableBody,
@@ -21,8 +24,27 @@ interface Props {
 }
 
 export default function Sections({ schools }: Props) {
+    const { role } = usePage().props as any;
     const [selectedSchoolId, setSelectedSchoolId] = useState<number | null>(null);
     const [isManageOpen, setIsManageOpen] = useState(false);
+
+    const {
+        displayData: list,
+        search,
+        setSearch,
+        localPage,
+        setLocalPage,
+        localTotalPages,
+        handlePageChange
+    } = useAcademicTable<School>({
+        endpoint: '',
+        initialData: schools,
+        isAdmin: false,
+        pageSize: 10,
+        localSearchFn: (school, search) => 
+            school.name.toLowerCase().includes(search) || 
+            (school.faculty?.name || '').toLowerCase().includes(search)
+    });
 
     const selectedSchool = schools.find(s => s.id === selectedSchoolId) || null;
 
@@ -42,6 +64,14 @@ export default function Sections({ schools }: Props) {
                         variant="small"
                         title="Gestión de Secciones"
                         description="Configura las secciones disponibles para cada escuela en este semestre."
+                    />
+                </div>
+
+                <div className="flex items-center justify-start">
+                    <AcademicSearch
+                        role={role}
+                        search={search}
+                        setSearch={setSearch}
                     />
                 </div>
 
@@ -67,8 +97,8 @@ export default function Sections({ schools }: Props) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {schools.length > 0 ? (
-                                schools.map((school) => (
+                            {list.length > 0 ? (
+                                list.map((school) => (
                                     <TableRow
                                         key={school.id}
                                         className="group h-16 border-b transition-colors hover:bg-muted/30"
@@ -136,6 +166,16 @@ export default function Sections({ schools }: Props) {
                         </TableBody>
                     </Table>
                 </div>
+
+                <AcademicPagination
+                    isAdmin={false}
+                    total={schools.length}
+                    showing={list.length}
+                    onPageChange={handlePageChange}
+                    currentPage={localPage}
+                    totalPages={localTotalPages}
+                    onLocalPageChange={setLocalPage}
+                />
             </div>
 
             <ManageSectionsModal

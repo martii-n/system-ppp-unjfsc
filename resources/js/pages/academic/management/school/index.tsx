@@ -5,6 +5,10 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
+import AcademicSearch from '@/components/academic/academic-search';
+import AcademicPagination from '@/components/academic/academic-pagination';
+import { useAcademicTable } from '@/hooks/use-academic-table';
+import { usePage } from '@inertiajs/react';
 import {
     Table,
     TableBody,
@@ -25,10 +29,29 @@ interface Props {
 }
 
 export default function Schools({ schools, faculties }: Props) {
+    const { role } = usePage().props as any;
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [selectedSchool, setSelectedSchool] = useState<School | null>(null);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+    const {
+        displayData: list,
+        search,
+        setSearch,
+        localPage,
+        setLocalPage,
+        localTotalPages,
+        handlePageChange
+    } = useAcademicTable<School>({
+        endpoint: '',
+        initialData: schools,
+        isAdmin: false,
+        pageSize: 10,
+        localSearchFn: (school, search) =>
+            school.name.toLowerCase().includes(search) ||
+            (school.faculty?.name || '').toLowerCase().includes(search)
+    });
 
     const formatId = (id: number) => `#${id.toString().padStart(3, '0')}`;
 
@@ -60,6 +83,15 @@ export default function Schools({ schools, faculties }: Props) {
                     </Button>
                 </div>
 
+                <div className="flex items-center justify-start">
+                    <AcademicSearch
+                        role={role}
+                        search={search}
+                        setSearch={setSearch}
+                        placeholder='Busca una escuela'
+                    />
+                </div>
+
                 <div className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-xs">
                     <Table>
                         <TableHeader className="border-b bg-muted/50">
@@ -82,8 +114,8 @@ export default function Schools({ schools, faculties }: Props) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {schools.length > 0 ? (
-                                schools.map((school) => (
+                            {list.length > 0 ? (
+                                list.map((school) => (
                                     <TableRow
                                         key={school.id}
                                         className="group h-16 border-b transition-colors hover:bg-muted/30"
@@ -163,6 +195,16 @@ export default function Schools({ schools, faculties }: Props) {
                         </TableBody>
                     </Table>
                 </div>
+
+                <AcademicPagination
+                    isAdmin={false}
+                    total={schools.length}
+                    showing={list.length}
+                    onPageChange={handlePageChange}
+                    currentPage={localPage}
+                    totalPages={localTotalPages}
+                    onLocalPageChange={setLocalPage}
+                />
             </div>
 
             <CreateSchoolModal
