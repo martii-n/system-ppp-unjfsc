@@ -39,7 +39,9 @@ export function CreateResourceSheet({
     initialFilters?: any;
 }) {
     const { role } = usePage().props as any;
+    const isAdmin = role === 1;
     const isTeacher = role === 3;
+    const isSubAdmin = role === 2;
 
     // ─── Formulario con Inertia ──────────────────────────────────────
     const { data, setData, post, processing, reset, errors } = useForm({
@@ -189,7 +191,7 @@ export function CreateResourceSheet({
                                 <SelectValue placeholder="Selecciona el rol destinatario" />
                             </SelectTrigger>
                             <SelectContent>
-                                {!isTeacher && (
+                                {isAdmin && (
                                     <SelectItem value="all">
                                         Público General / Todos
                                     </SelectItem>
@@ -223,8 +225,12 @@ export function CreateResourceSheet({
                                         <SelectValue placeholder="Global, Facultad, Escuela..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="1">Global (toda la institución)</SelectItem>
-                                        <SelectItem value="2">Por Facultad</SelectItem>
+                                        {!isSubAdmin && (
+                                            <SelectItem value="1">Global (toda la institución)</SelectItem>
+                                        )}
+                                        {!isSubAdmin && (
+                                            <SelectItem value="2">Por Facultad</SelectItem>
+                                        )}
                                         <SelectItem value="3">Por Escuela</SelectItem>
                                         <SelectItem value="4">Por Sección</SelectItem>
                                     </SelectContent>

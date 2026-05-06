@@ -22,7 +22,10 @@ export interface StudentSupervision {
     };
     section: {
         name: string;
-        school: { name: string };
+        school: {
+            name: string;
+            faculty: { name: string };
+        };
     };
     search_module?: number;
     supervision: Supervision;

@@ -6,7 +6,8 @@ use App\Enums\Role;
 use App\Models\Assignment;
 use App\Models\Document;
 use App\Models\DocumentType;
-use App\Models\Dossier;
+use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,7 +22,12 @@ class DossierService
         $this->notificationService = $notificationService;
     }
 
-    public function getDossierData(Assignment $assignment)
+    /**
+     * @param Assignment $assignment
+     *
+     * @return Collection
+     */
+    public function getDossierData(Assignment $assignment): Collection
     {
         $dossier = $assignment->dossiers()->firstOrCreate([
             'assignment_id' => $assignment->id,
@@ -62,7 +68,11 @@ class DossierService
         });
     }
 
-    private function getRequirementsByRole(int $roleId)
+    /**
+     * @param int $roleId
+     * @return array<int, array<string, string>>
+     */
+    private function getRequirementsByRole(int $roleId): array
     {
         $configs = [
             3 => [
@@ -85,6 +95,71 @@ class DossierService
     }
 
     /**
+     * @param int|null $raId
+     * @return array
+     */
+    public function initDataValition(?int $raId, int $roleId, Assignment $assignment): array
+    {
+        $assignments = [
+            'data' => [],
+            'current_page' => 1,
+            'last_page' => 1,
+            'total' => 0,
+            'links' => []
+        ];
+
+        if ($raId) {
+            $assignments = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
+                ->where('id', $raId)
+                ->get()
+                ->toArray();
+        } else {
+            if ($assignment && in_array($assignment->role_id, [3, 4])) {
+                $assignments = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
+                    ->where('role_id', $roleId)
+                    ->where('section_id', $assignment->section_id)
+                    ->get()
+                    ->toArray();
+            }
+        }
+
+        return $assignments;
+    }
+
+    /**
+     * @param array $filters
+     * @return LengthAwarePaginator
+     */
+    public function getAssignments(array $filters): LengthAwarePaginator
+    {
+        $query = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
+            ->where('role_id', $filters['target_role_id']);
+
+        if (!empty($filters['faculty_id'])) {
+            $query->whereHas('section.school.faculty', function ($q) use ($filters) {
+                $q->where('id', $filters['faculty_id']);
+            });
+        }
+        if (!empty($filters['school_id'])) {
+            $query->whereHas('section.school', function ($q) use ($filters) {
+                $q->where('id', $filters['school_id']);
+            });
+        }
+        if (!empty($filters['section_id'])) {
+            $query->where('section_id', $filters['section_id']);
+        }
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('email', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->paginate(5);
+    }
+
+    /**
      * Store a document for a dossier.
      *
      * @param array $data
@@ -97,7 +172,7 @@ class DossierService
             $model = $this->documentService->validateOwnership('dossier', $data['target_id'], $assignment);
 
             $data['context'] = 'dossier';
-            $data['document_type_id'] = DocumentType::where('code', $data['code'])->first()->id;
+            $data['document_type_id'] = DocumentType::query()->where('code', $data['code'])->first()->id;
 
             $document = $this->documentService->registerDocument($data, $assignment, $model);
 

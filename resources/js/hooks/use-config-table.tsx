@@ -72,7 +72,7 @@ export function useConfigTable<T>({
                 responseData;
             setData(result as TableData<T>);
         } catch {
-            toast.error('Error al obtener los datos. Waaaa Owuu');
+            toast.error('Error al obtener los datos.');
         } finally {
             setIsSearching(false);
         }

@@ -1,10 +1,5 @@
-import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { Loader2, Save, FileText, Maximize2, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 import DocumentViewer from '@/components/document/DocumentViewer';
-import internship from '@/routes/academic/internship';
 import { Spinner } from '@/components/ui/spinner';
 
 interface DocumentFormProps {
@@ -29,7 +24,7 @@ export default function DocumentForm({
     onUpload,
     previewEnabled,
 }: DocumentFormProps) {
-    const [uploading, setUploading] = useState(false);
+    const [uploading] = useState(false);
 
     // Preparamos el currentFile inyectando el tempFile si existe (para el DocumentViewer)
     const viewerFile = {
@@ -38,7 +33,7 @@ export default function DocumentForm({
     };
 
     return (
-        <div className="flex-1 w-full flex flex-col h-full bg-card overflow-hidden relative animate-in fade-in zoom-in-95 duration-500">
+        <div className="flex-1 w-full flex flex-col h-full overflow-hidden relative animate-in fade-in zoom-in-95 duration-500">
 
             {uploading && (
                 <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex items-center justify-center">

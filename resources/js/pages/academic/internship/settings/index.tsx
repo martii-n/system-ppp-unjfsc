@@ -1,4 +1,5 @@
 import AppLayout from "@/layouts/app-layout";
+import AcademicSettingsLayout from "@/layouts/academic/settings-layout";
 import { Head, router, usePage } from "@inertiajs/react";
 import { useEffect } from "react";
 import { DragDropProvider } from "@dnd-kit/react";
@@ -23,21 +24,21 @@ const createDefaultWorkflow = () => [
         step: 1,
         name: "Planeamiento",
         is_evaluation: false,
-        required_docs: { desarrollo: [], convalidacion: [] },
+        required_docs: { development: [], validation: [] },
     },
     {
         id: crypto.randomUUID(),
         step: 2,
         name: "Supervisión Intermedia",
         is_evaluation: false,
-        required_docs: { desarrollo: [], convalidacion: [] },
+        required_docs: { development: [], validation: [] },
     },
     {
         id: crypto.randomUUID(),
         step: 3,
         name: "Evaluación Final",
         is_evaluation: true,
-        required_docs: { desarrollo: [], convalidacion: [] },
+        required_docs: { development: [], validation: [] },
     },
 ];
 
@@ -111,13 +112,14 @@ export default function InternshipSettingsIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Configuración de Prácticas" />
 
-            <div className="flex flex-col flex-1 min-h-screen p-4 md:p-6 lg:p-8 gap-6">
+            <AcademicSettingsLayout>
+                <div className="flex flex-col flex-1 gap-6">
 
-                <Heading
-                    variant="small"
-                    title="Configuración de Flujo"
-                    description="Define las etapas y requisitos documentales dinámicamente por sección."
-                />
+                    <Heading
+                        variant="small"
+                        title="Configuración de Flujo"
+                        description="Define las etapas y requisitos documentales dinámicamente por sección."
+                    />
 
                 {/* Filtro de sección + botones de acción */}
                 <div className="flex justify-between sm:flex-row gap-3 items-center">
@@ -181,7 +183,8 @@ export default function InternshipSettingsIndex({
                         </div>
                     </DragDropProvider>
                 )}
-            </div>
+                </div>
+            </AcademicSettingsLayout>
         </AppLayout>
     );
 }

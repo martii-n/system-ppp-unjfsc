@@ -9,7 +9,7 @@ export function StepperPreview({ workflow }: StepperPreviewProps) {
     return (
         <div className="bg-card border border-border rounded-lg shadow-sm p-6">
             <h3 className="text-sm font-semibold mb-6 flex items-center">
-                <Eye className="w-4 h-4 mr-2" /> 
+                <Eye className="w-4 h-4 mr-2" />
                 Vista Previa Estudiante
             </h3>
 
@@ -27,18 +27,18 @@ export function StepperPreview({ workflow }: StepperPreviewProps) {
                                     <div className="w-0.5 h-full bg-slate-100 my-1"></div>
                                 )}
                             </div>
-                            
+
                             <div className="flex-1 pb-6">
                                 <h4 className={`font-semibold text-sm ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
                                     {step.name}
                                 </h4>
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                    {step.required_docs.desarrollo.length === 0 ? (
+                                    {step.required_docs.development.length === 0 ? (
                                         <span className="text-[10px] text-slate-400 italic">Sin requisitos</span>
                                     ) : (
-                                        step.required_docs.desarrollo.map((d: any, dIdx) => (
+                                        step.required_docs.development.map((d: any, dIdx) => (
                                             <div key={dIdx} className="flex items-center text-xs text-slate-500 bg-white border rounded px-2 py-1 shadow-sm">
-                                                <FileText className="w-3 h-3 mr-1 text-slate-400" /> 
+                                                <FileText className="w-3 h-3 mr-1 text-slate-400" />
                                                 {d.name}
                                             </div>
                                         ))

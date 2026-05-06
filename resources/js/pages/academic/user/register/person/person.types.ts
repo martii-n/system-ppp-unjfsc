@@ -1,10 +1,9 @@
+import { type Faculty } from '@/types';
+
 export interface PersonFlowProps {
     roles: any[];
-    faculties: any[];
-    schools: any[];
-    sections: any[];
+    faculties: Faculty[];
     mode: 'individual' | 'masivo';
-    initialFilters?: any;
     onBack: () => void;
 }
 

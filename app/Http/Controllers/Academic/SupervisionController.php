@@ -35,7 +35,7 @@ class SupervisionController extends Controller
         $raId = request('a');
         $rmId = request('m');
 
-        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+        $faculties = Faculty::query()->forAssignmentContext($assignment, session('semester_id'))->get();
 
         $students = [];
         $groups = [];
@@ -92,10 +92,7 @@ class SupervisionController extends Controller
         $raId = request('a');
         $rmId = request('m');
 
-        $faculties = [];
-        if (in_array($role, [1, 2])) {
-            $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
-        }
+        $faculties = Faculty::query()->forAssignmentContext($assignment, session('semester_id'))->get();
 
         $students = [];
         $groups = [];
@@ -185,7 +182,7 @@ class SupervisionController extends Controller
 
     /**
      * API: Global student search by user code.
-     * GET /supervision/api/students/search?code=xxxx
+     * GET /supervision/api/students/search?code=xxx
      */
     public function searchStudents(Request $request): JsonResponse
     {

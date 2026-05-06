@@ -15,7 +15,7 @@ export default function FilePreview({ path, name, previewEnabled }: any) {
     }
 
     return (
-        <div className="flex-1 w-full flex flex-col items-center justify-center p-12 border-t">
+        <div className="flex-1 w-full flex flex-col items-center justify-center p-12">
             {/* Un mock mucho más simple y limpio */}
             <div className="flex flex-col items-center text-center max-w-sm">
                 <div className="size-16 rounded-full border flex items-center justify-center mb-6 shadow-sm">

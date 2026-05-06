@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Clock, FileText, ShieldCheck, FileCheck, Circle, Info, Lock as LockIcon } from "lucide-react";
 import { Badge } from "../ui/badge";
+import { SectionCard } from "../ui/section-card";
 
 export interface RequirementItem {
     code: string;
@@ -44,18 +45,18 @@ export default function RequirementsList({
     onTogglePreview
 }: RequirementsListProps) {
     if (!requirements || requirements.length === 0) return (
-        <div className="rounded-xl border bg-card shadow-sm flex items-center justify-center text-muted-foreground text-sm italic">
+        <SectionCard className="flex items-center justify-center text-muted-foreground text-sm italic py-8">
             Cargando requisitos...
-        </div>
+        </SectionCard>
     );
 
     return (
-        <div className="rounded-xl border bg-card text-card-foreground">
-            <div className="px-4 py-3 border-b">
-                <h3 className="font-semibold text-sm leading-none">Archivos requeridos</h3>
-                <p className="text-xs text-muted-foreground mt-1">Selecciona un archivo para gestionar</p>
-            </div>
-            <div className="px-3 py-2 space-y-2">
+        <SectionCard>
+            <SectionCard.Header
+                title="Archivos requeridos"
+                description="Selecciona un archivo para gestionar"
+            />
+            <SectionCard.Body className="space-y-2">
                 {requirements.map((req, idx) => {
                     const isActive = selectedType === idx;
                     const cfg = statusConfig[req.status > 3 ? 3 : req.status] ?? statusConfig[0];
@@ -83,8 +84,8 @@ export default function RequirementsList({
                         </button>
                     );
                 })}
-            </div>
-            <div className="px-4 py-3 border-t flex items-center justify-between bg-muted/30">
+            </SectionCard.Body>
+            <SectionCard.Footer>
                 <label htmlFor="preview-toggle" className="text-xs font-medium cursor-pointer">
                     Previsualización
                 </label>
@@ -97,7 +98,7 @@ export default function RequirementsList({
                     <span className={`pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg transition-transform ${previewEnabled ? 'translate-x-4' : 'translate-x-0'
                         }`} />
                 </button>
-            </div>
-        </div>
+            </SectionCard.Footer>
+        </SectionCard>
     );
 }

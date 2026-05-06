@@ -245,9 +245,7 @@ export default function SubmissionShow({ faculties, groups, students }: Props) {
                                         onSuccess={() => {
                                             setTempFile(null);
                                             setIsEditing(false);
-                                            if (selectedGroup) {
-                                                fetchData(`/supervision/api/groups/${selectedGroup.id}/students/filter`, { module_id: selectedModuleId });
-                                            }
+                                            actions.reloadAnnexes();
                                         }}
                                     />
                                 )}

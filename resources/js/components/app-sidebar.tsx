@@ -61,7 +61,7 @@ export function AppSidebar() {
             .filter((item) => !item.items || item.items.length > 0);
     };
 
-    const filteredFooterNav = FOOTER_NAV.filter((item) => {
+    const footerNavItems = FOOTER_NAV.filter((item) => {
         if (!item.userTypes) return true;
         return item.userTypes.includes(userTypeId);
     });
@@ -85,7 +85,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={filteredFooterNav} className="mt-auto" />
+                <NavFooter items={filterItems(footerNavItems, role)} />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

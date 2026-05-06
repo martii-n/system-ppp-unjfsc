@@ -1,9 +1,9 @@
-import axios from "axios";
 import { useConfigTable } from "@/hooks/use-config-table";
 import dossiers from "@/routes/academic/dossiers";
-import { usePage, router } from "@inertiajs/react";
-import { useEffect, useState } from "react";
+import { router } from "@inertiajs/react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { useItemDetail } from "@/hooks/use-item-detail";
 
 interface Props {
     initialData: any;
@@ -14,11 +14,7 @@ interface Props {
 export function useDossierValidation(
     { initialData, target_role_id, isAdmin }: Props
 ) {
-    const { url } = usePage();
-    const params = new URLSearchParams(url.split('?')[1]);
-    const itemFromUrl = params.get('a');
-    const [selectedId, setSelectedId] = useState<number | null>(itemFromUrl ? Number(itemFromUrl) : null);
-
+    // 1. Manejo de la tabla (Sigue igual)
     const tableManager = useConfigTable({
         endpoint: '/api/dossiers/filter',
         initialData,
@@ -34,38 +30,24 @@ export function useDossierValidation(
         },
     });
 
+    // 2. Manejo del Detalle mediante el nuevo Motor (useItemDetail)
+    const { 
+        selectedId, 
+        detailData: itemDetail, 
+        isLoading: isLoadingDetail,
+        actions: detailActions 
+    } = useItemDetail({
+        fetchUrl: (id) => dossiers.api.validations.url(id),
+    });
+
     const selectedItem = tableManager.displayData.find((item) =>
         item.id === selectedId
     );
 
-    const [itemDetail, setItemDetail] = useState<any>(null);
+    // 3. Estados locales específicos del flujo de Dossier
     const [previewEnabled, setPreviewEnabled] = useState(false);
     const [isSavingValidation, setIsSavingValidation] = useState(false);
     const [selectedType, setSelectedType] = useState(0);
-
-    useEffect(() => {
-        if (selectedId) {
-            axios.get(dossiers.api.validations.url(selectedId))
-                .then(res => setItemDetail(res.data))
-                .catch(err => console.log(err));
-        }
-    }, [selectedId]);
-
-    const handleSelect = (id: number) => {
-        /*const url = new URL(window.location.href);
-        url.searchParams.set('a', id.toString());
-        window.history.pushState({}, '', url.toString());*/
-        setSelectedId(id);
-    };
-
-    const handleCloseSelected = () => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('a');
-        window.history.pushState({}, '', url.toString());
-        setSelectedId(null);
-    };
-
-
 
     const handleSaveValidation = (status: number, message: string) => {
         const currentReq = itemDetail?.requirements?.[selectedType];
@@ -86,9 +68,8 @@ export function useDossierValidation(
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
-                // Refrescar el panel de detalles para visualizar nuevo badge/estado
-                axios.get(dossiers.api.validations.url(selectedId!))
-                    .then((res) => setItemDetail(res.data));
+                // Refrescar el panel de detalles de forma estandarizada
+                detailActions.reloadDetail();
 
                 // Refrescar tabla si es Admin para recuperar últimos estados
                 if (isAdmin) {
@@ -118,13 +99,15 @@ export function useDossierValidation(
             selectedId,
             selectedItem,
             itemDetail,
+            isLoadingDetail,
             previewEnabled,
             isSavingValidation,
             selectedType
         },
         actions: {
-            handleSelect,
-            handleCloseSelected,
+            // Mapeamos las acciones del motor a los nombres esperados por el componente
+            handleSelect: detailActions.handleSelect,
+            handleCloseSelected: detailActions.handleClose,
             handleSaveValidation,
             setPreviewEnabled,
             setSelectedType,

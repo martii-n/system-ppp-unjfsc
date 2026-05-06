@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { stepDetailsSchema } from "../stteps-placement/detail.schema";
+import { stepDetailsSchema } from "../schemas/detail.schema";
 import { toast } from "sonner";
 import { router } from "@inertiajs/react";
 import { useEffect, useState } from "react";
@@ -69,7 +69,7 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
     // Cargar áreas si ya hay empresa registrada (modo edición)
     useEffect(() => {
         if (placement?.company?.ruc) {
-            fetch(`/api/internship/companies/verify/${placement.company.ruc}`)
+            fetch(internship.api.company.verify.url(placement.company.ruc))
                 .then(r => r.json())
                 .then(res => { if (res.found) setCompanyAreas(res.areas ?? []); })
                 .catch(() => { });
@@ -82,7 +82,7 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
         if (ruc.length !== 11) { toast.warning("El RUC debe tener exactamente 11 dígitos."); return; }
         setVerifying(true);
         try {
-            const res = await fetch(`/api/internship/companies/verify/${ruc}`);
+            const res = await fetch(internship.api.company.verify.url(ruc));
             const json = await res.json();
             if (json.found) {
                 form.setValue('company.id', json.company.id);
@@ -435,7 +435,7 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 px-1">
                                 <FormField
                                     control={form.control}
-                                    name="placement.area.name"
+                                    name="placement.area_name"
                                     render={({ field }) => (
                                         <FormItem className="space-y-2">
                                             <div className="flex items-center gap-2 px-1">
@@ -526,7 +526,7 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
                                                                     </div>
                                                                     <Input
                                                                         value={field.value ?? ''}
-                                                                        onChange={e => form.setValue('placement.area_name', e.target.value as any)}
+                                                                        onChange={field.onChange}
                                                                         placeholder="Ej. Departamento de TI"
                                                                         className="h-9 text-xs"
                                                                         autoFocus

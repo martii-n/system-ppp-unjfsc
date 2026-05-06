@@ -1,10 +1,11 @@
 import { GroupOption } from "@/components/academic/group-selector";
 import { TableData, useConfigTable } from "@/hooks/use-config-table";
+import { useItemDetail } from "@/hooks/use-item-detail";
 import supervision from "@/routes/academic/supervision";
 import { StudentSupervision } from "@/types";
 import { router, usePage } from "@inertiajs/react";
 import axios from "axios";
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface Props {
@@ -23,34 +24,43 @@ interface CodeSearchResponse {
 
 export function useSupervision({ initialData, groups, isAdmin }: Props) {
     const { url } = usePage();
-    const params = new URLSearchParams(url.split('?')[1]);
+    const moduleFromUrl = new URLSearchParams(url.split('?')[1] || '').get('m');
 
-    // --- 1. Estados de Selección y Deep Linking ---
-    const itemFromUrl = params.get('a');
-    const moduleFromUrl = params.get('m');
+    // --- 1. Motor de Detalle: gestiona 'a', fetch de anexos y reloadDetail ---
+    const {
+        selectedId,
+        detailData,
+        isLoading: isAnnexesLoading,
+        actions: detailActions,
+    } = useItemDetail<{ annexes: any[] }>({
+        fetchUrl: (id) => supervision.api.annexes.url(id),
+        onError: () => toast.error('No se pudieron cargar los anexos.'),
+    });
 
-    const [selectedId, setSelectedId] = useState<number | null>(null);
+    const annexes = detailData?.annexes ?? [];
+    const [selectedAnnexIdx, setSelectedAnnexIdx] = useState(0);
+    const currentAnnex = annexes[selectedAnnexIdx] ?? null;
+
+    // Resetear índice al cambiar de estudiante
+    useEffect(() => { setSelectedAnnexIdx(0); }, [selectedId]);
+
+    // --- 2. Estado del Módulo ('m') — manejado manualmente ---
     const [selectedModuleId, setSelectedModuleId] = useState<number | null>(
         moduleFromUrl ? Number(moduleFromUrl) : null
     );
 
+    // --- 3. Estados de Grupos y Filtros ---
     const [availableGroups, setAvailableGroups] = useState<GroupOption[]>(groups);
     const [selectedGroup, setSelectedGroup] = useState<GroupOption | null>(null);
-    const hasAutoSelected = useRef(false);
-
-    // --- 2. Estados de Anexos (Detalle) ---
-    const [annexes, setAnnexes] = useState<any[]>([]);
-    const [isAnnexesLoading, setIsAnnexesLoading] = useState(false);
-    const [selectedAnnexIdx, setSelectedAnnexIdx] = useState(0);
-
-    const currentAnnex = annexes[selectedAnnexIdx] || null;
-
-    // --- 3. Estados de Búsqueda y Filtros ---
     const [isSearchingByCode, setIsSearchingByCode] = useState(false);
     const [codeSearch, setCodeSearch] = useState('');
     const [isFilteringGroups, setIsFilteringGroups] = useState(false);
+    const hasAutoSelected = useRef(false);
 
-    // --- 3. Motor de la Tabla (useConfigTable) ---
+    // --- 4. Motor de la Tabla ---
+    // useMemo para evitar bucle infinito por referencia de objeto
+    const tableExtraParams = useMemo(() => ({ module_id: selectedModuleId }), [selectedModuleId]);
+
     const tableManager = useConfigTable<StudentSupervision>({
         endpoint: selectedGroup && selectedModuleId
             ? `/supervision/api/groups/${selectedGroup.id}/students/filter`
@@ -58,7 +68,7 @@ export function useSupervision({ initialData, groups, isAdmin }: Props) {
         initialData: initialData as unknown as TableData<StudentSupervision>,
         isAdmin,
         pageSize: 10,
-        extraParams: { module_id: selectedModuleId },
+        extraParams: tableExtraParams,
         onLocalSearch: (a, term) => {
             const fullName = `${a.user?.person?.surnames || ''} ${a.user?.person?.names || ''}`.toLowerCase();
             const email = (a.user?.email || '').toLowerCase();
@@ -68,38 +78,25 @@ export function useSupervision({ initialData, groups, isAdmin }: Props) {
 
     const { fetchData, setData: setAssignments, displayData, setSearch, handleFilter: handleAcademicFilter } = tableManager;
 
-    // --- 4. Lógica de Selección de Item ---
-    const selectedItem = displayData.find((item) =>
-        item.id === selectedId &&
-        (item.search_module === selectedModuleId || !item.search_module)
-    );
+    // Item seleccionado (memoizado para evitar recalcular en cada render)
+    const selectedItem = useMemo(() =>
+        displayData.find((item) =>
+            item.id === selectedId &&
+            (item.search_module === selectedModuleId || !item.search_module)
+        ),
+    [displayData, selectedId, selectedModuleId]);
 
-    // Autoselección si viene de URL (Notificaciones)
+    // --- 5. Efectos de Sincronización ---
+
+    // Autoselección desde URL (notificaciones con ?a=X)
     useEffect(() => {
-        if (itemFromUrl && displayData.length > 0 && !hasAutoSelected.current) {
-            setSelectedId(displayData[0].id);
+        if (selectedId && displayData.length > 0 && !hasAutoSelected.current) {
             hasAutoSelected.current = true;
         }
-    }, [displayData, itemFromUrl]);
+    }, [displayData, selectedId]);
 
-    useEffect(() => {
-        if (selectedId) {
-            setIsAnnexesLoading(true);
-            axios.get(supervision.api.annexes.url(selectedId))
-                .then(res => setAnnexes(res.data.annexes ?? []))
-                .catch(() => toast.error('No se pudieron cargar los anexos.'))
-                .finally(() => setIsAnnexesLoading(false));
-        } else {
-            setAnnexes([]);
-        }
-    }, [selectedId]);
+    useEffect(() => { setAvailableGroups(groups); }, [groups]);
 
-    // Sincronizar grupos iniciales
-    useEffect(() => {
-        setAvailableGroups(groups);
-    }, [groups]);
-
-    // Recargar tabla cuando cambia Grupo o Módulo
     useEffect(() => {
         if (selectedGroup && selectedModuleId) {
             fetchData(
@@ -109,9 +106,62 @@ export function useSupervision({ initialData, groups, isAdmin }: Props) {
         }
     }, [selectedGroup, selectedModuleId]);
 
-    // --- 5. Handlers (Acciones) ---
+    // --- 6. Acciones de Negocio (lógica fuera de la UI) ---
 
-    // Filtrado Académico (Facultad -> Escuela -> Sección)
+    /**
+     * Seleccionar estudiante: sincroniza 'a' (motor) y 'm' (manual) en la URL.
+     */
+    const handleSelect = useCallback((id: number, moduleOverride?: number) => {
+        const moduleId = moduleOverride ?? selectedModuleId;
+
+        detailActions.handleSelect(id); // Actualiza 'a' en URL + dispara fetch
+
+        if (moduleId) {
+            setSelectedModuleId(moduleId);
+            // replaceState para añadir 'm' sin crear otra entrada en el historial
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('m', moduleId.toString());
+            window.history.replaceState({}, '', newUrl.toString());
+        }
+    }, [detailActions, selectedModuleId]);
+
+    /**
+     * Cerrar panel: elimina 'a' y 'm' de la URL en un solo movimiento.
+     */
+    const handleCloseSelected = useCallback(() => {
+        detailActions.setSelectedId(null); // Limpia estado y detailData
+
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('a');
+        newUrl.searchParams.delete('m');
+        window.history.pushState({}, '', newUrl.toString());
+    }, [detailActions]);
+
+    /**
+     * Validar anexo: lógica de negocio centralizada.
+     * Después de guardar, refresca los anexos automáticamente.
+     */
+    const validateAnnex = useCallback((data: { status: number; comment: string }, annex: any) => {
+        if (!annex.evaluation_id) return;
+
+        router.patch(
+            supervision.update.url({ evaluation: annex.evaluation_id }),
+            {
+                approval_status: data.status,
+                observation_type: data.status,
+                comment: data.comment,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    detailActions.reloadDetail(); // Refresca panel sin perder selección
+                    toast.success('Validación registrada correctamente.');
+                },
+            }
+        );
+    }, [detailActions]);
+
+    // Filtrado Académico
     const handleFilter = async (values: Record<string, unknown>) => {
         handleAcademicFilter(values);
 
@@ -127,7 +177,7 @@ export function useSupervision({ initialData, groups, isAdmin }: Props) {
         setSelectedGroup(null);
         setSelectedModuleId(null);
         setAssignments({ data: [] });
-        setSelectedId(null);
+        detailActions.setSelectedId(null);
 
         try {
             const res = await axios.get(supervision.api.groups.url(), { params: values });
@@ -143,41 +193,36 @@ export function useSupervision({ initialData, groups, isAdmin }: Props) {
     // Selección de Grupo
     const handleGroupSelect = (group: GroupOption | null) => {
         setSelectedGroup(group);
-        setSelectedId(null);
+        detailActions.setSelectedId(null);
         setAssignments({ data: [] });
 
-        // Si veníamos de un link profundo, limpiamos la URL para evitar conflictos
-        if (itemFromUrl && moduleFromUrl) {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('a');
-            url.searchParams.delete('m');
-            window.history.pushState({}, '', url.toString());
-        }
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('a');
+        newUrl.searchParams.delete('m');
+        window.history.pushState({}, '', newUrl.toString());
 
         if (!group) {
             setSelectedModuleId(null);
             return;
         }
-
         setSelectedModuleId(group.module_id);
     };
 
     // Búsqueda Global por Código (Admin)
     const handleCodeSearch = async () => {
         if (!codeSearch.trim()) return;
-
         setAvailableGroups([]);
         setSelectedGroup(null);
         setSelectedModuleId(null);
-
         setIsSearchingByCode(true);
+
         try {
             const res = await axios.get<CodeSearchResponse>(
                 supervision.api.students_search.url(),
                 { params: { code: codeSearch.trim() } }
             );
             setAssignments(res.data.students);
-            setSelectedId(null);
+            detailActions.setSelectedId(null);
         } catch {
             toast.error('No se encontró al estudiante.');
             setAssignments({ data: [] });
@@ -186,28 +231,9 @@ export function useSupervision({ initialData, groups, isAdmin }: Props) {
         }
     };
 
-    // Selección de Estudiante
-    const handleSelect = (id: number, moduleOverride?: number) => {
-        setSelectedId(id);
-        if (moduleOverride) setSelectedModuleId(moduleOverride);
-    };
-
-    // Cerrar Panel de Detalle
-    const handleCloseSelected = () => {
-        if (itemFromUrl && moduleFromUrl) {
-            router.get(window.location.pathname, {}, { preserveState: true, replace: true });
-        } else {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('a');
-            url.searchParams.delete('m');
-            window.history.pushState({}, '', url.toString());
-        }
-        setSelectedId(null);
-    };
-
     const handleModuleSelect = (moduleId: number) => {
         setSelectedModuleId(moduleId);
-        setSelectedId(null);
+        detailActions.setSelectedId(null);
     };
 
     return {
@@ -224,7 +250,7 @@ export function useSupervision({ initialData, groups, isAdmin }: Props) {
             isAnnexesLoading,
             isSearchingByCode,
             codeSearch,
-            isFilteringGroups
+            isFilteringGroups,
         },
         actions: {
             handleSelect,
@@ -234,7 +260,9 @@ export function useSupervision({ initialData, groups, isAdmin }: Props) {
             handleCodeSearch,
             setCodeSearch,
             handleModuleSelect,
-            setSelectedAnnexIdx
-        }
+            setSelectedAnnexIdx,
+            validateAnnex,                          // Para validation/index.tsx
+            reloadAnnexes: detailActions.reloadDetail, // Para submission/index.tsx
+        },
     };
 }

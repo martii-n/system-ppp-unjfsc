@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/combobox";
 
 interface RequirementColumnProps {
-    type: 'desarrollo' | 'convalidacion';
+    type: 'development' | 'validation';
     stageId: string;
     documents: any[];
-    onAdd: (type: 'desarrollo' | 'convalidacion', docInfo: { name: string; code: string }) => void;
-    onRemove: (type: 'desarrollo' | 'convalidacion', index: number) => void;
+    onAdd: (type: 'development' | 'validation', docInfo: { name: string; code: string }) => void;
+    onRemove: (type: 'development' | 'validation', index: number) => void;
     availableDocuments: { id: number, name: string, code: string }[];
 }
 
@@ -29,8 +29,8 @@ function SortableDocItem({ doc, idx, type, stageId, onRemove }: any) {
     });
 
     return (
-        <div 
-            ref={ref} 
+        <div
+            ref={ref}
             className={`group flex items-center justify-between bg-slate-50 p-2 rounded-md border border-slate-100 text-sm ${isDragging ? "opacity-30 shadow-md ring-1 ring-primary z-50 relative bg-white" : ""}`}
         >
             <div className="flex items-center gap-2 overflow-hidden">
@@ -54,9 +54,9 @@ export function RequirementColumn({ type, stageId, documents, onAdd, onRemove, a
     const [inputValue, setInputValue] = useState("");
 
     return (
-        <div className={`space-y-3 ${type === 'convalidacion' ? 'border-l pl-4' : ''}`}>
+        <div className={`space-y-3 ${type === 'validation' ? 'border-l pl-4' : ''}`}>
             <h4 className="text-xs font-bold text-slate-500 uppercase flex items-center">
-                {type === 'desarrollo' ? (
+                {type === 'development' ? (
                     <GraduationCap className="w-3 h-3 mr-1" />
                 ) : (
                     <Briefcase className="w-3 h-3 mr-1" />
@@ -69,13 +69,13 @@ export function RequirementColumn({ type, stageId, documents, onAdd, onRemove, a
                     <span className="text-[10px] text-slate-400 italic">Ningún requisito definido</span>
                 ) : (
                     documents.map((doc, idx) => (
-                        <SortableDocItem 
-                            key={doc.code || idx} 
-                            doc={doc} 
-                            idx={idx} 
-                            type={type} 
-                            stageId={stageId} 
-                            onRemove={onRemove} 
+                        <SortableDocItem
+                            key={doc.code || idx}
+                            doc={doc}
+                            idx={idx}
+                            type={type}
+                            stageId={stageId}
+                            onRemove={onRemove}
                         />
                     ))
                 )}

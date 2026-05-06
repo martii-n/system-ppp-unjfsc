@@ -44,6 +44,15 @@ export function usePlacementSubmission({ placement, requirements }: UsePlacement
         }
     };
 
+    const removeTempFile = () => {
+        setTempFile(null);
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
+        setIsEditing(false);
+    };
+
     // Callback para visulizar local antes de subir
     const onUploadTempFile = (file: File) => {
         setTempFile(file);
@@ -57,7 +66,7 @@ export function usePlacementSubmission({ placement, requirements }: UsePlacement
 
     // Lógica para decidir si mostrar UploadZone o Preview
     const canUploadDocument = activeRequirement
-        ? (!activeRequirement?.latest && !tempFile) || isEditing
+        ? (!activeRequirement?.latest || isEditing) && !tempFile
         : false;
 
     const [loading, setLoading] = useState(false);
@@ -105,6 +114,7 @@ export function usePlacementSubmission({ placement, requirements }: UsePlacement
         activeContext,
         activeRequirement,
         setActiveContext: handleSelectContext,
+        removeTempFile,
         loading,
 
         // Archivos y Previsualización

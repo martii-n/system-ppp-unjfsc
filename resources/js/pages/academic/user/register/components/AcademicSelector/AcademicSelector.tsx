@@ -12,40 +12,38 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { usePage } from "@inertiajs/react";
 
 import { useFormContext, useWatch } from "react-hook-form";
+import { useAcademicAutoResolver } from "./useAcademicAutoResolver";
 
 export function AcademicSelectorRHF({
     roleId,
     roleUser,
-    faculties,
-    schools,
-    sections,
+    faculties = [],
 }: any) {
-    const { auth, role } = usePage().props as any;
-
     const { control, setValue } = useFormContext();
 
     const isSubadmin = roleId === "2";
-    const isTeacher = roleUser === 3;
+    const isTeacher  = roleUser === 3;
 
     const facultyId = useWatch({ control, name: "faculty_id" });
-    const schoolId = useWatch({ control, name: "school_id" });
+    const schoolId  = useWatch({ control, name: "school_id" });
 
-    const facultyIdNum =
-        facultyId && facultyId !== "" ? Number(facultyId) : null;
+    const safeFaculties = Array.isArray(faculties) ? faculties : [];
 
-    const schoolIdNum =
-        schoolId && schoolId !== "" ? Number(schoolId) : null;
+    // Obtener la facultad seleccionada y sus escuelas
+    const selectedFaculty = safeFaculties.find((f: any) => f.id?.toString() === facultyId?.toString());
+    const filteredSchools = Array.isArray(selectedFaculty?.schools) ? selectedFaculty.schools : [];
 
-    const filteredSchools = facultyIdNum
-        ? schools.filter((s: any) => s.faculty_id === facultyIdNum)
-        : [];
+    // Obtener la escuela seleccionada y sus secciones
+    const selectedSchool = filteredSchools.find((s: any) => s.id?.toString() === schoolId?.toString());
+    const filteredSections = Array.isArray(selectedSchool?.sections) ? selectedSchool.sections : [];
 
-    const filteredSections = schoolIdNum
-        ? sections.filter((s: any) => s.school_id === schoolIdNum)
-        : [];
+    // Lógica de auto-resolución para SubAdmin delegada al hook
+    useAcademicAutoResolver({
+        faculties: safeFaculties,
+        isSubadmin
+    });
 
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -72,8 +70,8 @@ export function AcademicSelectorRHF({
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                {faculties.map((f: any) => (
-                                    <SelectItem key={f.id} value={f.id.toString()}>
+                                {safeFaculties.map((f: any) => (
+                                    <SelectItem key={f.id} value={f.id?.toString()}>
                                         {f.name}
                                     </SelectItem>
                                 ))}

@@ -16,9 +16,9 @@ class AssignmentService
         $this->requestService = $requestService;
     }
 
-    public function requestAssignmentManage(array $data, Assignment $assignment, Assignment $sender): Request
+    public function requestAssignmentManage(array $data, Assignment $assignment, Assignment $sender): void
     {
-        return DB::transaction(function () use ($data, $assignment, $sender) {
+        DB::transaction(function () use ($data, $assignment, $sender) {
             $this->validateOwnership($assignment, $sender);
 
             $type = '';
@@ -26,12 +26,10 @@ class AssignmentService
             if ($data['action'] == 1) {
                 $type = 'DELETE_ASSIGNMENT';
                 $msj = 'Eliminar el usuario';
-            }
-            elseif ($data['action'] == 2) {
+            } elseif ($data['action'] == 2) {
                 $type = 'DISABLE_ASSIGNMENT';
                 $msj = 'Deshabilitar el usuario';
-            }
-            elseif ($data['action'] == 3) {
+            } elseif ($data['action'] == 3) {
                 $type = 'ENABLE_ASSIGNMENT';
                 $msj = 'Habilitar el usuario';
             }
@@ -39,19 +37,17 @@ class AssignmentService
             $assignment->review_status = 1;
             $assignment->save();
 
-            $request = $this->requestService->createRequest(
+            $this->requestService->createRequest(
                 $sender,
                 $assignment,
                 $type,
-            [
-                'assignment_id' => $assignment->id,
-                'access_status' => $assignment->access_status,
-                'approval_status' => $assignment->approval_status,
-            ],
+                [
+                    'assignment_id' => $assignment->id,
+                    'access_status' => $assignment->access_status,
+                    'approval_status' => $assignment->approval_status,
+                ],
                 $data['reason'] ?? $msj
             );
-
-            return $request->load('requestable');
         });
     }
 

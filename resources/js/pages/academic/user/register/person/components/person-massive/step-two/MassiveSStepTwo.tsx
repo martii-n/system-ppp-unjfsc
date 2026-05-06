@@ -11,12 +11,12 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { type Faculty } from '@/types';
+
 interface MassiveSummaryProps {
     data: any;
     roles: any[];
-    faculties: any[];
-    schools: any[];
-    sections: any[];
+    faculties: Faculty[];
 }
 
 function SummaryRow({ label, value, icon: Icon }: { label: string; value: string; icon?: any }) {
@@ -31,14 +31,20 @@ function SummaryRow({ label, value, icon: Icon }: { label: string; value: string
     );
 }
 
-export function MassiveSStepTwo({ data, roles, faculties, schools, sections }: MassiveSummaryProps) {
+export function MassiveSStepTwo({ data, roles, faculties }: MassiveSummaryProps) {
     const [showPreview, setShowPreview] = useState(false);
 
-    const getLabel = (arr: any[], id: string | number) => arr.find((i: any) => i.id.toString() === id.toString())?.name || '—';
+    const getLabel = (arr: any[] | undefined, id: string | number) => arr?.find((i: any) => i.id.toString() === id?.toString())?.name || '—';
 
     // Obtenemos los datos dinámicos del estado global 'data' de Inertia
     const fileName = data.file?.name || "Archivo de carga masiva";
     const recordCount = data.rows?.length || 0;
+
+    const selectedFaculty = faculties.find((f: any) => f.id.toString() === data.faculty_id?.toString());
+    const schoolName = getLabel(selectedFaculty?.schools, data.school_id);
+
+    const selectedSchool = selectedFaculty?.schools?.find((s: any) => s.id.toString() === data.school_id?.toString());
+    const sectionName = getLabel(selectedSchool?.sections, data.section_id);
 
     return (
         <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
@@ -107,8 +113,8 @@ export function MassiveSStepTwo({ data, roles, faculties, schools, sections }: M
                         <SummaryRow label="Rol destino" value={getLabel(roles, data.role_id)} />
                         <Separator className="my-1 border-dashed opacity-50" />
                         <SummaryRow label="Facultad" value={getLabel(faculties, data.faculty_id)} />
-                        <SummaryRow label="Escuela" value={getLabel(schools, data.school_id)} />
-                        <SummaryRow label="Sección" value={getLabel(sections, data.section_id)} />
+                        <SummaryRow label="Escuela" value={schoolName} />
+                        <SummaryRow label="Sección" value={sectionName} />
                     </div>
 
                     <div className="mt-6 p-3 rounded-lg bg-muted/40 border text-[10px] text-muted-foreground leading-relaxed flex gap-3">

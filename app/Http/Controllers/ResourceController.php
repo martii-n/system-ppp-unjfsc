@@ -26,25 +26,7 @@ class ResourceController extends Controller
     {
         $assignment = Assignment::with('section')->find(session('assignment_id'));
 
-        // Cargar facultades con su jerarquía para el selector de ubicación
-        $facultiesQuery = Faculty::with('schools.sections')->where('status', 1);
-
-        // Si es rol 3 (Docente), solo cargamos su propia sección académica
-        if ($assignment && $assignment->role_id === 3 && $assignment->section) {
-            $facultiesQuery->where('id', $assignment->section->faculty_id)
-                ->with([
-                    'schools' => function ($q) use ($assignment) {
-                        $q->where('id', $assignment->section->school_id)
-                            ->with([
-                                'sections' => function ($q) use ($assignment) {
-                                    $q->where('id', $assignment->section_id);
-                                }
-                            ]);
-                    }
-                ]);
-        }
-
-        $faculties = $facultiesQuery->get();
+        $faculties = Faculty::query()->forAssignmentContext($assignment, session('semester_id'), true)->get();
 
         // Cargar todos los tipos de documentos con sus roles asociados para filtrar en el front
         $queryDocTypes = DocumentType::with([
@@ -62,6 +44,10 @@ class ResourceController extends Controller
         $queryRoles = Role::query();
 
         $queryRoles->whereNotIn('id', [1, 6]);
+
+        if ($assignment && $assignment->role_id === 2) {
+            $queryRoles->whereNotIn('id', [2]);
+        }
 
         if ($assignment && $assignment->role_id === 3) {
             $queryRoles->whereNotIn('id', [2, 3]);

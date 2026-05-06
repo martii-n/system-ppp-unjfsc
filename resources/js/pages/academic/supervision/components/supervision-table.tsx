@@ -54,21 +54,35 @@ export default function SupervisionTable({
     return (
         <div className="overflow-hidden rounded-md border bg-card">
             <Table>
+                <colgroup>
+                    <col className="w-[20%]" />
+                    {!selectedId && (
+                        <>
+                            <col className="w-[25%]" />
+                            <col className="w-[24%]" />
+                            <col className="w-[10%]" />
+                        </>
+                    )}
+                    <col className="w-[8%]" />
+                    <col className="w-[2%]" />
+                </colgroup>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Estudiante</TableHead>
+                        <TableHead>Nombre / Usuario</TableHead>
                         {!selectedId && (
                             <>
-                                <TableHead className="hidden text-xs md:table-cell">
+                                <TableHead className="hidden md:table-cell">
+                                    Facultad
+                                </TableHead>
+                                <TableHead className="hidden md:table-cell">
                                     Escuela
                                 </TableHead>
-                                <TableHead className="hidden text-xs lg:table-cell">
+                                <TableHead className="hidden lg:table-cell">
                                     Sección
                                 </TableHead>
                             </>
                         )}
                         <TableHead className="text-center">Estado</TableHead>
-                        <TableHead className="w-6" />
                     </TableRow>
                 </TableHeader>
                 {isSearching ? (
@@ -90,7 +104,7 @@ export default function SupervisionTable({
                             const cfg = statusConfig[status] ?? statusConfig[0];
                             const isSelected = student.search_module
                                 ? selectedId === student.id &&
-                                  selectedModuleId === student.search_module
+                                selectedModuleId === student.search_module
                                 : selectedId === student.id;
                             return (
                                 <TableRow
@@ -105,37 +119,50 @@ export default function SupervisionTable({
                                             student.search_module,
                                         )
                                     }
-                                    className={`group/row cursor-pointer transition-colors ${
-                                        isSelected
-                                            ? 'border-l-2 border-l-primary bg-primary/5'
-                                            : 'hover:bg-muted/30'
-                                    }`}
+                                    className={`group/row cursor-pointer transition-colors ${isSelected
+                                        ? 'border-l-2 border-l-primary bg-primary/5'
+                                        : 'hover:bg-muted/30'
+                                        }`}
                                 >
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
-                                                <User className="size-3.5 text-muted-foreground" />
+                                            <div className="flex size-8 items-center justify-center rounded-full bg-muted">
+                                                <User className="size-4 text-muted-foreground" />
                                             </div>
-                                            <div className="flex min-w-0 flex-col">
-                                                <span className="truncate text-xs font-bold uppercase">
-                                                    {student.user?.person?.surnames}
-                                                    , {student.user?.person?.names}
+                                            <div className="flex flex-col overflow-hidden">
+                                                <span className="max-w-37.5 truncate text-xs font-bold uppercase lg:max-w-none">
+                                                    {student.user?.person?.surnames}{' '}
+                                                    {student.user?.person?.names}
                                                 </span>
-                                                {!selectedId && (
+                                                {!selectedId ? (
                                                     <span className="truncate text-[10px] text-muted-foreground">
                                                         {student.user?.email}
                                                     </span>
+                                                ) : (
+                                                    <div className="flex gap-2">
+                                                        <span className="truncate text-[10px] text-muted-foreground">
+                                                            {student.section?.school?.name}
+                                                        </span>
+                                                        <span className="truncate text-[10px] text-muted-foreground">
+                                                            - {student.section?.name}
+                                                        </span>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
                                     </TableCell>
+                                    {/* Columnas que desaparecen en modo split */}
                                     {!selectedId && (
                                         <>
-                                            <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
-                                                {student.section.school.name}
+                                            <TableCell className="hidden text-sm font-medium text-muted-foreground md:table-cell">
+                                                {student.section?.school?.faculty?.name ||
+                                                    'N/A'}
                                             </TableCell>
-                                            <TableCell className="hidden text-xs font-bold lg:table-cell">
-                                                {student.section.name}
+                                            <TableCell className="hidden text-sm font-medium text-muted-foreground md:table-cell">
+                                                {student.section?.school?.name || 'N/A'}
+                                            </TableCell>
+                                            <TableCell className="hidden font-bold lg:table-cell">
+                                                {student.section?.name || 'N/A'}
                                             </TableCell>
                                         </>
                                     )}
@@ -149,11 +176,10 @@ export default function SupervisionTable({
                                     </TableCell>
                                     <TableCell>
                                         <ChevronRight
-                                            className={`size-4 text-muted-foreground transition-all ${
-                                                isSelected
-                                                    ? 'rotate-180 text-primary'
-                                                    : 'opacity-0 group-hover/row:opacity-100'
-                                            }`}
+                                            className={`size-4 text-muted-foreground transition-all ${isSelected
+                                                ? 'rotate-180 text-primary'
+                                                : 'opacity-0 group-hover/row:opacity-100'
+                                                }`}
                                         />
                                     </TableCell>
                                 </TableRow>

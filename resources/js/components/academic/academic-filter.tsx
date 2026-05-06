@@ -88,6 +88,7 @@ export function AcademicFilter({
 
     const appliedLabel = () => {
         if (!applied) return null;
+
         const fac = faculties.find(
             (f) => f.id.toString() === applied.faculty_id,
         );
@@ -97,7 +98,23 @@ export function AcademicFilter({
         const sec = sch?.sections.find(
             (s) => s.id.toString() === applied.section_id,
         );
-        return sec?.name ?? sch?.name ?? fac?.name ?? null;
+
+        // 1. Si hay sección, mostrar "Escuela - Sección"
+        if (sec && sch) {
+            return `${sch.name} - ${sec.name}`;
+        }
+
+        // 2. Si no hay sección pero sí escuela
+        if (sch) {
+            return sch.name;
+        }
+
+        // 3. Si solo hay facultad
+        if (fac) {
+            return fac.name;
+        }
+
+        return null;
     };
 
     return (

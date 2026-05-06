@@ -5,6 +5,8 @@ use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\ProfileDetailsController;
 use App\Http\Controllers\Settings\ProfileMediaController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
+use App\Http\Controllers\Academic\Settings\InternshipSettingController;
+use App\Http\Controllers\Academic\Settings\DocumentSettingController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -34,3 +36,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
 });
+
+// Academic Settings
+Route::middleware(['auth', 'type:1,2', 'approved', 'role:1,2,3'])
+    ->name('settings.academic.')
+    ->prefix('settings')
+    ->group(function () {
+        Route::get('internship', [InternshipSettingController::class, 'index'])->name('internship');
+        Route::get('document', [DocumentSettingController::class, 'index'])->name('document');
+        Route::post('document', [DocumentSettingController::class, 'store'])->name('document.store');
+        Route::put('document/{document}', [DocumentSettingController::class, 'update'])->name('document.update');
+        Route::delete('document/{document}', [DocumentSettingController::class, 'destroy'])->name('document.destroy');
+    });

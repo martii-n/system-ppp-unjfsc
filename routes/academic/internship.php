@@ -3,10 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Academic\InternshipController;
 use App\Http\Controllers\Academic\PlacementController;
-use App\Http\Controllers\Academic\InternshipSettingController;
+use App\Http\Controllers\Academic\Settings\InternshipSettingController;
 
 Route::middleware(['role:1,5'])->group(function () {
-    Route::get('/internship', [InternshipController::class, 'SubmissionIndex'])->name('internship.submission');
+    Route::get('/internship', [InternshipController::class, 'SubmissionIndex'])->middleware(['role:5'])->name('internship.submission');
 
     // Placement: formalización previa al Internship
     Route::post('/internship/placements', [PlacementController::class, 'store'])->name('internship.placements.store');

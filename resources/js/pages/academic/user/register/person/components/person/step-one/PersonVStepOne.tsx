@@ -23,15 +23,14 @@ import {
 } from '@/components/ui/select';
 import { AcademicSelectorRHF } from '../../../../components/AcademicSelector/AcademicSelector';
 
+import { type Faculty } from '@/types';
+
 import { personInitSchema, PersonInitValues } from './schema';
 import { usePage } from '@inertiajs/react';
 
 interface PersonInitProps {
     roles: any[];
-    faculties: any[];
-    schools: any[];
-    sections: any[];
-
+    faculties: Faculty[];
     initialValues?: Partial<PersonInitValues>;
     onSubmit: (values: PersonInitValues) => void;
     isLoading: boolean;
@@ -40,8 +39,6 @@ interface PersonInitProps {
 export function PersonVStepOne({
     roles,
     faculties,
-    schools,
-    sections,
     initialValues,
     onSubmit,
     isLoading,
@@ -116,8 +113,6 @@ export function PersonVStepOne({
                     roleId={form.watch('role_id')}
                     roleUser={role}
                     faculties={faculties}
-                    schools={schools}
-                    sections={sections}
                 />
 
                 <div className="flex justify-end">

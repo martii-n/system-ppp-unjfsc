@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use App\Services\SupervisionService;
 
 use App\Models\Section;
-use App\Models\Faculty;
 use Illuminate\Support\Collection;
 
 class InternshipGroupService
@@ -27,6 +26,7 @@ class InternshipGroupService
 
     /**
      * Get all internship groups with necessary relations for the listing view.
+     * @return array
      */
     public function getInternshipGroups(): array
     {
@@ -148,10 +148,11 @@ class InternshipGroupService
 
     /**
      * Get all students and their assigned groups.
+     * @return Collection
      */
     public function getStudentsAndGroups(): Collection
     {
-        return Assignment::where('role_id', 5) // Role 5: Student
+        return Assignment::query()->where('role_id', 5) // Role 5: Student
             ->where('access_status', 1)
             ->with(['user.person', 'section.school', 'studentGroups.internshipGroup'])
             ->get();
@@ -159,10 +160,12 @@ class InternshipGroupService
 
     /**
      * Get internship groups scoped to a specific section (for Docente/Supervisor).
+     * @param int $sectionId
+     * @return array
      */
     public function getInternshipGroupsBySection(int $sectionId): array
     {
-        return InternshipGroup::with([
+        return InternshipGroup::query()->with([
             'teacher.user.person',
             'supervisor.user.person',
             'section.school.faculty',

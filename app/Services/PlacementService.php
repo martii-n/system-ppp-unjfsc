@@ -23,7 +23,6 @@ class PlacementService
     ) {
     }
 
-    // Se debe enviar el Placement y los archivos asociados
     public function getSubmissionData(Assignment $assignment): array
     {
         // 1. Cargar relaciones necesarias del assignment
@@ -151,19 +150,6 @@ class PlacementService
                     'validation_status' => 2, // 2: Pending (Global)
                 ]
             );
-
-            // Guardar archivos usando DocumentService
-            /*if (isset($data['files']['fut'])) {
-                $this->savePlacementDocument($placement, $assignment, 'fut', $data['files']['fut']);
-            }
-
-            if (isset($data['files']['carta_presentacion'])) {
-                $this->savePlacementDocument($placement, $assignment, 'carta_presentacion', $data['files']['carta_presentacion']);
-            }
-
-            if (isset($data['files']['carta_aceptacion'])) {
-                $this->savePlacementDocument($placement, $assignment, 'carta_aceptacion', $data['files']['carta_aceptacion']);
-            }*/
 
             // Notificar al Admin, Subadmin y Docente del registro de formalización
             $assignment->loadMissing('user.person');

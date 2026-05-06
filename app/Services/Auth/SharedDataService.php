@@ -3,8 +3,6 @@
 namespace App\Services\Auth;
 
 use App\Models\Assignment;
-use App\Models\Company;
-use App\Models\Person;
 use App\Models\Semester;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -18,6 +16,11 @@ class SharedDataService
     public function getSharedPayload(User $user): array
     {
         $type = $user->typeUser;
+
+        // Academic context synchronization if needed
+        if ($type->id === 2 || $type->id === 1) {
+            $this->syncService->sync($user);
+        }
 
         $payload = [
             'user' => [
@@ -33,9 +36,7 @@ class SharedDataService
             'notifications' => $this->getUnreadNotifications($user),
         ];
 
-        // Academic context synchronization if needed
         if ($type->id === 2 || $type->id === 1) {
-            $this->syncService->sync($user);
             $payload['academic'] = fn() => $this->getAcademicContext($user);
         }
 

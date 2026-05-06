@@ -13,12 +13,11 @@ import { SidebarInfo } from './components/SidebarInfo';
 // Flujos (Inyectados)
 import { PersonFlow } from './person/PersonFlow';
 
+import { type Faculty } from '@/types';
+
 interface PageProps {
     roles: any[];
-    faculties: any[];
-    schools: any[];
-    sections: any[];
-    initialFilters?: any;
+    faculties: Faculty[];
 }
 
 export default function UserRegistration(props: PageProps) {

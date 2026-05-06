@@ -39,37 +39,24 @@ class UserRegistrationController extends Controller
 
         $queryRoles->whereNotIn('id', [1, 6]);
 
+        if ($assignment->role_id === 2) {
+            $queryRoles->whereNotIn('id', [2]);
+        }
+
         if ($assignment->role_id === 3) {
             $queryRoles->whereNotIn('id', [2, 3]);
         }
 
         $roles = $queryRoles->get();
-        $faculties = Faculty::all();
-        $schools = School::all();
-        $sections = Section::where('semester_id', $semesterId)->get();
 
-        $initialFilters = [];
-        if ($assignment->role_id === 3) {
-            $section = $assignment->section;
-            if ($section) {
-                $initialFilters = [
-                    'faculty_id' => $section->school->faculty_id,
-                    'school_id' => $section->school_id,
-                    'section_id' => $section->id,
-                ];
-            }
-        }
+        $faculties = Faculty::query()->forAssignmentContext($assignment, $semesterId, true)->get();
 
         return Inertia::render('academic/user/register/index', [
             'roles' => $roles,
             'faculties' => $faculties,
-            'schools' => $schools,
-            'sections' => $sections,
-            'initialFilters' => $initialFilters,
             'role' => $assignment->role_id,
         ]);
     }
-
 
     public function stepOne(StepOneRequest $request, UserRegistrationService $service): JsonResponse
     {

@@ -1,3 +1,4 @@
+import { SectionCard } from "@/components/ui/section-card";
 import { CheckCircle2, GraduationCap, Laptop, UserCheck } from "lucide-react";
 
 const TYPE_OPTIONS = [
@@ -27,71 +28,79 @@ export function TypeSelector({ type, setType, origin, setOrigin, disabled }: {
     disabled: boolean;
 }) {
     return (
-        <div className="flex flex-col gap-2 rounded-xl border bg-card text-card-foreground">
-            <div className="px-4 py-3 border-b">
-                <h3 className="font-semibold text-sm leading-none">Tipo de Pasantía</h3>
-                <p className="text-xs text-muted-foreground mt-1">Selecciona un tipo de pasantía</p>
-            </div>
-            {TYPE_OPTIONS.map((opt) => {
-                const Icon = opt.icon;
-                const isSelected = type === opt.value;
-                return (
-                    <button
-                        key={opt.value}
-                        onClick={() => {
-                            setType(opt.value);
-                            if (opt.value === 'validation') setOrigin('direct');
-                        }}
-                        className={`mx-3 flex items-center gap-3 p-3 rounded-lg border text-left transition-all
-                            ${isSelected
-                                ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                : 'border-border bg-card hover:border-primary/40 hover:bg-muted/30'
-                            }`}
-                    >
-                        <div className={`p-1.5 rounded-md shrink-0 transition-colors ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                            <Icon className="size-4" />
-                        </div>
-                        <div>
-                            <p className="text-xs font-bold">{opt.label}</p>
-                            <p className="text-[10px] text-muted-foreground">{opt.desc}</p>
-                        </div>
-                    </button>
-                );
-            })}
-
-            {/* Origen (solo Desarrollo) */}
-            {type === 'development' && (
-                <div className="animate-in slide-in-from-top-2 duration-300">
-                    <div className="px-4 pt-3 pb-1">
-                        <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">
-                            Origen de Vacante
-                        </p>
-                    </div>
-                    {ORIGIN_OPTIONS.map((opt) => {
+        <SectionCard>
+            <SectionCard.Header
+                title="Tipo de Pasantía"
+                description="Selecciona un tipo de pasantía"
+            />
+            <SectionCard.Body className="flex flex-col gap-3 py-4">
+                <div className="flex flex-col gap-2">
+                    {TYPE_OPTIONS.map((opt) => {
                         const Icon = opt.icon;
-                        const isSelected = origin === opt.value;
+                        const isSelected = type === opt.value;
                         return (
                             <button
                                 key={opt.value}
-                                onClick={() => setOrigin(opt.value)}
-                                className={`mx-3 mb-2 w-[calc(100%-24px)] flex items-center gap-3 p-3 rounded-lg border text-left transition-all
-                                    ${isSelected
-                                        ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                        : 'border-border bg-card hover:border-primary/40 hover:bg-muted/30'
-                                    }`}
+                                onClick={() => {
+                                    setType(opt.value);
+                                    if (opt.value === 'validation') setOrigin('direct');
+                                }}
+                                disabled={disabled}
+                                className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-200
+                                ${isSelected
+                                        ? 'border-primary bg-primary/5 ring-1 ring-primary shadow-sm'
+                                        : 'border-border bg-card hover:border-primary/40 hover:bg-muted/50'
+                                    } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                             >
-                                <div className={`p-1.5 rounded-md shrink-0 transition-colors ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                                    <Icon className="size-3.5" />
+                                <div className={`p-2 rounded-lg shrink-0 transition-colors ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                    <Icon className="size-4" />
                                 </div>
-                                <div>
-                                    <p className="text-xs font-bold">{opt.label}</p>
-                                    <p className="text-[10px] text-muted-foreground">{opt.desc}</p>
+                                <div className="flex-1 overflow-hidden">
+                                    <p className="text-xs font-bold leading-tight">{opt.label}</p>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</p>
                                 </div>
                             </button>
                         );
                     })}
                 </div>
-            )}
-        </div>
+
+                {/* Origen (solo Desarrollo) */}
+                {type === 'development' && (
+                    <div className="flex flex-col gap-2 animate-in slide-in-from-top-2 duration-300">
+                        <div className="px-1 pt-2 pb-1">
+                            <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/80">
+                                Origen de Vacante
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            {ORIGIN_OPTIONS.map((opt) => {
+                                const Icon = opt.icon;
+                                const isSelected = origin === opt.value;
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        onClick={() => setOrigin(opt.value)}
+                                        disabled={disabled}
+                                        className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all duration-200
+                                        ${isSelected
+                                                ? 'border-primary bg-primary/5 ring-1 ring-primary shadow-sm'
+                                                : 'border-border bg-card hover:border-primary/40 hover:bg-muted/50'
+                                            } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    >
+                                        <div className={`p-2 rounded-lg shrink-0 transition-colors ${isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                            <Icon className="size-4" />
+                                        </div>
+                                        <div className="flex-1 overflow-hidden">
+                                            <p className="text-xs font-bold leading-tight">{opt.label}</p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </SectionCard.Body>
+        </SectionCard>
     );
 }

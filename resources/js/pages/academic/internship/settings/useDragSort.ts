@@ -26,7 +26,7 @@ export class RestrictToVerticalAxis extends Modifier<any> {
 
 export type DragSortHandlers = {
     onReorderStage: (oldIndex: number, newIndex: number) => void;
-    onReorderRequirement: (stageId: string, type: 'desarrollo' | 'convalidacion', oldIndex: number, newIndex: number) => void;
+    onReorderRequirement: (stageId: string, type: 'development' | 'validation', oldIndex: number, newIndex: number) => void;
 };
 
 /**
@@ -60,7 +60,7 @@ export function buildDragEndHandler({ onReorderStage, onReorderRequirement }: Dr
         if (sourceId.startsWith('req|')) {
             const parts = sourceId.split('|'); // req|type|stageId|code
             if (parts.length !== 4) return;
-            const type    = parts[1] as 'desarrollo' | 'convalidacion';
+            const type = parts[1] as 'development' | 'validation';
             const stageId = parts[2];
             onReorderRequirement(stageId, type, initialIdx, currentIdx);
         }

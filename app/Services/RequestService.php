@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Exceptions\RequestUnsupportedTypeException;
 
 use App\Models\Assignment;
-use App\Models\Request;
+use App\Models\Request as UserRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -15,9 +15,9 @@ class RequestService
     /**
      * @@param array $payload
      */
-    public function createRequest(Model $sender, Model $target, string $type, array $payload, string $reason): Request
+    public function createRequest(Model $sender, Model $target, string $type, array $payload, string $reason): void
     {
-        return $request = Request::query()->create([
+        UserRequest::query()->create([
             'senderable_id' => $sender->id,
             'senderable_type' => $sender->getMorphClass(),
             'requestable_id' => $target->id,
@@ -31,9 +31,9 @@ class RequestService
     /**
      * @@param array $data
      */
-    public function managementRequestStatus(array $data, Request $request, Assignment $reviewer): Request
+    public function managementRequestStatus(array $data, UserRequest $request, Assignment $reviewer): void
     {
-        return DB::transaction(function () use ($request, $data, $reviewer) {
+        DB::transaction(function () use ($request, $data, $reviewer) {
             $request->update([
                 'reviewed_by' => $reviewer->id,
                 'justification' => $data['justification'],

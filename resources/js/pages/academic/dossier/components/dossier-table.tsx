@@ -1,22 +1,28 @@
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ChevronRight, User } from "lucide-react"
+import { ChevronRight, User } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 interface DossierTableProps {
-    data: any[],
-    isLoading: boolean
-    selectedId: number | null
-    onSelect: (id: number) => void
-    search: string
+    data: any[];
+    isLoading: boolean;
+    selectedId: number | null;
+    onSelect: (id: number) => void;
+    search: string;
 }
-
 
 export default function DossierTable({
     data,
     isLoading,
     selectedId,
     onSelect,
-    search
+    search,
 }: DossierTableProps) {
     return (
         <Table>
@@ -48,14 +54,11 @@ export default function DossierTable({
                             </TableHead>
                         </>
                     )}
-                    <TableHead className="text-center">
-                        Estado
-                    </TableHead>
+                    <TableHead className="text-center">Estado</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {data.length === 0 &&
-                    !isLoading ? (
+                {data.length === 0 && !isLoading ? (
                     <TableRow>
                         <TableCell
                             colSpan={6}
@@ -70,9 +73,7 @@ export default function DossierTable({
                     data.map((item: any) => (
                         <TableRow
                             key={item.id}
-                            onClick={() =>
-                                onSelect(item.id)
-                            }
+                            onClick={() => onSelect(item.id)}
                             className={`group cursor-pointer transition-colors ${selectedId === item.id ? 'border-l-4 border-l-primary bg-primary/5' : ''}`}
                         >
                             <TableCell>
@@ -81,43 +82,21 @@ export default function DossierTable({
                                         <User className="size-4 text-muted-foreground" />
                                     </div>
                                     <div className="flex flex-col overflow-hidden">
-                                        <span className="max-w-[150px] truncate text-xs font-bold uppercase lg:max-w-none">
-                                            {
-                                                item.user
-                                                    ?.person
-                                                    ?.surnames
-                                            }{' '}
-                                            {
-                                                item.user
-                                                    ?.person
-                                                    ?.names
-                                            }
+                                        <span className="max-w-37.5 truncate text-xs font-bold uppercase lg:max-w-none">
+                                            {item.user?.person?.surnames}{' '}
+                                            {item.user?.person?.names}
                                         </span>
                                         {!selectedId ? (
                                             <span className="truncate text-[10px] text-muted-foreground">
-                                                {
-                                                    item
-                                                        .user
-                                                        ?.email
-                                                }
+                                                {item.user?.email}
                                             </span>
                                         ) : (
                                             <div className="flex gap-2">
                                                 <span className="truncate text-[10px] text-muted-foreground">
-                                                    {
-                                                        item
-                                                            .section
-                                                            ?.school
-                                                            ?.name
-                                                    }
+                                                    {item.section?.school?.name}
                                                 </span>
                                                 <span className="truncate text-[10px] text-muted-foreground">
-                                                    -{' '}
-                                                    {
-                                                        item
-                                                            .section
-                                                            ?.name
-                                                    }
+                                                    - {item.section?.name}
                                                 </span>
                                             </div>
                                         )}
@@ -129,39 +108,29 @@ export default function DossierTable({
                             {!selectedId && (
                                 <>
                                     <TableCell className="hidden text-sm font-medium text-muted-foreground md:table-cell">
-                                        {item.section
-                                            ?.school
-                                            ?.faculty
-                                            ?.name || 'N/A'}
+                                        {item.section?.school?.faculty?.name ||
+                                            'N/A'}
                                     </TableCell>
                                     <TableCell className="hidden text-sm font-medium text-muted-foreground md:table-cell">
-                                        {item.section
-                                            ?.school
-                                            ?.name || 'N/A'}
+                                        {item.section?.school?.name || 'N/A'}
                                     </TableCell>
                                     <TableCell className="hidden font-bold lg:table-cell">
-                                        {item.section
-                                            ?.name || 'N/A'}
+                                        {item.section?.name || 'N/A'}
                                     </TableCell>
                                 </>
                             )}
 
                             <TableCell className="text-center">
-                                {item.dossiers?.[0]
-                                    ?.approval_status ===
-                                    1 && (
-                                        <Badge
-                                            variant="outline"
-                                            className="h-5 border-none bg-green-500 px-1.5 text-[9px] font-bold tracking-tighter text-white uppercase"
-                                        >
-                                            Aprobado
-                                        </Badge>
-                                    )}
-                                {item.dossiers?.[0]
-                                    ?.approval_status ===
-                                    3 &&
-                                    item.dossiers?.[0]
-                                        ?.latest && (
+                                {item.dossiers?.[0]?.approval_status === 1 && (
+                                    <Badge
+                                        variant="outline"
+                                        className="h-5 border-none bg-green-500 px-1.5 text-[9px] font-bold tracking-tighter text-white uppercase"
+                                    >
+                                        Aprobado
+                                    </Badge>
+                                )}
+                                {item.dossiers?.[0]?.approval_status === 3 &&
+                                    item.dossiers?.[0]?.latest && (
                                         <Badge
                                             variant="outline"
                                             className="h-5 border-none bg-red-500 px-1.5 text-[9px] font-bold tracking-tighter text-white uppercase"
@@ -169,11 +138,8 @@ export default function DossierTable({
                                             Observado
                                         </Badge>
                                     )}
-                                {(item.dossiers?.[0]
-                                    ?.approval_status ===
-                                    2 ||
-                                    !item
-                                        .dossiers?.[0]) && (
+                                {(item.dossiers?.[0]?.approval_status === 2 ||
+                                    !item.dossiers?.[0]) && (
                                         <Badge
                                             variant="outline"
                                             className="h-5 border-none bg-amber-500 px-1.5 text-[9px] font-bold tracking-tighter text-white uppercase"
@@ -193,5 +159,5 @@ export default function DossierTable({
                 )}
             </TableBody>
         </Table>
-    )
+    );
 }

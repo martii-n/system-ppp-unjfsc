@@ -20,7 +20,10 @@ import dossiers from '@/routes/academic/dossiers';
 import { toast } from 'sonner';
 import RequirementsList from '@/components/academic/requirements-list';
 import { AlertHelp } from '@/components/document/AlertHelp';
-import ContentDetailsDocument from '@/components/document/content-details-document';
+import ContentDetailsDocument from '@/components/academic/submission-form';
+import { SectionCard } from '@/components/ui/section-card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SubmissionPanel } from '../../../../components/academic/submission-panel';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -63,7 +66,7 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
     }, [selectedType]);
 
     // Lógica para decidir si mostrar UploadZone o Preview
-    const canUpload = (!currentFile?.latest && !tempFile) || isEditing;
+    const canUpload = (!currentFile?.latest || isEditing) && !tempFile;
 
     //const requirements = getRequirements(assignment?.role_id);
     //const currentFile = requirements[selectedType];
@@ -76,6 +79,15 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
         }
         post(dossiers.document.store.url, payload);
     }*/
+
+    const removeTempFile = () => {
+        setTempFile(null);
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
+        setIsEditing(false);
+    };
 
     const handleSubmit = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -164,8 +176,7 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
                     </div>
 
                     {/* 2. PANEL CENTRAL (Visor del Documento) */}
-                    <div className="flex-1 w-full rounded-xl border bg-card text-card-foreground shadow-sm flex flex-col min-h-[600px] overflow-hidden relative">
-
+                    <div className="flex-1 w-full h-full overflow-hidden relative">
                         {/* Loader opcional de Inertia mientras sube */}
                         {processing && (
                             <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -176,116 +187,70 @@ export default function MyDossier({ assignment, requirements, dossier }: any) {
                             </div>
                         )}
 
-                        {/* Header del Card (Dinamizado y Compacto) */}
-                        <div className="flex flex-row items-center justify-between px-4 py-3 border-b backdrop-blur-sm">
-                            <div className="flex items-center gap-3">
-                                {/* Ícono más pequeño y sutil */}
-                                <div className={`flex h-8 w-8 items-center justify-center rounded-md border ${tempFile || currentFile?.latest ? 'bg-primary/5 border-primary/20' : 'bg-muted/50'
-                                    }`}>
-                                    <FileText className={`size-4 ${tempFile || currentFile?.latest ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <SectionCard>
+                            <SectionCard.Header>
+                                {/* Header del Card (Dinamizado y Compacto) */}
+                                <div className="flex flex-row items-center justify-between backdrop-blur-sm">
+                                    <div className="flex items-center gap-3">
+                                        {/* Ícono más pequeño y sutil */}
+                                        <div className={`flex h-9 w-9 items-center justify-center rounded-md border ${tempFile || currentFile?.latest ? 'bg-primary/5 border-primary/20' : 'bg-muted/50'
+                                            }`}>
+                                            <FileText className={`size-4 ${tempFile || currentFile?.latest ? 'text-primary' : 'text-muted-foreground'}`} />
+                                        </div>
+
+                                        <div className="flex flex-col">
+                                            <h3 className="text-sm font-semibold leading-none tracking-tight">
+                                                {currentFile?.title}
+                                            </h3>
+                                            <p className="text-[11px] text-muted-foreground mt-1">
+                                                {tempFile ? 'Archivo listo para subir' : currentFile?.latest ? 'Cargado correctamente' : 'Subida pendiente'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Acciones reducidas a botones compactos */}
+                                    <div className="flex items-center gap-2">
+                                        {(tempFile || currentFile?.latest) && (
+                                            <Button variant="ghost" size="sm" className="h-8 text-xs px-2.5">
+                                                <Maximize2 className="size-3.5 mr-2 text-muted-foreground" />
+                                                Expandir
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
-
-                                <div className="flex flex-col">
-                                    <h3 className="text-sm font-semibold leading-none tracking-tight">
-                                        {currentFile?.title}
-                                    </h3>
-                                    <p className="text-[11px] text-muted-foreground mt-1">
-                                        {tempFile ? 'Archivo listo para subir' : currentFile?.latest ? 'Cargado correctamente' : 'Subida pendiente'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Acciones reducidas a botones compactos */}
-                            <div className="flex items-center gap-2">
-                                {(tempFile || currentFile?.latest) && (
-                                    <Button variant="ghost" size="sm" className="h-8 text-xs px-2.5">
-                                        <Maximize2 className="size-3.5 mr-2 text-muted-foreground" />
-                                        Expandir
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* CONTENIDO PRINCIPAL: Orquestador */}
-                        <DocumentViewer
-                            currentFile={{
-                                ...currentFile,
-                                latest: tempFile ? { ...tempFile, path: previewUrl, name: tempFile.name } : currentFile?.latest
-                            }}
-                            canUpload={canUpload}
-                            onUpload={onUpload}
-                            previewEnabled={previewEnabled}
-                        />
-
+                            </SectionCard.Header>
+                            <SectionCard.Body className="p-0">
+                                <DocumentViewer
+                                    currentFile={{
+                                        ...currentFile,
+                                        latest: tempFile ? { ...tempFile, path: previewUrl, name: tempFile.name } : currentFile?.latest
+                                    }}
+                                    canUpload={canUpload}
+                                    onUpload={onUpload}
+                                    previewEnabled={previewEnabled}
+                                />
+                            </SectionCard.Body>
+                        </SectionCard>
                     </div>
 
 
                     {/* 3. PANEL DERECHO (Detalles y Acciones) */}
                     <div className="w-full lg:w-64 xl:w-72 flex flex-col gap-6 shrink-0">
-
-                        {/* Shadcn Tabs Card */}
-                        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
-                            <div className="px-4 py-3 flex items-center border-b">
-                                {/* Componente TabsList imitado */}
-                                <div className="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground w-full">
-                                    <button
-                                        onClick={() => setActiveTab('estado')}
-                                        className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-1/2 ${activeTab === 'estado' ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'
-                                            }`}
-                                    >
-                                        Detalles
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('historial')}
-                                        className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 w-1/2 ${activeTab === 'historial' ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'
-                                            }`}
-                                    >
-                                        Historial
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="p-4 space-y-6">
-                                {activeTab === 'estado' ? (
-                                    <>
-                                        <ContentDetailsDocument
-                                            currentFile={currentFile}
-                                            tempFile={tempFile}
-                                            isEditing={isEditing}
-                                            onSetEditing={setIsEditing}
-                                            onRemoveTemp={setTempFile}
-                                        />
-                                    </>
-                                ) : (
-                                    <FileHistory history={currentFile?.history} />
-                                )}
-                            </div>
-                        </div>
-                        {(tempFile || isEditing) && (
-                            <div className="flex flex-col gap-3 p-4 border-t">
-                                <Button
-                                    onClick={() => handleSubmit()}
-                                    disabled={processing || !tempFile}
-                                    className="w-full h-10 shadow-lg"
-                                >
-                                    {processing ? (
-                                        <>
-                                            <Spinner className="mr-2 size-4 animate-spin" />
-                                            Subiendo archivo...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Enviar para Revisión
-                                            <ArrowRight className="ml-2 h-4 w-4" />
-                                        </>
-                                    )}
-                                </Button>
-                                <p className="text-[11px] text-center text-muted-foreground leading-relaxed px-4">
-                                    Al confirmar, tu expediente será encolado para evaluación académica.
-                                </p>
-                            </div>
-                        )}
-
+                        <SubmissionPanel
+                            status={currentFile?.status}
+                            currentRequirement={currentFile}
+                            tempFile={tempFile}
+                            isEditing={isEditing}
+                            onSetEditing={setIsEditing}
+                            onRemoveTemp={removeTempFile}
+                            uploading={processing}
+                            showFileInfo={{
+                                name: currentFile?.latest?.name,
+                                meta: "Documento Oficial",
+                                size: currentFile?.latest?.size,
+                            }}
+                            onSubmit={handleSubmit}
+                        />
                     </div>
                 </div>
             </div>

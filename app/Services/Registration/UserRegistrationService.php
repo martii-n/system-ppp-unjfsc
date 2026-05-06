@@ -317,26 +317,37 @@ class UserRegistrationService
             ->get();
 
         if ($currentAssignments->isEmpty()) {
-            return; // Si no tiene asignaciones, puede registrarse en cualquier rol
+            return; // Sin asignaciones activas → puede registrarse
         }
 
         $firstAssignment = $currentAssignments->first();
         $existingRoleName = $firstAssignment->role->name;
 
-        // --- CASE 1: ROLES OF ASSIGNMENT UNIQUE (1, 2, 3, 5) ---
-        if (in_array($newRoleId, [1, 2, 3, 4, 5])) {
+        // --- CASE 1: SUBADMIN (2) — solo puede tener 1 asignación por semestre ---
+        if ($newRoleId === 2) {
+            throw new UserAlreadyAssignedInSemesterException($existingRoleName);
+        }
+
+        // --- CASE 2: ROLES ÚNICOS POR SEMESTRE (1, 3, 5) ---
+        if (in_array($newRoleId, [1, 3, 5])) {
             if ($firstAssignment->section_id === $newSectionId) {
                 throw new UserAlreadyRegisteredInSectionException($existingRoleName);
             }
-            if ($newRoleId !== 4 && $firstAssignment->role_id !== 4) {
+            // No puede tener otro rol diferente a Supervisor (4) en el mismo semestre
+            if ($firstAssignment->role_id !== 4) {
                 throw new UserAlreadyAssignedInSemesterException($existingRoleName);
             }
         }
 
-        // --- CASE 2: THE NEW ROLE IS SUPERVISOR (4), BUT THE USER HAS ANOTHER ROLE ---
+        // --- CASE 3: SUPERVISOR (4) — puede tener múltiples, pero todas en la misma facultad ---
         if ($newRoleId === 4) {
             $newSection = Section::query()->findOrFail($newSectionId);
             $newFacultyId = $newSection->faculty_id;
+
+            // Verificar que no esté ya asignado a esa misma sección
+            if ($currentAssignments->contains('section_id', $newSectionId)) {
+                throw new UserAlreadyRegisteredInSectionException($existingRoleName);
+            }
 
             foreach ($currentAssignments as $assignment) {
                 if ($assignment->section->faculty_id !== $newFacultyId) {

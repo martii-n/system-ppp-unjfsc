@@ -15,7 +15,7 @@ export function useWorkflow(initialState: WorkflowStage[]) {
                 step: insertAt + 1,
                 name: "Nueva Etapa",
                 is_evaluation: false,
-                required_docs: { desarrollo: [], convalidacion: [] }
+                required_docs: { development: [], validation: [] }
             };
             arr.splice(insertAt, 0, newStage);
             return arr.map((s, idx) => ({ ...s, step: idx + 1 }));
@@ -36,7 +36,7 @@ export function useWorkflow(initialState: WorkflowStage[]) {
         });
     };
 
-    const addRequirement = (stageId: string, type: 'desarrollo' | 'convalidacion', documentInfo: { name: string; code: string }) => {
+    const addRequirement = (stageId: string, type: 'development' | 'validation', documentInfo: { name: string; code: string }) => {
         if (!documentInfo.name.trim()) return;
         setWorkflow(prev => prev.map(s => {
             if (s.id === stageId) {
@@ -52,7 +52,7 @@ export function useWorkflow(initialState: WorkflowStage[]) {
         }));
     };
 
-    const removeRequirement = (stageId: string, type: 'desarrollo' | 'convalidacion', docIndex: number) => {
+    const removeRequirement = (stageId: string, type: 'development' | 'validation', docIndex: number) => {
         setWorkflow(prev => prev.map(s => {
             if (s.id === stageId) {
                 const updatedList = [...s.required_docs[type]];
@@ -87,7 +87,7 @@ export function useWorkflow(initialState: WorkflowStage[]) {
         });
     };
 
-    const reorderRequirement = (stageId: string, type: 'desarrollo' | 'convalidacion', oldIndex: number, newIndex: number) => {
+    const reorderRequirement = (stageId: string, type: 'development' | 'validation', oldIndex: number, newIndex: number) => {
         if (oldIndex === newIndex) return;
         setWorkflow(prev => prev.map(s => {
             if (s.id === stageId) {

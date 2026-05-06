@@ -14,7 +14,6 @@ use App\Models\Placement;
 use App\Models\Request;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class InternshipService
 {
@@ -31,7 +30,9 @@ class InternshipService
         $this->notificationService = $notificationService;
     }
 
-
+    /**
+     * @return array
+     */
     public function getSubmissionData(Assignment $assignment, int $requestStep = null): array
     {
         $assignment->loadMissing([
@@ -45,64 +46,45 @@ class InternshipService
         $placement = $assignment->placement;
         $internship = $assignment->internship;
 
-        $data = [
-            'requirements' => [],
-            'workflow_steps' => [],
-            'current_step' => 1,
-            'step_requirements' => [],
-        ];
+        $this->syncStudentStep($internship);
+        $internship->refresh();
 
-        if (!$placement)
-            return $data;
+        $currentStep = $internship->internship_step ?? 1;
+        $viewStep = min($requestStep ?? $currentStep, $currentStep);
 
-        $allDocs = $placement->documents;
-        $isDirectDevelopment = ($placement->internship_type === 'desarrollo' && $placement->origin_type === 'direct');
+        $setting = InternshipSetting::query()->where('section_id', $assignment->section_id)->first();
 
-        $reqsConfig = [['code' => 'fut', 'title' => 'FUT', 'locked' => false]];
+        $steps = [];
+        $requirements = [];
 
-        $futApproved = $allDocs->contains(fn($d) => $d->documentType->code === 'fut' && $d->approval_status === 1);
-        $dataApproved = $placement->approval_status === 1;
+        if ($setting && !empty($setting->workflow_schema)) {
+            $schema = collect($setting->workflow_schema)->sortBy('step');
+            $steps = $schema->map(fn($s) => [
+                'id' => $s['step'],
+                'label' => $s['name'],
+                'is_evaluation' => $s['is_evaluation'] ?? false,
+            ])->values()->all();
 
-        $extraDocsLocked = $isDirectDevelopment && (!$futApproved || !$dataApproved);
+            $viewStep = min($requestStep ?? $currentStep, $currentStep);
+            $currentStage = $schema->firstWhere('step', $viewStep);
 
-        $reqsConfig[] = ['code' => 'carta_presentacion', 'title' => 'Carta de Presentación', 'locked' => $extraDocsLocked];
-        $reqsConfig[] = ['code' => 'carta_aceptacion', 'title' => 'Carta de Aceptación', 'locked' => $extraDocsLocked];
+            if ($currentStage && !($currentStage['is_evaluation'] ?? false)) {
+                $reqDocs = $currentStage['required_docs'][$placement->internship_type] ?? [];
 
-        $data['requirements'] = $this->placementService->mapRequirements($reqsConfig, $allDocs);
-
-        if ($internship) {
-            $this->syncStudentStep($internship);
-            $internship->refresh();
-
-            $data['current_step'] = $internship->internship_step ?? 1;
-            $viewStep = min($requestStep ?? $data['current_step'], $data['current_step']);
-
-            $setting = InternshipSetting::where('section_id', $assignment->section_id)->first();
-
-            if ($setting && !empty($setting->workflow_schema)) {
-                $schema = collect($setting->workflow_schema)->sortBy('step');
-
-                $data['workflow_steps'] = $schema->map(fn($s) => [
-                    'id' => $s['step'],
-                    'label' => $s['name'],
-                    'is_evaluation' => $s['is_evaluation'] ?? false,
-                ])->values()->all();
-
-                $viewStep = min($requestStep ?? $data['current_step'], $data['current_step']);
-                $currentStage = $schema->firstWhere('step', $viewStep);
-
-                if ($currentStage && !($currentStage['is_evaluation'] ?? false)) {
-                    $reqDocs = $currentStage['required_docs'][$placement->internship_type] ?? [];
-
-                    $data['step_requirements'] = $this->placementService->mapRequirements(
-                        collect($reqDocs)->map(fn($d) => ['code' => $d['code'], 'title' => $d['name']])->all(),
-                        $internship->documents
-                    );
-                }
+                $requirements = $this->placementService->mapRequirements(
+                    collect($reqDocs)->map(fn($d) => ['code' => $d['code'], 'title' => $d['name']])->all(),
+                    $internship->documents
+                );
             }
         }
 
-        return $data;
+        return [
+            'assignment' => $assignment, // Incluye placement
+            'internship' => $internship,
+            'steps' => $steps,
+            'currentStep' => $currentStep,
+            'requirements' => $requirements,
+        ];
     }
 
     /**
@@ -139,9 +121,9 @@ class InternshipService
      *
      * @param array $data
      * @param Assignment $assignment
-     * @return Internship
+     * @return Document
      */
-    public function stepTwoToFourInternship(array $data, Assignment $assignment): Document
+    public function uploadDocumentInternship(array $data, Assignment $assignment): Document
     {
         return DB::transaction(function () use ($data, $assignment) {
             $model = $this->documentService->validateOwnership('internship', $data['target_id'], $assignment);
@@ -341,7 +323,7 @@ class InternshipService
      */
     public function syncStudentStep(Internship $internship): void
     {
-        // 1. Obtener la práctica y el tipo (desarrollo | convalidacion)
+        // 1. Obtener la práctica y el tipo (development | validation)
         // Se asume que $internship tiene la relación assignment y placement cargables.
         $internship->loadMissing(['assignment', 'placement']);
         $assignment = $internship->assignment;
@@ -351,7 +333,7 @@ class InternshipService
             return;
         }
 
-        $practiceType = $placement->internship_type; // 'desarrollo' o 'convalidacion'
+        $practiceType = $placement->internship_type; // 'development' o 'validation'
 
         // 2. Obtener el archivo de configuración JSON para la sección
         // Si no hay configuración definida en JSON, asumimos que no se puede calcular nada.

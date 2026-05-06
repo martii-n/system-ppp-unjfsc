@@ -65,7 +65,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 import { useSupervision } from '../hooks/use-supervision';
 import SupervisionDetailPanel from '../components/supervision-detail-panel';
-import ValidationForm from './components/ValidationForm';
+import { ValidationPanel } from '@/components/academic/validation-panel';
 
 export default function ValidationIndex({
     faculties,
@@ -249,17 +249,15 @@ export default function ValidationIndex({
                                 onClose={handleCloseSelected}
                                 actionTitle="Revisión"
                                 renderActionForm={(annex) => (
-                                    <ValidationForm
-                                        annex={annex}
-                                        onSuccess={() => {
-                                            // Refrescar tabla para ver nuevos badges
-                                            if (selectedGroup) {
-                                                fetchData(
-                                                    `/supervision/api/groups/${selectedGroup.id}/students/filter`,
-                                                    { module_id: selectedModuleId }
-                                                );
-                                            }
-                                        }}
+                                    <ValidationPanel
+                                        status={annex.status}
+                                        history={annex.history}
+                                        showFileInfo={annex.latest ? {
+                                            name: annex.title,
+                                            grade: annex.grade
+                                        } : undefined}
+                                        extendForm={true}
+                                        onSuccess={(data) => actions.validateAnnex(data, annex)}
                                     />
                                 )}
                             />

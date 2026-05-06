@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Academic;
+namespace App\Http\Controllers\Academic\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Internship\SaveInternshipSettingRequest;
@@ -25,7 +25,7 @@ class InternshipSettingController extends Controller
         $assignmentId = session('assignment_id');
         $assignment = Assignment::find($assignmentId);
 
-        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+        $faculties = Faculty::query()->forAssignmentContext($assignment, session('semester_id'))->get();
 
         $sectionId = $request->query('section_id');
 

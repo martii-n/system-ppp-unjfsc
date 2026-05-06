@@ -11,6 +11,7 @@ import {
     Settings,
     UserPlus2,
     UserRoundCog,
+    FileText,
 } from 'lucide-react';
 import { dashboard } from '@/routes';
 import { index as semestersIndex } from '@/routes/academic/semesters';
@@ -33,7 +34,6 @@ import { validation as supervisionValidationIndex } from '@/routes/academic/supe
 import { index as resourceIndex } from '@/routes/resource';
 import { submission as internshipSubmissionIndex } from '@/routes/academic/internship';
 import { validation as internshipValidationIndex } from '@/routes/academic/internship';
-import { settings as internshipSettingsIndex } from '@/routes/academic/internship';
 
 export const ACADEMIC_NAV = [
     {
@@ -218,20 +218,21 @@ export const ADMIN_NAV = [
     },
 ];
 
-export const FOOTER_NAV = [
+export const ACADEMIC_SETTINGS_NAV = [
     {
-        title: 'Solicitudes',
-        href: '#',
-        icon: Folder,
+        title: 'Internship',
+        href: '/settings/internship',
+        icon: Settings,
+    },
+    {
+        title: 'Document',
+        href: '/settings/document',
+        icon: FileText,
         roles: [1, 2],
     },
-    {
-        title: 'Config. Prácticas',
-        href: internshipSettingsIndex().url,
-        icon: Settings,
-        userTypes: [1, 2],
-        roles: [1, 2, 3],
-    },
+];
+
+export const FOOTER_NAV = [
     {
         title: 'Recursos Administrativos',
         href: resourceIndex().url,
@@ -239,7 +240,7 @@ export const FOOTER_NAV = [
         userTypes: [1],
     },
     {
-        title: 'Recursos Académicos',
+        title: 'Recursos',
         href: resourceIndex().url,
         icon: Archive,
         userTypes: [2],
@@ -249,6 +250,19 @@ export const FOOTER_NAV = [
         href: resourceIndex().url,
         icon: Archive,
         userTypes: [3],
+    },
+    {
+        title: 'Configuración',
+        href: '/settings/internship',
+        icon: Settings,
+        userTypes: [2],
+        roles: [1, 2, 3],
+    },
+    {
+        title: 'Repository',
+        href: 'https://github.com/marti-nm/system-ppp-unjfsc',
+        icon: Folder,
+        userTypes: [1],
     },
     {
         title: 'Repository',

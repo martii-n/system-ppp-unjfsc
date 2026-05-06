@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\DossierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -101,33 +102,14 @@ class DossierController extends Controller
      */
     private function renderValidationView(int $roleId, string $title): Response
     {
+        $semesterId = session('semester_id');
         $currentAssignmentId = session('assignment_id');
-        $currentAssignment = Assignment::query()->find($currentAssignmentId);
+        $assignment = Assignment::query()->find($currentAssignmentId);
 
-        $raId = request('a');
+        $raId = request('a') ? (int) request('a') : null;
+        $assignments = $this->dossierService->initDataValition($raId, $roleId, $assignment);
 
-        $assignments = [
-            'data' => [],
-            'current_page' => 1,
-            'last_page' => 1,
-            'total' => 0,
-            'links' => []
-        ];
-
-        if ($raId) {
-            $assignments = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
-                ->where('id', $raId)
-                ->get();
-        } else {
-            if ($currentAssignment && in_array($currentAssignment->role_id, [3, 4])) {
-                $assignments = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
-                    ->where('role_id', $roleId)
-                    ->where('section_id', $currentAssignment->section_id)
-                    ->get();
-            }
-        }
-
-        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+        $faculties = Faculty::query()->forAssignmentContext($assignment, $semesterId)->get();
 
         return Inertia::render('academic/dossier/validation/index', [
             'assignments' => $assignments,
@@ -137,7 +119,7 @@ class DossierController extends Controller
         ]);
     }
 
-    public function getAssignmentsByFilter(\Illuminate\Http\Request $request): JsonResponse
+    public function getAssignmentsByFilter(Request $request): JsonResponse
     {
         $request->validate([
             'target_role_id' => 'required|integer',
@@ -147,31 +129,9 @@ class DossierController extends Controller
             'search' => 'nullable|string'
         ]);
 
-        $query = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
-            ->where('role_id', $request->target_role_id);
+        $data = $this->dossierService->getAssignments($request->all());
 
-        if ($request->filled('faculty_id')) {
-            $query->whereHas('section.school.faculty', function ($q) use ($request) {
-                $q->where('id', $request->faculty_id);
-            });
-        }
-        if ($request->filled('school_id')) {
-            $query->whereHas('section.school', function ($q) use ($request) {
-                $q->where('id', $request->school_id);
-            });
-        }
-        if ($request->filled('section_id')) {
-            $query->where('section_id', $request->section_id);
-        }
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('email', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
-            });
-        }
-
-        return response()->json(['assignments' => $query->paginate(5)]);
+        return response()->json(['assignments' => $data]);
     }
 
     public function getDetailDossier(Assignment $assignment): JsonResponse

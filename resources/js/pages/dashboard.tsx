@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
 import AdminContent from '@/pages/academic/dashboard/admin-content';
@@ -25,6 +25,7 @@ export default function Dashboard({
     auth: any;
     role?: number;
 }) {
+    const { auth: user } = usePage().props as any;
     const userType = auth.user.type;
 
     if (userType === 'Administrador') {

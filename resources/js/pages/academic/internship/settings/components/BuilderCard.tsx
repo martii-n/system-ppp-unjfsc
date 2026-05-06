@@ -7,8 +7,8 @@ interface BuilderCardProps {
     stage: WorkflowStage;
     onUpdateName: (id: string, name: string) => void;
     onDelete: (id: string) => void;
-    onAddRequirement: (stageId: string, type: 'desarrollo' | 'convalidacion', documentInfo: { name: string; code: string }) => void;
-    onRemoveRequirement: (stageId: string, type: 'desarrollo' | 'convalidacion', docIndex: number) => void;
+    onAddRequirement: (stageId: string, type: 'development' | 'validation', documentInfo: { name: string; code: string }) => void;
+    onRemoveRequirement: (stageId: string, type: 'development' | 'validation', docIndex: number) => void;
     availableDocuments: any[];
 }
 
@@ -24,7 +24,7 @@ export function BuilderCard({ stage, onUpdateName, onDelete, onAddRequirement, o
     return (
         <div
             ref={ref}
-            className={`bg-card border border-border rounded-lg shadow-sm p-6 space-y-4 animate-in fade-in duration-300 ${isDragging ? "opacity-50 ring-2 ring-primary shadow-lg" : ""}`}
+            className={`bg-card border border-border rounded-lg shadow-sm p-6 space-y-4 ${isDragging ? "opacity-50 ring-2 ring-primary shadow-lg" : ""}`}
         >
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -55,17 +55,17 @@ export function BuilderCard({ stage, onUpdateName, onDelete, onAddRequirement, o
 
             <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
                 <RequirementColumn
-                    type="desarrollo"
+                    type="development"
                     stageId={stage.id}
-                    documents={stage.required_docs.desarrollo}
+                    documents={stage.required_docs.development}
                     onAdd={(type, name) => onAddRequirement(stage.id, type, name)}
                     onRemove={(type, idx) => onRemoveRequirement(stage.id, type, idx)}
                     availableDocuments={availableDocuments}
                 />
                 <RequirementColumn
-                    type="convalidacion"
+                    type="validation"
                     stageId={stage.id}
-                    documents={stage.required_docs.convalidacion}
+                    documents={stage.required_docs.validation}
                     onAdd={(type, name) => onAddRequirement(stage.id, type, name)}
                     onRemove={(type, idx) => onRemoveRequirement(stage.id, type, idx)}
                     availableDocuments={availableDocuments}

@@ -57,8 +57,7 @@ class UserAssignmentController extends Controller
     private function renderList(Request $request, int $roleId, string $title): Response
     {
         $semesterId = session('semester_id');
-        $currentAssignmentId = session('assignment_id');
-        $currentAssignment = Assignment::find($currentAssignmentId);
+        $assignment = Assignment::find(session('assignment_id'));
 
         // Lógica Híbrida:
         // Admin/Subadmin (1, 2) o Estudiantes (5) -> Lista vacía al inicio (Server-side)
@@ -71,11 +70,11 @@ class UserAssignmentController extends Controller
             'links' => []
         ];
 
-        if ($currentAssignment && in_array($currentAssignment->role_id, [3, 4])) {
-            $assignments = $this->assignmentService->getAssignmentsByRole($roleId, $semesterId, ['section_id' => $currentAssignment->section_id], false);
+        if ($assignment && in_array($assignment->role_id, [3, 4])) {
+            $assignments = $this->assignmentService->getAssignmentsByRole($roleId, $semesterId, ['section_id' => $assignment->section_id], false);
         }
 
-        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+        $faculties = Faculty::query()->forAssignmentContext($assignment, $semesterId)->get();
 
         return Inertia::render('academic/user/management/index', [
             'assignments' => $assignments,

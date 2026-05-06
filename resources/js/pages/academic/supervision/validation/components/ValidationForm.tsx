@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import supervision from "@/routes/academic/supervision";
+import StatusForm from '@/components/academic/status-form';
 
 interface ValidationFormProps {
     annex: any;
@@ -61,6 +62,7 @@ export default function ValidationForm({
                     </div>
                 </div>
             </div>
+
         );
     }
 

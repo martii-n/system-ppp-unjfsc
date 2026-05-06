@@ -11,11 +11,15 @@ export function PersonSStepThree({
     data,
     roles,
     faculties,
-    schools,
-    sections,
 }: any) {
     const getLabel = (arr: any[], id: number) =>
-        arr.find((i) => i.id.toString() === id.toString())?.name || '—';
+        arr?.find((i) => i.id.toString() === id?.toString())?.name || '—';
+
+    const selectedFaculty = faculties.find((f: any) => f.id.toString() === data.faculty_id?.toString());
+    const schoolName = getLabel(selectedFaculty?.schools, data.school_id);
+
+    const selectedSchool = selectedFaculty?.schools?.find((s: any) => s.id.toString() === data.school_id?.toString());
+    const sectionName = getLabel(selectedSchool?.sections, data.section_id);
 
     return (
         <div className="grid animate-in grid-cols-1 gap-4 duration-300 zoom-in-95 sm:grid-cols-2">
@@ -48,11 +52,11 @@ export function PersonSStepThree({
                     />
                     <SummaryRow
                         label="Escuela"
-                        value={getLabel(schools, data.school_id)}
+                        value={schoolName}
                     />
                     <SummaryRow
                         label="Sección"
-                        value={getLabel(sections, data.section_id)}
+                        value={sectionName}
                     />
                 </div>
             </div>

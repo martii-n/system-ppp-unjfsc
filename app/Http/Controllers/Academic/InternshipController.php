@@ -47,8 +47,7 @@ class InternshipController extends Controller
             $data = $this->placementService->getSubmissionData($assignment);
 
             return Inertia::render('academic/internship/submission/placementIndex', [
-                'data' => $data,
-                'title' => 'Formalización de Prácticas'
+                'data' => $data
             ]);
         }
 
@@ -58,16 +57,17 @@ class InternshipController extends Controller
             $request->query('step')
         );
 
-        return Inertia::render('academic/internship/submission/index', array_merge(
-            ['assignment' => $assignment],
-            $internshipData
-        ));
+        return Inertia::render('academic/internship/submission/internshipIndex', [
+            'data' => $internshipData
+        ]);
     }
 
     public function ValidationIndex(): Response
     {
+        $semesterId = session('semester_id');
         $assignment = Assignment::query()->findOrFail(session('assignment_id'));
-        $faculties = Faculty::with('schools.sections')->get();
+
+        $faculties = Faculty::query()->forAssignmentContext($assignment, $semesterId)->get();
 
         $raId = request('a');
 
@@ -128,6 +128,19 @@ class InternshipController extends Controller
 
     public function getDetailPlacement(Assignment $assignment, Request $request): JsonResponse
     {
+        $placement = $assignment->placement;
+
+        // Caso 1: Aún en Formalización (Placement no validado al 100%)
+        if (!$placement || $placement->validation_status !== 1) {
+            $data = $this->placementService->getSubmissionData($assignment);
+
+            return response()->json(array_merge([
+                'phase' => 'placement',
+                'assignment' => $assignment->load(['user.person', 'section.school.faculty']),
+            ], $data));
+        }
+
+        // Caso 2: Ya en Seguimiento (Internship activo)
         $internshipData = $this->internshipService->getSubmissionData(
             $assignment,
             $request->query('step')
@@ -144,14 +157,12 @@ class InternshipController extends Controller
                 ->first();
         }
 
-        return response()->json(array_merge(
-            [
-                'assignment' => $assignment->load(['user.person', 'section.school.faculty']),
-                'placement' => $assignment->placement,
-                'pending_request' => $pendingRequest
-            ],
-            $internshipData
-        ));
+        return response()->json(array_merge([
+            'phase' => 'internship',
+            'assignment' => $assignment->load(['user.person', 'section.school.faculty']),
+            'placement' => $assignment->placement,
+            'pending_request' => $pendingRequest
+        ], $internshipData));
     }
 
 
@@ -180,7 +191,7 @@ class InternshipController extends Controller
 
         $data = $request->validated();
 
-        $document = $this->internshipService->stepTwoToFourInternship($data, $assignment);
+        $this->internshipService->uploadDocumentInternship($data, $assignment);
 
         return back()->with('message', 'Documento registrado correctamente.');
     }

@@ -22,10 +22,7 @@ import { PersonFStepTwo } from './components/person/step-two/PersonFStepTwo';
 export function PersonFlow({
     roles,
     faculties,
-    schools,
-    sections,
     mode,
-    initialFilters,
     onBack,
 }: PersonFlowProps) {
     const [step, setStep] = useState(1);
@@ -35,11 +32,15 @@ export function PersonFlow({
 
     const steps = getRegistrationSteps('persona', currentMode);
 
+    const defaultFacultyId = faculties?.length === 1 ? faculties[0].id.toString() : '';
+    const defaultSchoolId = faculties?.[0]?.schools?.length === 1 ? faculties[0].schools[0].id.toString() : '';
+    const defaultSectionId = faculties?.[0]?.schools?.[0]?.sections?.length === 1 ? faculties[0].schools[0].sections[0].id.toString() : '';
+
     const { data, setData, processing, reset } = useForm<PersonInitialState>({
         role_id: '',
-        faculty_id: initialFilters?.faculty_id?.toString() || '',
-        school_id: initialFilters?.school_id?.toString() || '',
-        section_id: initialFilters?.section_id?.toString() || '',
+        faculty_id: defaultFacultyId,
+        school_id: defaultSchoolId,
+        section_id: defaultSectionId,
 
         email: '',
         dni: '',
@@ -245,8 +246,6 @@ export function PersonFlow({
                             <PersonVStepOne
                                 roles={roles}
                                 faculties={faculties}
-                                schools={schools}
-                                sections={sections}
                                 initialValues={data}
                                 onSubmit={handleStepOne}
                                 isLoading={isLoading}
@@ -256,8 +255,6 @@ export function PersonFlow({
                             <MassiveVStepOne
                                 roles={roles}
                                 faculties={faculties}
-                                schools={schools}
-                                sections={sections}
                                 initialValues={data}
                                 onSubmit={handleStepOneMassive}
                                 isLoading={isLoading}
@@ -285,8 +282,6 @@ export function PersonFlow({
                                     data={data}
                                     roles={roles}
                                     faculties={faculties}
-                                    schools={schools}
-                                    sections={sections}
                                 />
                                 <div className="flex gap-3">
                                     <Button
@@ -319,8 +314,6 @@ export function PersonFlow({
                                     data={data}
                                     roles={roles}
                                     faculties={faculties}
-                                    schools={schools}
-                                    sections={sections}
                                 />
                                 <div className="flex gap-3">
                                     <Button

@@ -17,12 +17,11 @@ import { CsvUploader } from './components/CsvUploader';
 import { CsvPreview } from './components/CsvPreview';
 import { usePage } from '@inertiajs/react';
 
+import { type Faculty } from '@/types';
+
 interface MassivePersonInitProps {
     roles: any[];
-    faculties: any[];
-    schools: any[];
-    sections: any[];
-
+    faculties: Faculty[];
     initialValues?: Partial<MassivePersonInitValues>;
     onSubmit: (values: MassivePersonInitValues) => void;
     isLoading: boolean;
@@ -31,8 +30,6 @@ interface MassivePersonInitProps {
 export function MassiveVStepOne({
     roles,
     faculties,
-    schools,
-    sections,
     initialValues,
     onSubmit,
     isLoading,
@@ -99,8 +96,6 @@ export function MassiveVStepOne({
                     roleId={form.watch("role_id")}
                     roleUser={role}
                     faculties={faculties}
-                    schools={schools}
-                    sections={sections}
                 />
                 <FormField
                     control={form.control}

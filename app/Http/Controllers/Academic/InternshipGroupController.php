@@ -36,14 +36,14 @@ class InternshipGroupController extends Controller
     public function indexByInternship(): Response
     {
         $currentAssignmentId = session('assignment_id');
-        $currentAssignment = Assignment::find($currentAssignmentId);
+        $currentAssignment = Assignment::query()->find($currentAssignmentId);
 
         $groups = [];
         if ($currentAssignment && in_array($currentAssignment->role_id, [3, 4])) {
             $groups = $this->groupService->getInternshipGroupsBySection($currentAssignment->section_id);
         }
 
-        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+        $faculties = Faculty::query()->forAssignmentContext($currentAssignment, session('semester_id'))->get();
 
         return Inertia::render('academic/group/internship/index', [
             'groups' => $groups,
@@ -111,7 +111,7 @@ class InternshipGroupController extends Controller
     public function indexByStudent(): Response
     {
         $currentAssignmentId = session('assignment_id');
-        $currentAssignment = Assignment::find($currentAssignmentId);
+        $currentAssignment = Assignment::query()->find($currentAssignmentId);
 
         $groups = [];
         $students = [];
@@ -121,7 +121,7 @@ class InternshipGroupController extends Controller
             $students = $this->groupService->getStudentsAndGroupsBySection($currentAssignment->section_id);
         }
 
-        $faculties = Faculty::with('schools.sections')->where('status', 1)->get();
+        $faculties = Faculty::query()->forAssignmentContext($currentAssignment, session('semester_id'))->get();
 
         return Inertia::render('academic/group/student/index', [
             'groups' => $groups,

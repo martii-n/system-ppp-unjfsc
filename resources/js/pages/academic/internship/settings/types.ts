@@ -4,8 +4,8 @@ export interface Document {
 }
 
 export interface RequirementDocs {
-    desarrollo: Document[];
-    convalidacion: Document[];
+    development: Document[];
+    validation: Document[];
 }
 
 export interface WorkflowStage {
