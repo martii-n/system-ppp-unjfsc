@@ -123,14 +123,15 @@ export default function NotificationIndex({ title, notifications }: Props) {
                                 variant="outline"
                                 size="icon"
                                 onClick={handleBack}
-                                className="rounded-xl h-10 w-10 shrink-0 bg-background shadow-sm hover:shadow-md transition-all"
+                                className="rounded-xl h-10 w-10 shrink-0 bg-background hover:shadow-md transition-all"
                             >
                                 <ChevronLeft className="h-5 w-5" />
                             </Button>
-                            <div>
-                                <h1 className="text-2xl font-bold tracking-tight">Notificaciones</h1>
-                                <p className="text-sm text-muted-foreground">Gestiona tus alertas y avisos académicos</p>
-                            </div>
+                            <Heading
+                                variant="small"
+                                title="Notificaciones"
+                                description="Gestiona tus alertas y avisos académicos"
+                            />
                         </div>
 
                         {unreadNotificationsCount > 0 && (
@@ -146,7 +147,7 @@ export default function NotificationIndex({ title, notifications }: Props) {
                         )}
                     </div>
 
-                    <Card className="shadow-lg border-muted/40 rounded-2xl overflow-hidden bg-background">
+                    <Card className="border-muted/40 rounded-xl overflow-hidden bg-background">
                         <Tabs defaultValue="all" className="w-full">
                             <CardHeader className="p-0 border-b">
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 gap-4">

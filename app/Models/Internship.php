@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Internship extends Model
 {
@@ -52,7 +53,7 @@ class Internship extends Model
      */
     public function requests(): MorphMany
     {
-        return $this->morphMany(Request::class, 'requestable');
+        return $this->morphMany(UserRequest::class, 'requestable');
     }
 
     /**

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Exceptions\Document\DocumentInvalidContextException;
-use App\Exceptions\Assignment\AssignmentNotAllowedException;
 use App\Exceptions\ResourceNotFoundException;
 
 use App\Models\Assignment;
@@ -11,7 +10,6 @@ use App\Models\Document;
 use App\Models\DocumentType;
 use App\Models\Dossier;
 use App\Models\Evaluation;
-use App\Models\User;
 use App\Models\Internship;
 use App\Models\Placement;
 use Illuminate\Support\Facades\DB;

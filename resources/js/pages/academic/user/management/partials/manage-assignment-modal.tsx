@@ -35,9 +35,10 @@ interface Props {
     assignment: Assignment | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onSuccess?: () => void;
 }
 
-export default function ManageAssignmentModal({ assignment, open, onOpenChange }: Props) {
+export default function ManageAssignmentModal({ assignment, open, onOpenChange, onSuccess }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         action: '',
         reason: '',
@@ -66,6 +67,7 @@ export default function ManageAssignmentModal({ assignment, open, onOpenChange }
             onSuccess: () => {
                 onOpenChange(false);
                 reset();
+                onSuccess?.();
             },
         });
     };
@@ -102,7 +104,7 @@ export default function ManageAssignmentModal({ assignment, open, onOpenChange }
                                     <SelectValue placeholder="Seleccione una acción" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {isReadOnly ? (
+                                    {isReadOnly || isReview ? (
                                         <SelectItem value="3">Habilitar Acceso</SelectItem>
                                     ) : (
                                         <>

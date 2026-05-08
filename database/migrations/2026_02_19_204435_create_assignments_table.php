@@ -18,10 +18,10 @@ return new class extends Migration {
             $table->foreignId('section_id')->nullable()->constrained('sections');
 
             // Access of the user
-            $table->unsignedTinyInteger('access_status')->default(2); // FULL | LIMITED | READ_ONLY | BLOCKED
+            $table->unsignedTinyInteger('access_status')->default(2); // FULL -> 1 | LIMITED -> 2 | READ_ONLY -> 3 | BLOCKED -> 0
 
             // Academic validaty
-            $table->unsignedTinyInteger('approval_status')->default(2); // APPROVED | PENDING | REJECTED
+            $table->unsignedTinyInteger('approval_status')->default(2); // APPROVED -> 1 | PENDING -> 2 | REJECTED -> 0
 
             // Flow administrative
             $table->unsignedTinyInteger('review_status')->default(0); // NONE | UNDER_REVIEW | OBSERVED

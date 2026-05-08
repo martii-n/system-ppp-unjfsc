@@ -10,6 +10,7 @@ use App\Services\UserAssignmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Models\UserRequest;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -109,5 +110,38 @@ class UserAssignmentController extends Controller
         $assignmentService->requestAssignmentManage($data, $assignment, $sender);
 
         return back()->with('message', 'Solicitud generada y enviada correctamente.');
+    }
+
+    /**
+     * API: Obtener la solicitud pendiente para una asignación.
+     */
+    public function getAssignmentRequest(Assignment $assignment): JsonResponse
+    {
+        $request = UserRequest::query()
+            ->where('requestable_id', $assignment->id)
+            ->where('requestable_type', Assignment::class)
+            ->where('approval_status', 2) // PENDING
+            ->latest()
+            ->first();
+
+        return response()->json(['data' => $request]);
+    }
+
+    /**
+     * API: Actualizar el estado de una solicitud de asignación.
+     */
+    public function updateAssignmentRequestStatus(Request $httpRequest, UserRequest $userRequest, AssignmentService $assignmentService): RedirectResponse
+    {
+        $assignmentId = session('assignment_id');
+        $reviewer = Assignment::query()->findOrFail($assignmentId);
+
+        $data = $httpRequest->validate([
+            'approval_status' => 'required|in:1,3',
+            'justification' => 'nullable|string'
+        ]);
+
+        $assignmentService->updateAssignmentRequestStatus($data, $userRequest, $reviewer);
+
+        return back()->with('message', 'Solicitud procesada correctamente.');
     }
 }

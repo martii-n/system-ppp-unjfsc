@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { Camera, ImagePlus, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -46,6 +47,13 @@ export default function ProfileHero({ profileData }: { profileData: any }) {
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                toast.error('La imagen es muy pesada', {
+                    description: 'Por favor, comprímela o usa una de menos de 2MB.',
+                });
+                e.target.value = ''; // Limpiar el input
+                return;
+            }
             setPhotoAction(file);
             setPreviewPhoto(URL.createObjectURL(file)); // Crea una URL temporal para ver la foto ya mismo!
         }
@@ -55,6 +63,13 @@ export default function ProfileHero({ profileData }: { profileData: any }) {
     const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                toast.error('La imagen de portada es muy pesada', {
+                    description: 'Por favor, comprímela o usa una de menos de 2MB.',
+                });
+                e.target.value = '';
+                return;
+            }
             setBannerAction(file);
             setPreviewBanner(URL.createObjectURL(file));
         }
@@ -98,7 +113,7 @@ export default function ProfileHero({ profileData }: { profileData: any }) {
                 {previewBanner ? (
                     <img
                         src={previewBanner}
-                        alt="Profile Banner"
+                        alt="Portada del perfil. Max 2MB."
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                 ) : (

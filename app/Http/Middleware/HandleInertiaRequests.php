@@ -60,6 +60,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'academic' => [
                 'historicMode' => fn () => $this->isHistoricMode($request),
+                'accessStatus' => fn () => $this->getCurrentAccessStatus(),
                 'currentSemester' => fn () => $this->getCurrentSemester(),
                 'selectedAssignmentId' => session('assignment_id'),
                 'sessionToken' => $user ? md5(session()->getId()) : null,
@@ -81,6 +82,26 @@ class HandleInertiaRequests extends Middleware
         }
 
         return $assignment->semester && $assignment->semester->status->value === 0;
+    }
+
+    private function getCurrentAccessStatus(): int
+    {
+        $assignmentId = session('assignment_id');
+        if (!$assignmentId) {
+            return 1;
+        }
+
+        $assignment = \App\Models\Assignment::find($assignmentId);
+        if (!$assignment) {
+            return 1;
+        }
+
+        // Los administradores y subadmins siempre tienen acceso completo (1)
+        if (in_array($assignment->role_id, [1, 2])) {
+            return 1;
+        }
+
+        return $assignment->access_status->value;
     }
 
     private function getCurrentSemester(): ?array

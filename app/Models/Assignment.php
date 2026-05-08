@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Assignment extends Model
 {
@@ -113,7 +114,7 @@ class Assignment extends Model
      */
     public function documents(): HasMany
     {
-        return $this->hasMany(Dossier::class, 'assignment_id');
+        return $this->hasMany(Document::class, 'uploaded_by');
     }
 
     /**
@@ -130,5 +131,38 @@ class Assignment extends Model
     public function internship(): HasOne
     {
         return $this->hasOne(Internship::class, 'assignment_id');
+    }
+
+    /**
+     * Helper methods for access control
+     */
+    public function isBlocked(): bool
+    {
+        return $this->status === AssignmentStatus::INACTIVE 
+            || $this->access_status === AssignmentAccessStatus::BLOCKED;
+    }
+
+    public function isReadOnly(): bool
+    {
+        return $this->access_status === AssignmentAccessStatus::READ_ONLY;
+    }
+
+    public function isLimited(): bool
+    {
+        return $this->access_status === AssignmentAccessStatus::LIMITED;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->approval_status === AssignmentApprovalStatus::APPROVED;
+    }
+
+    /**
+     * Get the requests associated with the assignment.
+     * @return MorphMany
+     */
+    public function requests(): MorphMany
+    {
+        return $this->morphMany(UserRequest::class, 'requestable');
     }
 }

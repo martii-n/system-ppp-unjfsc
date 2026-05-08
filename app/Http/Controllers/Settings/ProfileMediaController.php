@@ -15,10 +15,10 @@ class ProfileMediaController extends Controller
 
     public function update(ProfileMediaUpdateRequest $request)
     {
-        $authenticable = $request->user()->authenticable;
+        $person = $request->user()->person;
 
         $this->service->updateMedia(
-            $authenticable,
+            $person,
             $request->file('photo') === 'deleted' ? 'deleted' : $request->file('photo'),
             $request->file('banner') === 'deleted' ? 'deleted' : $request->file('banner')
         );

@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Exceptions\RequestUnsupportedTypeException;
 
 use App\Models\Assignment;
-use App\Models\Request as UserRequest;
+use App\Models\UserRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -15,9 +15,9 @@ class RequestService
     /**
      * @@param array $payload
      */
-    public function createRequest(Model $sender, Model $target, string $type, array $payload, string $reason): void
+    public function createRequest(Model $sender, Model $target, string $type, array $payload, string $reason): UserRequest
     {
-        UserRequest::query()->create([
+        return UserRequest::query()->create([
             'senderable_id' => $sender->id,
             'senderable_type' => $sender->getMorphClass(),
             'requestable_id' => $target->id,
@@ -52,7 +52,7 @@ class RequestService
         });
     }
 
-    private function applyRequestAction(Request $request): void
+    private function applyRequestAction(UserRequest $request): void
     {
         $target = $request->requestable;
         $payload = $request->payload;

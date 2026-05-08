@@ -11,7 +11,7 @@ use App\Models\DocumentType;
 use App\Models\Internship;
 use App\Models\InternshipSetting;
 use App\Models\Placement;
-use App\Models\Request;
+use App\Models\UserRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -241,7 +241,7 @@ class InternshipService
      * @param Assignment $sender
      * @return Request
      */
-    public function requestTypeChange(array $data, Internship $internship, Assignment $sender): Request
+    public function requestTypeChange(array $data, Internship $internship, Assignment $sender): UserRequest
     {
         return DB::transaction(function () use ($internship, $data, $sender) {
             $this->validateOwnership($internship, $sender);
@@ -276,9 +276,9 @@ class InternshipService
      * @param array $data
      * @param Internship $internship
      * @param Assignment $sender
-     * @return Request
+     * @return UserRequest
      */
-    public function requestGradeChange(array $data, Internship $internship, Assignment $sender): Request
+    public function requestGradeChange(array $data, Internship $internship, Assignment $sender): UserRequest
     {
         return DB::transaction(function () use ($internship, $data, $sender) {
             $this->validateOwnership($internship, $sender);

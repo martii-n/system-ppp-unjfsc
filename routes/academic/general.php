@@ -12,7 +12,7 @@ Route::middleware(['role:1,2,3'])->group(function () {
     Route::patch('/semesters/{semester}', [SemesterController::class, 'update'])->name('semesters.update');
     Route::post('/semesters/{semester}/close', [SemesterController::class, 'closeCurrentSemester'])->name('semesters.close');
     Route::post('/semesters/{semester}/back', [SemesterController::class, 'backCurrentSemester'])->name('semesters.back');
-    
+
     // Filtrado de Usuarios (Estilo Dossier)
     Route::get('/users/filter', [UserAssignmentController::class, 'getAssignmentsByFilter'])->name('users.filter');
 });
@@ -54,3 +54,9 @@ Route::middleware(['role:1,2,3'])->group(function () {
 
 // Ruta exclusiva para Administrador de Sistema
 Route::get('/subadmins', [UserAssignmentController::class, 'listSubAdmins'])->middleware('role:1')->name('subadmins.index');
+
+// API para Gestión de Asignaciones (Pedidos de Cambio/Baja)
+Route::middleware(['role:1,2,3'])->group(function () {
+    Route::get('/assignments/api/requests/{assignment}', [UserAssignmentController::class, 'getAssignmentRequest'])->name('assignments.api.requests.get');
+    Route::patch('/assignments/api/requests/{userRequest}/status', [UserAssignmentController::class, 'updateAssignmentRequestStatus'])->name('assignments.api.requests.status');
+});

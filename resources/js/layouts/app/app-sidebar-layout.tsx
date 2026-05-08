@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { ExceptionHandler } from '@/components/exception-handler';
 import { HistoricNotice } from '@/components/historic-notice';
+import { AssignmentAccessNotice } from '@/components/assignment-access-notice';
 import { Toaster } from 'sonner';
 import type { AppLayoutProps } from '@/types';
 
@@ -16,6 +17,7 @@ export default function AppSidebarLayout({
             <Toaster position="top-center" richColors closeButton />
             <ExceptionHandler />
             <HistoricNotice />
+            <AssignmentAccessNotice />
             <AppSidebar />
             <AppContent variant="sidebar" className="overflow-x-hidden">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />

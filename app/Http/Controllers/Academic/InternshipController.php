@@ -14,7 +14,7 @@ use App\Models\Assignment;
 use App\Models\Document;
 use App\Models\Faculty;
 use App\Models\Internship;
-use App\Models\Request as UserRequest;
+use App\Models\UserRequest;
 use App\Models\User;
 use App\Services\InternshipService;
 use App\Services\PlacementService;

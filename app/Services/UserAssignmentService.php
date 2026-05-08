@@ -35,9 +35,9 @@ class UserAssignmentService
         } elseif (!empty($filters['school_id'])) {
             $query->whereHas('section', fn($q) => $q->where('school_id', $filters['school_id']));
         } elseif (!empty($filters['faculty_id'])) {
-            $query->where(function($q) use ($filters) {
+            $query->where(function ($q) use ($filters) {
                 $q->whereHas('section.school', fn($sq) => $sq->where('faculty_id', $filters['faculty_id']))
-                  ->orWhereHas('section.faculty', fn($sq) => $sq->where('id', $filters['faculty_id']));
+                    ->orWhereHas('section.faculty', fn($sq) => $sq->where('id', $filters['faculty_id']));
             });
         }
 
@@ -53,6 +53,6 @@ class UserAssignmentService
             });
         }
 
-        return $paginate ? $query->paginate(15) : $query->get();
+        return $paginate ? $query->paginate(3) : $query->get();
     }
 }

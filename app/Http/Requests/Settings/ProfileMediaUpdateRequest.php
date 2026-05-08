@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Settings;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\UploadedFile;
 
 class ProfileMediaUpdateRequest extends FormRequest
 {
@@ -22,16 +23,38 @@ class ProfileMediaUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'photo' => ['nullable', function ($attribute, $value, $fail) {
-                if ($value !== 'deleted' && !($value instanceof \Illuminate\Http\UploadedFile)) {
-                    $fail('La foto debe ser una imagen válida o la instrucción de eliminación.');
+            'photo' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($value === 'deleted')
+                        return;
+
+                    if (!($value instanceof UploadedFile)) {
+                        $fail('La foto debe ser una imagen válida o la instrucción de eliminación.');
+                        return;
+                    }
+
+                    if ($value->getSize() > 2048 * 1024) {
+                        $fail('La foto no debe pesar más de 2MB.');
+                    }
                 }
-            }],
-            'banner' => ['nullable', function ($attribute, $value, $fail) {
-                if ($value !== 'deleted' && !($value instanceof \Illuminate\Http\UploadedFile)) {
-                    $fail('El fondo debe ser una imagen válida o la instrucción de eliminación.');
+            ],
+            'banner' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($value === 'deleted')
+                        return;
+
+                    if (!($value instanceof UploadedFile)) {
+                        $fail('El fondo debe ser una imagen válida o la instrucción de eliminación.');
+                        return;
+                    }
+
+                    if ($value->getSize() > 2048 * 1024) {
+                        $fail('El fondo no debe pesar más de 2MB.');
+                    }
                 }
-            }],
+            ],
         ];
     }
 }

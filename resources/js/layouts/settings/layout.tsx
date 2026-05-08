@@ -10,6 +10,7 @@ import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
 import { show } from '@/routes/two-factor';
 import { edit as editPassword } from '@/routes/user-password';
+import { about } from '@/routes/settings';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -32,6 +33,11 @@ const sidebarNavItems: NavItem[] = [
         href: editAppearance(),
         icon: null,
     },
+    {
+        title: 'About',
+        href: about(),
+        icon: null,
+    }
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {

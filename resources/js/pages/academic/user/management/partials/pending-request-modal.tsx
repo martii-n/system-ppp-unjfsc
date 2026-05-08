@@ -18,6 +18,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import requests from '@/routes/requests';
+import assignments from '@/routes/academic/assignments';
 import { Loader2 } from 'lucide-react';
 
 interface Assignment {
@@ -45,6 +46,7 @@ interface Props {
     assignment: Assignment | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onSuccess?: () => void;
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -53,7 +55,7 @@ const ACTION_LABELS: Record<string, string> = {
     ENABLE_ASSIGNMENT: 'Habilitar Acceso',
 };
 
-export default function PendingRequestModal({ assignment, open, onOpenChange }: Props) {
+export default function PendingRequestModal({ assignment, open, onOpenChange, onSuccess }: Props) {
     const { role } = usePage().props as any;
     const [pendingRequest, setPendingRequest] = useState<PendingRequest | null>(null);
     const [loading, setLoading] = useState(false);
@@ -72,7 +74,7 @@ export default function PendingRequestModal({ assignment, open, onOpenChange }: 
             setPendingRequest(null);
             reset();
 
-            fetch(requests.byAssignment.url(assignment.id))
+            fetch(assignments.api.requests.get.url(assignment.id))
                 .then((res) => res.json())
                 .then((json) => {
                     setPendingRequest(json.data);
@@ -88,10 +90,11 @@ export default function PendingRequestModal({ assignment, open, onOpenChange }: 
         e.preventDefault();
         if (!pendingRequest) return;
 
-        patch(requests.management.status.url(pendingRequest.id), {
+        patch(assignments.api.requests.status.url(pendingRequest.id), {
             onSuccess: () => {
                 onOpenChange(false);
                 reset();
+                onSuccess?.();
             },
         });
     };
@@ -103,10 +106,11 @@ export default function PendingRequestModal({ assignment, open, onOpenChange }: 
         setData('approval_status', '3');
         setData('justification', 'Solicitud cancelada por el usuario.');
 
-        patch(requests.management.status.url(pendingRequest.id), {
+        patch(assignments.api.requests.status.url(pendingRequest.id), {
             onSuccess: () => {
                 onOpenChange(false);
                 reset();
+                onSuccess?.();
             },
         });
     };

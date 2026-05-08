@@ -2,7 +2,7 @@
 
 use App\Exceptions\BusinessException;
 use App\Http\Middleware\EnsureActiveSemester;
-use App\Http\Middleware\EnsureAssignmentApproved;
+use App\Http\Middleware\EnsureAssignmentAccess;
 use App\Http\Middleware\EnsureHasRole;
 use App\Http\Middleware\EnsureUserType;
 use App\Http\Middleware\HandleAppearance;
@@ -33,7 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureHasRole::class,
             'type' => EnsureUserType::class,
-            'approved' => EnsureAssignmentApproved::class,
+            'approved' => EnsureAssignmentAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

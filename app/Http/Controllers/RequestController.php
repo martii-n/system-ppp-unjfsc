@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Request\UpdateManagementRequestStatusRequest;
 use App\Models\Assignment;
-use App\Models\Request;
+use App\Models\UserRequest;
 use App\Services\RequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +23,7 @@ class RequestController extends Controller
      */
     public function getRequestAssignment(Assignment $assignment): JsonResponse
     {
-        $request = Request::query()
+        $request = UserRequest::query()
             ->where('requestable_id', $assignment->id)
             ->where('requestable_type', Assignment::class)
             ->where('approval_status', 2) // PENDING
@@ -43,7 +43,7 @@ class RequestController extends Controller
      * @param UpdateManagementRequestStatusRequest $request
      * @return RedirectResponse
      */
-    public function updateManagementRequestStatus(UpdateManagementRequestStatusRequest $validatedRequest, Request $request): RedirectResponse
+    public function updateManagementRequestStatus(UpdateManagementRequestStatusRequest $validatedRequest, UserRequest $request): RedirectResponse
     {
         $assignmentId = session('assignment_id');
         $assignment = Assignment::find($assignmentId);

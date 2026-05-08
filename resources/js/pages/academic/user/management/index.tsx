@@ -18,8 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import { useAcademicTable } from "@/hooks/use-academic-table";
+import { useState } from "react";
 import { AcademicFilter, type AcademicFilterValues } from "@/components/academic/academic-filter";
 import AcademicSearch from "@/components/academic/academic-search";
 import AcademicPagination from "@/components/academic/academic-pagination";
@@ -27,35 +26,11 @@ import { MoreHorizontal, UserCog, Settings2, Clock, Info } from "lucide-react";
 import Heading from "@/components/heading";
 import ManageAssignmentModal from "./partials/manage-assignment-modal";
 import PendingRequestModal from "./partials/pending-request-modal";
+import { Badge } from "@/components/ui/badge";
 
-interface Assignment {
-    id: number;
-    role_id: number;
-    access_status: number;
-    review_status: number;
-    user: {
-        email: string;
-        person: {
-            names: string;
-            surnames: string;
-        };
-    };
-    role: {
-        name: string;
-    };
-    section?: {
-        name: string;
-        school?: {
-            name: string;
-            faculty: {
-                name: string;
-            };
-        };
-        faculty?: {
-            name: string;
-        };
-    };
-}
+
+
+import { useUserManagement } from "./hooks/use-user-management";
 
 interface Props {
     assignments: any;
@@ -66,35 +41,12 @@ interface Props {
 
 export default function UserManagementIndex({ assignments: initialAssignments, faculties, roleId, title }: Props) {
     const { role } = usePage().props as any;
-    const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-    const [isManageModalOpen, setIsManageModalOpen] = useState(false);
-    const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
-
     const isAdmin = [1, 2].includes(Number(role));
 
-    const {
-        data: backendData,
-        displayData: list,
-        search,
-        setSearch,
-        isSearching,
-        bodyVisible,
-        handleFilter,
-        handleBackendSearch,
-        handlePageChange,
-        localPage,
-        localTotalPages,
-        setLocalPage
-    } = useAcademicTable<Assignment>({
-        endpoint: '/users/filter',
+    const { table, state, actions } = useUserManagement({
         initialData: initialAssignments,
-        isAdmin: isAdmin,
-        responseKey: 'assignments',
-        extraParams: { target_role_id: roleId },
-        localSearchFn: (a, term) => {
-            const fullName = `${a.user?.person?.surnames || ''} ${a.user?.person?.names || ''}`.toLowerCase();
-            return fullName.includes(term) || (a.user?.email || '').toLowerCase().includes(term);
-        }
+        roleId,
+        isAdmin
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -127,16 +79,16 @@ export default function UserManagementIndex({ assignments: initialAssignments, f
                     {isAdmin && (
                         <AcademicFilter
                             faculties={faculties}
-                            onFilter={handleFilter}
-                            isLoading={isSearching}
+                            onFilter={table.handleFilter}
+                            isLoading={table.isSearching}
                         />
                     )}
                     <AcademicSearch
-                        role={role}
-                        search={search}
-                        setSearch={setSearch}
-                        onSearch={isAdmin ? handleBackendSearch : undefined}
-                        isLoading={isSearching}
+                        isAdmin={isAdmin}
+                        search={table.search}
+                        setSearch={table.setSearch}
+                        onSearch={isAdmin ? table.handleBackendSearch : undefined}
+                        isLoading={table.isSearching}
                         placeholder={isAdmin ? "Buscar por email o nombre..." : "Filtrar en esta lista..."}
                     />
                 </div>
@@ -148,25 +100,30 @@ export default function UserManagementIndex({ assignments: initialAssignments, f
                                 <TableHead className="w-[50px]">#</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Apellidos y Nombres</TableHead>
-                                <TableHead>Facultad</TableHead>
+                                {isSubadmin && (
+                                    <TableHead>Facultad</TableHead>
+                                )}
                                 {!isSubadmin && (
                                     <>
-                                        <TableHead>Escuela</TableHead>
+                                        <TableHead>Facultad / Escuela</TableHead>
                                         <TableHead>Sección</TableHead>
                                     </>
                                 )}
+                                <TableHead>Estado</TableHead>
+                                <TableHead>Acceso</TableHead>
+                                <TableHead>Solicitud</TableHead>
                                 <TableHead className="text-right">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody className={`transition-opacity duration-300 ${bodyVisible ? 'opacity-100' : 'opacity-0'}`}>
-                            {isSearching ? (
+                        <TableBody className="transition-opacity duration-300">
+                            {table.isSearching ? (
                                 <TableRow>
                                     <TableCell colSpan={isSubadmin ? 5 : 7} className="h-24 text-center text-sm italic text-muted-foreground opacity-50 animate-pulse">
                                         Cargando usuarios...
                                     </TableCell>
                                 </TableRow>
-                            ) : list.length > 0 ? (
-                                list.map((assignment, index) => {
+                            ) : table.displayData.length > 0 ? (
+                                table.displayData.map((assignment, index) => {
                                     const user = assignment.user;
                                     const person = user.person;
                                     const section = assignment.section;
@@ -181,19 +138,57 @@ export default function UserManagementIndex({ assignments: initialAssignments, f
                                     return (
                                         <TableRow key={assignment.id}>
                                             <TableCell className="font-medium text-muted-foreground">
-                                                {(localPage - 1) * 15 + index + 1}
+                                                {(table.localPage - 1) * 15 + index + 1}
                                             </TableCell>
                                             <TableCell className="font-medium">{user.email}</TableCell>
                                             <TableCell className="capitalize">
                                                 {person.surnames} {person.names}
                                             </TableCell>
-                                            <TableCell>{facultyName}</TableCell>
+                                            {isSubadmin && (
+                                                <TableCell>{facultyName}</TableCell>
+                                            )}
                                             {!isSubadmin && (
                                                 <>
-                                                    <TableCell>{schoolName}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-xs text-muted-foreground">{facultyName}</span>
+                                                            <span>{schoolName}</span>
+                                                        </div>
+                                                    </TableCell>
                                                     <TableCell>{sectionName}</TableCell>
                                                 </>
                                             )}
+                                            <TableCell>
+                                                {
+                                                    assignment.approval_status === 1 ? (
+                                                        <Badge variant="default">Validado</Badge>
+                                                    ) : assignment.approval_status === 2 ? (
+                                                        <Badge variant="outline">Pendiente</Badge>
+                                                    ) : assignment.approval_status === 0 ? (
+                                                        <Badge variant="secondary">Rechazado</Badge>
+                                                    ) : 'N/A'
+                                                }
+                                            </TableCell>
+                                            <TableCell>
+                                                {
+                                                    assignment.access_status === 1 ? (
+                                                        <Badge variant="default">Completo</Badge>
+                                                    ) : assignment.access_status === 2 ? (
+                                                        <Badge variant="secondary">Limitado</Badge>
+                                                    ) : assignment.access_status === 3 ? (
+                                                        <Badge variant="outline">Solo lectura</Badge>
+                                                    ) : assignment.access_status === 0 ? (
+                                                        <Badge variant="destructive">Bloqueado</Badge>
+                                                    ) : 'N/A'
+                                                }
+                                            </TableCell>
+                                            <TableCell>
+                                                {
+                                                    assignment.review_status === 0 ?
+                                                        <Badge variant="secondary">Ninguno</Badge> :
+                                                        <Badge variant="default">Pendiente</Badge>
+                                                }
+                                            </TableCell>
                                             <TableCell className="text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
@@ -213,10 +208,7 @@ export default function UserManagementIndex({ assignments: initialAssignments, f
                                                         </DropdownMenuItem>
                                                         {!isReview && (
                                                             <DropdownMenuItem
-                                                                onClick={() => {
-                                                                    setSelectedAssignment(assignment);
-                                                                    setIsManageModalOpen(true);
-                                                                }}
+                                                                onClick={() => actions.openManageModal(assignment)}
                                                                 className="flex items-center cursor-pointer"
                                                             >
                                                                 <Settings2 className="mr-2 h-4 w-4 text-orange-500" />
@@ -225,10 +217,7 @@ export default function UserManagementIndex({ assignments: initialAssignments, f
                                                         )}
                                                         {isReview && (
                                                             <DropdownMenuItem
-                                                                onClick={() => {
-                                                                    setSelectedAssignment(assignment);
-                                                                    setIsPendingModalOpen(true);
-                                                                }}
+                                                                onClick={() => actions.openPendingModal(assignment)}
                                                                 className="flex items-center cursor-pointer"
                                                             >
                                                                 <Clock className="mr-2 h-4 w-4 text-yellow-500" />
@@ -257,26 +246,28 @@ export default function UserManagementIndex({ assignments: initialAssignments, f
 
                 <AcademicPagination
                     isAdmin={isAdmin}
-                    isLoading={isSearching}
-                    links={backendData?.links}
-                    total={isAdmin ? (backendData?.total || 0) : initialAssignments.length}
-                    showing={list.length}
-                    onPageChange={handlePageChange}
-                    currentPage={localPage}
-                    totalPages={localTotalPages}
-                    onLocalPageChange={setLocalPage}
+                    isLoading={table.isSearching}
+                    links={(table.data as any)?.links}
+                    total={isAdmin ? ((table.data as any)?.total || 0) : initialAssignments.length}
+                    showing={table.displayData.length}
+                    onPageChange={table.handlePageChange}
+                    currentPage={table.localPage}
+                    totalPages={table.localTotalPages}
+                    onLocalPageChange={table.setLocalPage}
                 />
             </div>
 
             <ManageAssignmentModal
-                assignment={selectedAssignment}
-                open={isManageModalOpen}
-                onOpenChange={setIsManageModalOpen}
+                assignment={state.selectedAssignment}
+                open={state.isManageModalOpen}
+                onOpenChange={actions.setIsManageModalOpen}
+                onSuccess={actions.reload}
             />
             <PendingRequestModal
-                assignment={selectedAssignment}
-                open={isPendingModalOpen}
-                onOpenChange={setIsPendingModalOpen}
+                assignment={state.selectedAssignment}
+                open={state.isPendingModalOpen}
+                onOpenChange={actions.setIsPendingModalOpen}
+                onSuccess={actions.reload}
             />
         </AppLayout>
     );

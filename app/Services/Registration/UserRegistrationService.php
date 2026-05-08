@@ -43,7 +43,7 @@ class UserRegistrationService
         $person = collect();
         if ($user) {
             $this->validateRoleRulesUserAcademic($user, $data['role_id'], $data['section_id'], $semesterId);
-            $person = Person::query()->where('id', $user->authenticable_id)->select('id', 'dni', 'names', 'surnames')->first() ?? collect();
+            $person = Person::query()->where('id', $user->person_id)->select('id', 'dni', 'names', 'surnames')->first() ?? collect();
         }
 
         return [

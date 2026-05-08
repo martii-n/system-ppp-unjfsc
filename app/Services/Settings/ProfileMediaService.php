@@ -2,6 +2,7 @@
 
 namespace App\Services\Settings;
 
+use App\Models\Person;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -9,48 +10,48 @@ use Illuminate\Support\Facades\Storage;
 class ProfileMediaService
 {
     /**
-     * @param Model $authenticable
+     * @param Person $person
      * @param mixed $photoFile (File | 'deleted' | null)
      * @param mixed $bannerFile (File | 'deleted' | null)
-     * @return Model
+     * @return Person
      */
-    public function updateMedia(Model $authenticable, $photoFile, $bannerFile): Model
+    public function updateMedia(Person $person, $photoFile, $bannerFile): Person
     {
         if ($photoFile) {
-            $this->processFile($authenticable, 'path_photo', 'avatar', $photoFile);
+            $this->processFile($person, 'path_photo', 'avatar', $photoFile);
         }
         if ($bannerFile) {
-            $this->processFile($authenticable, 'path_banner', 'banner', $bannerFile);
+            $this->processFile($person, 'path_banner', 'banner', $bannerFile);
         }
 
-        $authenticable->save();
+        $person->save();
 
-        return $authenticable;
+        return $person;
     }
 
     /**
-     * @param Model $model
+     * @param Person $person
      * @param string $column
      * @param string $type
      * @param mixed $file (File | 'deleted' | null)
      */
-    private function processFile(Model $model, string $column, string $type, $file): void
+    private function processFile(Person $person, string $column, string $type, $file): void
     {
-        if ($model->{$column}) {
-            Storage::disk('public')->delete($model->{$column});
-            $model->{$column} = null;
+        if ($person->{$column}) {
+            Storage::disk('public')->delete($person->{$column});
+            $person->{$column} = null;
         }
 
         if ($file !== 'deleted' && $file instanceof UploadedFile) {
             $yearMonth = date('Y/m');
-            $modelType = strtolower(class_basename($model));
+            $modelType = strtolower(class_basename($person));
 
-            $identifier = $model->dni ?? $model->ruc ?? $model->id;
+            $identifier = $person->dni ?? $person->id;
 
             $folder = "profiles/{$modelType}/{$yearMonth}";
-            $filename = "{$identifier}_{$type}_". time() . '.' . $file->extension();
+            $filename = "{$identifier}_{$type}_" . time() . '.' . $file->extension();
 
-            $model->{$column} = $file->storeAs($folder, $filename, 'public');
+            $person->{$column} = $file->storeAs($folder, $filename, 'public');
         }
     }
 }
