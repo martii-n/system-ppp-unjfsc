@@ -31,17 +31,78 @@ export function useConfigTable<T>({
     extraParams = {},
     onLocalSearch,
 }: UseConfigTableOptions<T>) {
+    const getInitialParams = () => {
+        const params = new URLSearchParams(window.location.search);
+        const search = params.get('search') || '';
+        const page = parseInt(params.get('page') || '1', 10);
+        
+        // Capturar filtros académicos comunes
+        const filters: Record<string, any> = {};
+        ['faculty_id', 'school_id', 'section_id'].forEach(key => {
+            const val = params.get(key);
+            if (val) filters[key] = val;
+        });
+
+        return { search, page, filters: Object.keys(filters).length > 0 ? filters : null };
+    };
+
+    const initialParams = getInitialParams();
+
     const [data, setData] = useState<TableData<T>>(initialData);
     const [isSearching, setIsSearching] = useState(false);
-    const [search, setSearch] = useState('');
+    const [search, setSearch] = useState(initialParams.search);
     const [activeFilters, setActiveFilters] = useState<Record<
         string,
         unknown
-    > | null>(null);
+    > | null>(initialParams.filters);
     const [filterClearKey, setFilterClearKey] = useState(0);
-    const [localPage, setLocalPage] = useState(1);
+    const [localPage, setLocalPage] = useState(initialParams.page);
 
     const isLocalPagination = Array.isArray(data);
+
+    // --- Carga Inicial para Admins (Deep Linking) ---
+    useEffect(() => {
+        if (isAdmin) {
+            // Si hay algo en la URL que no sea lo por defecto, cargamos data
+            const hasParams = initialParams.search || initialParams.page > 1 || initialParams.filters;
+            if (hasParams) {
+                fetchData(endpoint, {
+                    page: initialParams.page,
+                    search: initialParams.search,
+                    ...initialParams.filters
+                });
+            }
+        }
+    }, []);
+
+    // --- Sincronización con URL (Deep Linking) ---
+    useEffect(() => {
+        const url = new URL(window.location.href);
+        const academicKeys = ['faculty_id', 'school_id', 'section_id'];
+        
+        if (search.trim()) {
+            url.searchParams.set('search', search);
+            // Si hay búsqueda, limpiamos agresivamente los filtros de la URL
+            academicKeys.forEach(key => url.searchParams.delete(key));
+        } else {
+            url.searchParams.delete('search');
+        }
+
+        if (localPage > 1) url.searchParams.set('page', localPage.toString());
+        else url.searchParams.delete('page');
+
+        if (activeFilters && !search.trim()) {
+            academicKeys.forEach(key => {
+                const val = activeFilters[key];
+                if (val) url.searchParams.set(key, val.toString());
+                else url.searchParams.delete(key);
+            });
+        } else if (!activeFilters) {
+            academicKeys.forEach(key => url.searchParams.delete(key));
+        }
+
+        window.history.replaceState({}, '', url.toString());
+    }, [search, localPage, activeFilters]);
 
     // --- Sincronización con Props (Deep Linking & Inertia updates) ---
     useEffect(() => {
@@ -88,6 +149,7 @@ export function useConfigTable<T>({
         }
         setActiveFilters(values);
         setSearch('');
+        setLocalPage(1);
         fetchData(endpoint, values);
     };
 
@@ -100,11 +162,18 @@ export function useConfigTable<T>({
         }
         setFilterClearKey((k) => k + 1);
         setActiveFilters(null);
+        setLocalPage(1);
         fetchData(endpoint, { search: search.trim() });
     };
 
     const handlePageChange = (url: string | null) => {
         if (!url) return;
+        
+        // Extraer página de la URL para sincronizar el estado local (Deep Linking)
+        const urlObj = new URL(url, window.location.origin);
+        const page = urlObj.searchParams.get('page');
+        if (page) setLocalPage(parseInt(page, 10));
+
         const params = (
             search.trim() ? { search: search.trim() } : activeFilters || {}
         ) as Record<string, unknown>;

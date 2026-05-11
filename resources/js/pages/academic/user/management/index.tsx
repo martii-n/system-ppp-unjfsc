@@ -78,9 +78,11 @@ export default function UserManagementIndex({ assignments: initialAssignments, f
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                     {isAdmin && (
                         <AcademicFilter
+                            key={table.filterClearKey}
                             faculties={faculties}
                             onFilter={table.handleFilter}
                             isLoading={table.isSearching}
+                            initialValues={table.activeFilters as any}
                         />
                     )}
                     <AcademicSearch

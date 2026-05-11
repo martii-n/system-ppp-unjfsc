@@ -156,7 +156,7 @@ class DossierService
             });
         }
 
-        return $query->paginate(5);
+        return $query->paginate(3);
     }
 
     /**

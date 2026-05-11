@@ -93,9 +93,11 @@ export default function InternshipValidationIndex({
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             {isAdmin && (
                                 <AcademicFilter
+                                    key={tableManager.filterClearKey}
                                     faculties={faculties}
                                     onFilter={tableManager.handleFilter}
                                     isLoading={tableManager.isSearching}
+                                    initialValues={tableManager.activeFilters as any}
                                 />
                             )}
                             <AcademicSearch

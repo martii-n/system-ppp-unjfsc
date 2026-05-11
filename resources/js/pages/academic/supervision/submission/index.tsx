@@ -118,10 +118,11 @@ export default function SubmissionShow({ faculties, groups, students }: Props) {
                             <div className="flex flex-wrap items-center gap-2">
                                 {isAdmin && (
                                     <AcademicFilter
-                                        key={filterClearKey}
+                                        key={tableManager.filterClearKey}
                                         faculties={faculties}
                                         onFilter={handleFilter}
                                         isLoading={isSearching}
+                                        initialValues={tableManager.activeFilters as any}
                                     />
                                 )}
                                 <GroupSelector

@@ -68,6 +68,7 @@ export default function DossierValidationIndex({ ...props }: Props) {
                                     faculties={faculties}
                                     onFilter={tableManager.handleFilter}
                                     isLoading={tableManager.isSearching}
+                                    initialValues={tableManager.activeFilters as any}
                                 />
                             )}
                             <AcademicSearch
@@ -122,11 +123,10 @@ export default function DossierValidationIndex({ ...props }: Props) {
                     </aside>
                     {/* PANEL DERECHO: Detalle de Gestión */}
                     <main
-                        className={`flex min-w-0 flex-1 flex-col transition-all duration-500 ease-in-out ${
-                            state.selectedId
+                        className={`flex min-w-0 flex-1 flex-col transition-all duration-500 ease-in-out ${state.selectedId
                                 ? 'translate-x-0 opacity-100'
                                 : 'pointer-events-none translate-x-12.5 opacity-0'
-                        }`}
+                            }`}
                     >
                         <DossierDetailPanel
                             selectedItem={state.selectedItem}
