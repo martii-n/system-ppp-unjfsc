@@ -89,6 +89,7 @@ export default function StudentGroupIndex({ groups = [], students = [], facultie
                                     faculties={faculties}
                                     onFilter={handleFilter}
                                     isLoading={isSearching}
+                                    initialValues={activeFilters as any}
                                 />
                             )}
                             <AcademicSearch

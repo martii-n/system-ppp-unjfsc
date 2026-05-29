@@ -138,6 +138,7 @@ export default function ValidationIndex({
                                         faculties={faculties}
                                         onFilter={handleFilter}
                                         isLoading={isSearching}
+                                        initialValues={tableManager.activeFilters as any}
                                     />
                                 )}
                                 <GroupSelector

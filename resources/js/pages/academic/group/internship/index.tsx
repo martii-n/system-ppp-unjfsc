@@ -91,6 +91,7 @@ export default function InternshipGroupsIndex({ groups = [], faculties }: Props)
                             faculties={faculties}
                             onFilter={handleFilter}
                             isLoading={isSearching}
+                            initialValues={tableManager.activeFilters as any}
                         />
                     )}
                     <AcademicSearch
