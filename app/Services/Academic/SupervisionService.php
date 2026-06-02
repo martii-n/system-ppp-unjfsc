@@ -1,5 +1,5 @@
 <?php
-namespace App\Services;
+namespace App\Services\Academic;
 
 use App\Enums\Role as RoleEnum;
 use App\Exceptions\EvaluationAlreadyApprovedException;
@@ -11,6 +11,7 @@ use App\Models\StudentGroup;
 use App\Models\Supervision;
 use Illuminate\Support\Facades\DB;
 use App\Services\DocumentService;
+use App\Services\NotificationService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 

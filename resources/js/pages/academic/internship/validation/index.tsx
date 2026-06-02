@@ -88,7 +88,7 @@ export default function InternshipValidationIndex({
                 <div className="relative flex flex-1 gap-6 overflow-hidden pr-1 pb-1">
                     {/* PANEL IZQUIERDO: Listado de Estudiantes */}
                     <aside
-                        className={`flex shrink-0 flex-col transition-all duration-300 ease-in-out ${state.selectedId ? 'w-[350px] lg:w-[380px]' : 'w-full'} `}
+                        className={`flex shrink-0 flex-col transition-all duration-300 ease-in-out ${state.selectedId ? 'w-87.5 lg:w-95' : 'w-full'} `}
                     >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             {isAdmin && (
@@ -97,7 +97,9 @@ export default function InternshipValidationIndex({
                                     faculties={faculties}
                                     onFilter={tableManager.handleFilter}
                                     isLoading={tableManager.isSearching}
-                                    initialValues={tableManager.activeFilters as any}
+                                    initialValues={
+                                        tableManager.activeFilters as any
+                                    }
                                 />
                             )}
                             <AcademicSearch
@@ -147,7 +149,9 @@ export default function InternshipValidationIndex({
                                                 </TableHead>
                                             </>
                                         )}
-                                        <TableHead className="text-center">Estado</TableHead>
+                                        <TableHead className="text-center">
+                                            Estado
+                                        </TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -170,20 +174,44 @@ export default function InternshipValidationIndex({
                                                             </div>
                                                             <div className="flex flex-col overflow-hidden">
                                                                 <span className="max-w-37.5 truncate text-xs font-bold uppercase lg:max-w-none">
-                                                                    {item.user?.person?.surnames}{' '}
-                                                                    {item.user?.person?.names}
+                                                                    {
+                                                                        item
+                                                                            .user
+                                                                            ?.person
+                                                                            ?.surnames
+                                                                    }{' '}
+                                                                    {
+                                                                        item
+                                                                            .user
+                                                                            ?.person
+                                                                            ?.names
+                                                                    }
                                                                 </span>
                                                                 {!state.selectedId ? (
                                                                     <span className="truncate text-[10px] text-muted-foreground">
-                                                                        {item.user?.email}
+                                                                        {
+                                                                            item
+                                                                                .user
+                                                                                ?.email
+                                                                        }
                                                                     </span>
                                                                 ) : (
                                                                     <div className="flex gap-2">
                                                                         <span className="truncate text-[10px] text-muted-foreground">
-                                                                            {item.section?.school?.name}
+                                                                            {
+                                                                                item
+                                                                                    .section
+                                                                                    ?.school
+                                                                                    ?.name
+                                                                            }
                                                                         </span>
                                                                         <span className="truncate text-[10px] text-muted-foreground">
-                                                                            - {item.section?.name}
+                                                                            -{' '}
+                                                                            {
+                                                                                item
+                                                                                    .section
+                                                                                    ?.name
+                                                                            }
                                                                         </span>
                                                                     </div>
                                                                 )}
@@ -195,14 +223,22 @@ export default function InternshipValidationIndex({
                                                     {!state.selectedId && (
                                                         <>
                                                             <TableCell className="hidden text-sm font-medium text-muted-foreground md:table-cell">
-                                                                {item.section?.school?.faculty?.name ||
+                                                                {item.section
+                                                                    ?.school
+                                                                    ?.faculty
+                                                                    ?.name ||
                                                                     'N/A'}
                                                             </TableCell>
                                                             <TableCell className="hidden text-sm font-medium text-muted-foreground md:table-cell">
-                                                                {item.section?.school?.name || 'N/A'}
+                                                                {item.section
+                                                                    ?.school
+                                                                    ?.name ||
+                                                                    'N/A'}
                                                             </TableCell>
                                                             <TableCell className="hidden font-bold lg:table-cell">
-                                                                {item.section?.name || 'N/A'}
+                                                                {item.section
+                                                                    ?.name ||
+                                                                    'N/A'}
                                                             </TableCell>
                                                         </>
                                                     )}
@@ -216,8 +252,8 @@ export default function InternshipValidationIndex({
                                                                 NO INICIADO
                                                             </Badge>
                                                         ) : item.placement
-                                                            ?.approval_status ===
-                                                            1 ? (
+                                                              ?.approval_status ===
+                                                          1 ? (
                                                             <Badge
                                                                 variant="outline"
                                                                 className="border-none bg-green-500 text-[9px] font-bold text-white"
@@ -225,8 +261,8 @@ export default function InternshipValidationIndex({
                                                                 PROCESO
                                                             </Badge>
                                                         ) : item.placement
-                                                            ?.approval_status ===
-                                                            3 ? (
+                                                              ?.approval_status ===
+                                                          3 ? (
                                                             <Badge
                                                                 variant="outline"
                                                                 className="border-none bg-red-500 text-[9px] font-bold text-white"
@@ -287,10 +323,11 @@ export default function InternshipValidationIndex({
 
                     {/* PANEL DERECHO: Detalle de Validación */}
                     <main
-                        className={`flex min-w-0 flex-1 flex-col transition-all duration-500 ease-in-out ${state.selectedId
-                            ? 'translate-x-0 opacity-100'
-                            : 'pointer-events-none translate-x-12.5 opacity-0'
-                            }`}
+                        className={`flex min-w-0 flex-1 flex-col transition-all duration-500 ease-in-out ${
+                            state.selectedId
+                                ? 'translate-x-0 opacity-100'
+                                : 'pointer-events-none translate-x-12.5 opacity-0'
+                        }`}
                     >
                         {state.selectedId && state.selectedItem ? (
                             <div className="flex flex-1 flex-col overflow-hidden">
@@ -336,17 +373,30 @@ export default function InternshipValidationIndex({
                                             )}
 
                                             {state.detailData &&
-                                                (state.detailData.phase === 'placement' ? (
+                                                (state.detailData.phase ===
+                                                'placement' ? (
                                                     <PlacementDetail
-                                                        detailData={state.detailData}
-                                                        loadDetail={actions.loadDetail}
-                                                        onStatusUpdateSuccess={onStatusUpdateSuccess}
+                                                        detailData={
+                                                            state.detailData
+                                                        }
+                                                        loadDetail={
+                                                            actions.loadDetail
+                                                        }
+                                                        onStatusUpdateSuccess={
+                                                            onStatusUpdateSuccess
+                                                        }
                                                     />
                                                 ) : (
                                                     <InternshipDetail
-                                                        detailData={state.detailData}
-                                                        loadDetail={actions.loadDetail}
-                                                        onStatusUpdateSuccess={onStatusUpdateSuccess}
+                                                        detailData={
+                                                            state.detailData
+                                                        }
+                                                        loadDetail={
+                                                            actions.loadDetail
+                                                        }
+                                                        onStatusUpdateSuccess={
+                                                            onStatusUpdateSuccess
+                                                        }
                                                     />
                                                 ))}
                                         </>
@@ -369,4 +419,3 @@ export default function InternshipValidationIndex({
         </AppLayout>
     );
 }
-

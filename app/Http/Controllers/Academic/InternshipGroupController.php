@@ -11,7 +11,7 @@ use App\Http\Requests\Group\UpdateGroupRequest;
 use App\Models\Faculty;
 use App\Models\InternshipGroup;
 use App\Models\Section;
-use App\Services\InternshipGroupService;
+use App\Services\Academic\InternshipGroupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\Assignment;
@@ -225,5 +225,31 @@ class InternshipGroupController extends Controller
             $data['student_assignment_ids']
         );
         return back()->with('message', 'Estudiantes movidos correctamente.');
+    }
+
+    public function indexBySupervision(): Response
+    {
+        $currentAssignmentId = session('assignment_id');
+        $currentAssignment = Assignment::query()->find($currentAssignmentId);
+
+        $groups = [];
+        if ($currentAssignment && in_array($currentAssignment->role_id, [3, 4])) {
+            $groups = $this->groupService->getInternshipGroupsBySection($currentAssignment->section_id);
+        }
+
+        $faculties = Faculty::query()->forAssignmentContext($currentAssignment, session('semester_id'))->get();
+
+        return Inertia::render('academic/group/supervision/index', [
+            'groups' => $groups,
+            'faculties' => $faculties,
+        ]);
+    }
+
+    public function getGroupStudentsDetails(InternshipGroup $group): JsonResponse
+    {
+        $students = $this->groupService->getGroupStudentsWithPlacement($group->id);
+        return response()->json([
+            'students' => $students
+        ]);
     }
 }

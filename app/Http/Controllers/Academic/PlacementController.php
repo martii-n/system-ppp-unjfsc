@@ -8,7 +8,7 @@ use App\Models\Area;
 use App\Models\Assignment;
 use App\Models\Placement;
 use App\Services\Company\CompanyService;
-use App\Services\PlacementService;
+use App\Services\Academic\PlacementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -48,7 +48,13 @@ class PlacementController extends Controller
     {
         try {
             $data = $this->companyService->verifyCompany($ruc);
+
+            if (!$data) {
+                return response()->json(['found' => false, 'company' => null, 'areas' => []]);
+            }
+
             return response()->json([
+                'message' => 'Empresa encontrada exitosamente.',
                 'found' => true,
                 'company' => [
                     'id' => $data['id'],
@@ -60,7 +66,7 @@ class PlacementController extends Controller
                 'areas' => $data['areas']->map(fn($a) => ['id' => $a->id, 'name' => $a->name]),
             ]);
         } catch (\Throwable $e) {
-            return response()->json(['found' => false, 'company' => null, 'areas' => []]);
+            return response()->json(['found' => false, 'company' => null, 'areas' => [], 'error' => $e->getMessage()]);
         }
     }
 
@@ -89,12 +95,7 @@ class PlacementController extends Controller
             'observation' => 'required_if:approval_status,3|string'
         ]);
 
-        $placement->update($data);
-
-        // Intentar finalizar validación si se aprobó la data
-        if ($data['approval_status'] == 1) {
-            $this->placementService->checkAndFinalizeValidation($placement, $assignment);
-        }
+        $this->placementService->validatePlacementData($placement, $data, $assignment);
 
         return back()->with('message', 'Dictamen registrado correctamente.');
     }
@@ -107,10 +108,10 @@ class PlacementController extends Controller
             'company.email' => 'nullable|email',
             'placement.area_id' => 'nullable|exists:areas,id',
             'placement.area_name' => 'required_if:placement.area_id,null|string',
-            'placement.staff_name' => 'required|string',
-            'placement.staff_position' => 'nullable|string',
-            'placement.staff_phone' => 'nullable|string',
-            'placement.staff_email' => 'nullable|email',
+            'placement.boss_name' => 'required|string',
+            'placement.boss_position' => 'nullable|string',
+            'placement.boss_phone' => 'nullable|string',
+            'placement.boss_email' => 'nullable|email',
             'placement.position' => 'required|string',
             'placement.description' => 'required|string',
             'placement.start_date' => 'required|date',

@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Academic;
 
 use App\Enums\Role;
 use App\Models\Assignment;
 use App\Models\Document;
 use App\Models\DocumentType;
+use App\Services\DocumentService;
+use App\Services\NotificationService;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -184,6 +186,8 @@ class DossierService
                 default => ['dashboard', []],
             };
 
+            $docType = $document->documentType->name;
+
             $this->notificationService->notify(
                 type: 'DOSSIER_UPLOAD',
                 actor: $assignment,
@@ -194,9 +198,10 @@ class DossierService
                         'params' => ['a' => $assignment->id],
                     ],
                     'meta' => [
-                        'message' => 'subió un documento al dossier',
-                        'sender' => $assignment->user->name ?? 'Usuario',
-                        'entity' => 'dossier',
+                        'title'    => 'Nueva carga de archivo',
+                        'role'     => $assignment->role->name,
+                        'document' => $docType,
+                        'entity'   => 'dossier',
                     ],
                 ],
                 resolver: fn($subject, $actor) => $this->notificationService->resolveAcademicRoles(
@@ -227,7 +232,12 @@ class DossierService
             ]);
 
             $docType = $result->documentType->name;
-            $msj = $data['approval_status'] == 1 ? 'El archivo ' . $docType . ' fue aprobado' : 'El archivo ' . $docType . ' fue rechazado';
+            $status = (int) $data['approval_status'];
+            $title = match ($status) {
+                1 => 'Documento aprobado',
+                2 => 'Documento con observación',
+                default => 'Documento rechazado',
+            };
 
             $this->notificationService->notify(
                 type: 'DOSSIER_VALIDATION',
@@ -239,8 +249,12 @@ class DossierService
                         'params' => [],
                     ],
                     'meta' => [
-                        'message' => $msj,
-                        'entity' => 'dossier',
+                        'title'    => $title,
+                        'role'     => $assignment->role->name,
+                        'document' => $docType,
+                        'status'   => $status,
+                        'comment'  => $data['comment'] ?? null,
+                        'entity'   => 'dossier',
                     ],
                 ],
                 resolver: function ($subject, $actor) {

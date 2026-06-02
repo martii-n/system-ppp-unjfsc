@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Academic;
 
 use App\Exceptions\Group\GroupHasStudentsException;
 use App\Exceptions\Group\SupervisorAlreadyAssignedToGroupInSectionException;
@@ -9,7 +9,7 @@ use App\Models\InternshipGroup;
 use App\Models\StudentGroup;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use App\Services\SupervisionService;
+use App\Services\Academic\SupervisionService;
 
 use App\Models\Section;
 use Illuminate\Support\Collection;
@@ -426,5 +426,50 @@ class InternshipGroupService
                 'data' => null
             ];
         }
+    }
+
+    /**
+     * Get group students with placement details.
+     */
+    public function getGroupStudentsWithPlacement(int $groupId): array
+    {
+        $group = InternshipGroup::findOrFail($groupId);
+        return $group->students()
+            ->with([
+                'user.person',
+                'placement.company',
+                'placement.area',
+                'internship'
+            ])
+            ->get()
+            ->map(fn($student) => [
+                'id' => $student->id,
+                'user' => [
+                    'email' => $student->user->email,
+                    'person' => [
+                        'names' => $student->user->person->names,
+                        'surnames' => $student->user->person->surnames,
+                    ]
+                ],
+                'placement' => $student->placement ? [
+                    'id' => $student->placement->id,
+                    'company_name' => $student->placement->company->name ?? '---',
+                    'area_name' => $student->placement->area->name ?? '---',
+                    'boss_name' => $student->placement->boss_name ?? '---',
+                    'boss_position' => $student->placement->boss_position ?? '---',
+                    'boss_phone' => $student->placement->boss_phone ?? '---',
+                    'boss_email' => $student->placement->boss_email ?? '---',
+                    'position' => $student->placement->position ?? '---',
+                    'start_date' => $student->placement->start_date ?? '---',
+                    'end_date' => $student->placement->end_date ?? '---',
+                    'internship_type' => $student->placement->internship_type ?? '---',
+                    'approval_status' => $student->placement->approval_status ?? 0,
+                    'validation_status' => $student->placement->validation_status ?? 0,
+                ] : null,
+                'internship' => $student->internship ? [
+                    'id' => $student->internship->id,
+                    'status' => $student->internship->status ?? 0,
+                ] : null,
+            ])->toArray();
     }
 }

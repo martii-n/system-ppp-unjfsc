@@ -2,13 +2,16 @@ import Heading from "@/components/heading";
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Download, FileArchive, File, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Plus, FileText, Download, FileArchive, File, MoreVertical, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { CreateResourceSheet } from "./partials/create-resource-sheet";
 import { usePage } from "@inertiajs/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSubTrigger } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { toast } from "sonner";
+import { DeleteResourceAlert } from "./partials/delete-resource-alert";
+import { EditResourceSheet } from "./partials/edit-resource-sheet";
 
 // Interfaces para tipar nuestros recursos
 interface DocumentType {
@@ -18,6 +21,7 @@ interface DocumentType {
 interface ResourceDoc {
     id: number;
     path: string;
+    name?: string;
     type: DocumentType;
 }
 
@@ -43,8 +47,10 @@ export default function AcademicResourceContent(props: PageProps) {
     const { resources, documentTypes, roles, faculties, initialFilters } = props;
 
     const [isSheetOpen, setIsSheetOpen] = useState(false);
-
+    const [resourceToEdit, setResourceToEdit] = useState<ResourceItem | null>(null);
+    const [resourceToDelete, setResourceToDelete] = useState<ResourceItem | null>(null);
     const isAuthorized = ![4, 5].includes(role);
+
     // Helper para pintar el Badge según el nivel del recurso
     const getLevelBadge = (level: number) => {
         switch (level) {
@@ -114,10 +120,10 @@ export default function AcademicResourceContent(props: PageProps) {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setResourceToEdit(res)}>
                                                 <Pencil className="mr-2 h-4 w-4" /> Editar
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setResourceToDelete(res)}>
                                                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -138,10 +144,26 @@ export default function AcademicResourceContent(props: PageProps) {
                             <span className="text-xs text-muted-foreground font-medium">
                                 {format(new Date(res.created_at), "d 'de' MMMM, p", { locale: es }) || 'Reciente'}
                             </span>
-                            <Button size="sm" variant="ghost" className="h-8 gap-2 hover:bg-blue-500/10 hover:text-blue-600 transition-colors">
-                                <Download className="h-4 w-4" />
-                                <span className="sr-only sm:not-sr-only text-xs">Descargar</span>
-                            </Button>
+                            <div className="flex items-center gap-1">
+                                {res.documents?.[0]?.path ? (
+                                    <>
+                                        <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-blue-500/10 hover:text-blue-600 transition-colors" asChild title="Abrir en nueva pestaña">
+                                            <a href={`/storage/${res.documents[0].path}`} target="_blank" rel="noopener noreferrer">
+                                                <ExternalLink className="h-4 w-4" />
+                                                <span className="sr-only">Abrir</span>
+                                            </a>
+                                        </Button>
+                                        <Button size="sm" variant="ghost" className="h-8 gap-2 hover:bg-blue-500/10 hover:text-blue-600 transition-colors" asChild title="Descargar archivo">
+                                            <a href={`/storage/${res.documents[0].path}`} download={res.documents[0].name || 'documento'}>
+                                                <Download className="h-4 w-4" />
+                                                <span className="sr-only sm:not-sr-only text-xs">Descargar</span>
+                                            </a>
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <span className="text-xs text-muted-foreground italic">Sin archivo</span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -164,6 +186,20 @@ export default function AcademicResourceContent(props: PageProps) {
                 roles={roles}
                 faculties={faculties}
                 initialFilters={initialFilters}
+            />
+
+            {/* Modal de confirmación para eliminar */}
+            <DeleteResourceAlert
+                fres={resourceToDelete}
+                isOpen={!!resourceToDelete}
+                onClose={() => setResourceToDelete(null)}
+            />
+
+            {/* Sheet para edición rápida */}
+            <EditResourceSheet
+                resource={resourceToEdit}
+                open={!!resourceToEdit}
+                onOpenChange={(open) => !open && setResourceToEdit(null)}
             />
         </div>
     );

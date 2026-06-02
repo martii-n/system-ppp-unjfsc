@@ -24,10 +24,10 @@ export function AcademicSelectorRHF({
     const { control, setValue } = useFormContext();
 
     const isSubadmin = roleId === "2";
-    const isTeacher  = roleUser === 3;
+    const isTeacher = roleUser === 3;
 
     const facultyId = useWatch({ control, name: "faculty_id" });
-    const schoolId  = useWatch({ control, name: "school_id" });
+    const schoolId = useWatch({ control, name: "school_id" });
 
     const safeFaculties = Array.isArray(faculties) ? faculties : [];
 
@@ -126,7 +126,7 @@ export function AcademicSelectorRHF({
                             <Select
                                 onValueChange={field.onChange}
                                 value={field.value}
-                                disabled={!schoolId || isTeacher}
+                                disabled={!facultyId || !schoolId || isTeacher}
                             >
                                 <FormControl>
                                     <SelectTrigger>

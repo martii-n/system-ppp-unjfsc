@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Academic;
 
 use App\Models\InternshipSetting;
 use Illuminate\Support\Facades\DB;

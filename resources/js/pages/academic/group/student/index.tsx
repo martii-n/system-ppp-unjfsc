@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Heading from "@/components/heading";
 import StudentManagementTabs from "./partials/student-management-tabs";
-import { AcademicFilter, AcademicFilterValues } from "@/components/academic/academic-filter";
+import { AcademicFilter } from "@/components/academic/academic-filter";
 import AcademicSearch from "@/components/academic/academic-search";
 import AcademicPagination from "@/components/academic/academic-pagination";
 import { useConfigTable } from "@/hooks/use-config-table";

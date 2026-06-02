@@ -9,21 +9,20 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { RegistrationModeSelector } from '../components/RegistrationModeSelector';
 
-import { MassivePersonInitValues } from './components/person-massive/step-one/schema';
-import { MassiveVStepOne } from './components/person-massive/step-one/MassiveVStepOne';
-import { MassiveSStepTwo } from './components/person-massive/step-two/MassiveSStepTwo';
-import { MassiveRStepThree } from './components/person-massive/step-three/MassiveRStepThree';
+import { MassivePersonInitValues } from './partials/person-massive/step-one/schema';
+import { MassiveVStepOne } from './partials/person-massive/step-one/MassiveVStepOne';
+import { MassiveSStepTwo } from './partials/person-massive/step-two/MassiveSStepTwo';
+import { MassiveRStepThree } from './partials/person-massive/step-three/MassiveRStepThree';
 
-import { PersonInitValues } from './components/person/step-one/schema';
-import { PersonVStepOne } from './components/person/step-one/PersonVStepOne';
-import { PersonSStepThree } from './components/person/step-three/PersonSStepThree';
-import { PersonFStepTwo } from './components/person/step-two/PersonFStepTwo';
+import { PersonInitValues } from './partials/person/step-one/schema';
+import { PersonVStepOne } from './partials/person/step-one/PersonVStepOne';
+import { PersonSStepThree } from './partials/person/step-three/PersonSStepThree';
+import { PersonFStepTwo } from './partials/person/step-two/PersonFStepTwo';
 
 export function PersonFlow({
     roles,
     faculties,
     mode,
-    onBack,
 }: PersonFlowProps) {
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -33,8 +32,20 @@ export function PersonFlow({
     const steps = getRegistrationSteps('persona', currentMode);
 
     const defaultFacultyId = faculties?.length === 1 ? faculties[0].id.toString() : '';
-    const defaultSchoolId = faculties?.[0]?.schools?.length === 1 ? faculties[0].schools[0].id.toString() : '';
-    const defaultSectionId = faculties?.[0]?.schools?.[0]?.sections?.length === 1 ? faculties[0].schools[0].sections[0].id.toString() : '';
+
+    // Solo autollenar escuela si hay una única facultad y esa facultad tiene una única escuela
+    const defaultSchoolId =
+        faculties?.length === 1 && faculties[0].schools?.length === 1
+            ? faculties[0].schools[0].id.toString()
+            : '';
+
+    // Solo autollenar sección si hay una única escuela disponible
+    const defaultSectionId =
+        faculties?.length === 1 &&
+        faculties[0].schools?.length === 1 &&
+        faculties[0].schools[0].sections?.length === 1
+            ? faculties[0].schools[0].sections[0].id.toString()
+            : '';
 
     const { data, setData, processing, reset } = useForm<PersonInitialState>({
         role_id: '',

@@ -10,19 +10,22 @@ use Illuminate\Support\Collection;
 class CompanyService
 {
 
-    public function verifyCompany(string $ruc): array
+    public function verifyCompany(string $ruc): ?array
     {
         $company = Company::query()->where('ruc', $ruc)->first();
-        $payload = [
+
+        if (!$company) {
+            return null;
+        }
+
+        return [
             'id' => $company->id,
             'name' => $company->name,
             'address' => $company->address,
             'phone' => $company->phone,
             'email' => $company->email,
+            'areas' => $this->listAreas($company->id)
         ];
-        $areas = $this->listAreas($company->id);
-        $payload['areas'] = $areas;
-        return $payload;
     }
 
     public function registerCompany(array $data): Company
@@ -60,12 +63,9 @@ class CompanyService
 
     public function registerArea(array $data): Area
     {
-        $area = Area::query()->create([
-            'name' => $data['name'],
-            'description' => $data['description'],
-            'company_id' => $data['company_id'],
-        ]);
-
-        return $area;
+        return Area::firstOrCreate(
+            ['name' => $data['name'], 'company_id' => $data['company_id']],
+            ['description' => $data['description'] ?? null]
+        );
     }
 }

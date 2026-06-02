@@ -57,6 +57,55 @@ export default function InternshipIndex({ data }: InternshipIndexProps) {
     const isEvalStage =
         data.steps.find((s: any) => s.id === viewStep)?.is_evaluation ?? false;
 
+    if (!data.steps || data.steps.length === 0) {
+        return (
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Prácticas" />
+                <div className="flex h-full flex-1 flex-col gap-8 p-8">
+                    <div className="flex items-center justify-between">
+                        <Heading
+                            variant="small"
+                            title="Seguimiento de Prácticas"
+                            description="Registro de documentos y evaluaciones conforme avancen sus prácticas."
+                        />
+                        <Badge
+                            variant="outline"
+                            className="border-green-200 bg-green-100 text-green-700"
+                        >
+                            Convenio con:{' '}
+                            {data.assignment?.placement?.company?.name || '---'}
+                        </Badge>
+                    </div>
+
+                    <div className="flex flex-1 flex-col items-center justify-center p-8">
+                        <div className="flex max-w-md flex-col items-center text-center">
+                            <div className="mb-4 flex size-12 items-center justify-center rounded-full border border-dashed bg-muted/10">
+                                <Info className="size-6 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-sm font-bold tracking-tight uppercase">Etapas de prácticas no configuradas</h3>
+                            <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                                Las etapas y requisitos del seguimiento de sus prácticas aún no han sido configurados por la coordinación académica de su escuela.
+                            </p>
+
+                            {data.assignment?.section && (
+                                <div className="mt-6 w-full rounded-lg border bg-muted/20 p-4 text-left text-[11px] text-muted-foreground space-y-1">
+                                    <p className="font-bold text-foreground mb-1.5 uppercase tracking-wider text-[10px]">Información Académica:</p>
+                                    <p><span className="font-medium text-foreground">Facultad:</span> {data.assignment?.section?.school?.faculty?.name || 'N/A'}</p>
+                                    <p><span className="font-medium text-foreground">Escuela:</span> {data.assignment?.section?.school?.name || 'N/A'}</p>
+                                    <p><span className="font-medium text-foreground">Sección:</span> {data.assignment?.section?.name || 'N/A'}</p>
+                                </div>
+                            )}
+
+                            <p className="mt-6 text-xs font-semibold text-muted-foreground italic uppercase">
+                                Por favor, comuníquese con su coordinador académico para habilitar el flujo.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </AppLayout>
+        );
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Prácticas" />

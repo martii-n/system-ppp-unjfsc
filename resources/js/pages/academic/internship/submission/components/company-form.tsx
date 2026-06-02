@@ -51,10 +51,10 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
                 email: ''
             },
             placement: placement || {
-                staff_name: '',
-                staff_position: '',
-                staff_phone: '',
-                staff_email: '',
+                boss_name: '',
+                boss_position: '',
+                boss_phone: '',
+                boss_email: '',
                 area_id: null,
                 area_name: '',
                 position: '',
@@ -74,7 +74,16 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
                 .then(res => { if (res.found) setCompanyAreas(res.areas ?? []); })
                 .catch(() => { });
         }
-    }, [placement]);
+        
+        // Sincronizar el formulario con los datos que vienen del servidor (Inertia reload)
+        if (placement) {
+            form.reset({
+                company: placement.company,
+                placement: placement
+            });
+            setCompanyFound(!!placement.company?.id);
+        }
+    }, [placement, form]);
 
     // Verificar RUC contra la API
     const handleVerifyRuc = async () => {
@@ -83,6 +92,8 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
         setVerifying(true);
         try {
             const res = await fetch(internship.api.company.verify.url(ruc));
+            if (!res.ok) throw new Error("Error en la respuesta del servidor");
+            
             const json = await res.json();
             if (json.found) {
                 form.setValue('company.id', json.company.id);
@@ -95,6 +106,7 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
                 setCompanyFound(true);
                 setAreaMode('select');
                 toast.success(`Empresa encontrada: ${json.company.name}`);
+                setRucInput(''); // Limpiar solo en éxito
             } else {
                 form.setValue('company.id', null);
                 form.setValue('company.ruc', ruc);
@@ -106,9 +118,13 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
                 setCompanyFound(false);
                 setAreaMode('new');
                 toast.info("RUC no registrado. Complete los datos de la nueva empresa.");
+                setRucInput(''); // Limpiar solo en éxito
             }
-        } catch { toast.error("Error al verificar el RUC. Intente nuevamente."); }
-        finally { setVerifying(false); setRucInput(''); }
+        } catch (error) { 
+            console.error("RUC Verification Error:", error);
+            toast.error("Error al verificar el RUC. Revise su conexión o intente nuevamente."); 
+        }
+        finally { setVerifying(false); }
     };
 
     const handleSelectArea = (area: CompanyArea) => {
@@ -256,7 +272,12 @@ export default function CompanyForm({ placement, type, origin }: CompanyFormProp
                                                                     <Input
                                                                         value={rucInput}
                                                                         onChange={e => setRucInput(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                                                                        onKeyDown={e => e.key === 'Enter' && handleVerifyRuc()}
+                                                                        onKeyDown={e => {
+                                                                            if (e.key === 'Enter') {
+                                                                                e.preventDefault();
+                                                                                handleVerifyRuc();
+                                                                            }
+                                                                        }}
                                                                         placeholder="Ej. 20123456789"
                                                                         maxLength={11}
                                                                         className="h-9 text-xs font-mono"

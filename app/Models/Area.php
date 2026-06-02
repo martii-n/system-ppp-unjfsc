@@ -18,4 +18,9 @@ class Area extends Model
     {
         return $this->belongsTo(Company::class);
     }
+
+    public function placements()
+    {
+        return $this->hasMany(Placement::class);
+    }
 }

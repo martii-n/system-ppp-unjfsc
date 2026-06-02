@@ -42,22 +42,25 @@ class NotificationService
                 if (!$notification)
                     return null;
 
-                $actor = $notification->actor->user->person->surnames . ' ' . $notification->actor->user->person->names;
+                $actorName = trim($notification->actor->user->person->names . ' ' . $notification->actor->user->person->surnames);
 
                 return [
                     'id' => $recipient->id,
                     'type' => $notification->type,
-                    // Accedemos al actor a través del accesor que definimos en Assignment
-                    'actor' => $actor,
-                    'message' => $notification->payload['meta']['message'] ?? '',
+                    'actor' => $actorName,
+                    'role'     => $notification->payload['meta']['role'] ?? '',
+                    'title'    => $notification->payload['meta']['title'] ?? '',
+                    'document' => $notification->payload['meta']['document'] ?? '',
+                    'status'   => $notification->payload['meta']['status'] ?? null,
+                    'comment'  => $notification->payload['meta']['comment'] ?? null,
+                    'entity'   => $notification->payload['meta']['entity'] ?? null,
                     'action' => $notification->payload['action'] ?? '',
-                    // Estos campos viven en NotificationRecipient
                     'read_at' => $recipient->read_at,
                     'seen_at' => $recipient->seen_at,
                     'created_at' => $notification->created_at,
                 ];
             })
-            ->filter() // Limpia los nulos si alguna notificación no existía
+            ->filter()
             ->values();
     }
 

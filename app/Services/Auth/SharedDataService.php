@@ -188,7 +188,7 @@ class SharedDataService
     private function getUnreadNotifications(User $user): array
     {
         $recipients = $user->notificationRecipients()
-            ->with('notification')
+            ->with('notification.actor.user.person')
             ->whereNull('read_at')
             ->latest()
             ->limit(10)
@@ -196,10 +196,13 @@ class SharedDataService
 
         return $recipients->map(function ($recipient) {
             $notification = $recipient->notification;
+            $actorName = trim($notification->actor->user->person->names . ' ' . $notification->actor->user->person->surnames);
+
             return [
                 'id' => $recipient->id,
                 'notification_id' => $notification->id,
                 'type' => $notification->type,
+                'actor' => $actorName,
                 'payload' => $notification->payload,
                 'created_at' => $notification->created_at->diffForHumans(),
             ];

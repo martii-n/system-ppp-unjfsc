@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Academic;
 
 use App\Enums\Role;
 use App\Models\Area;
@@ -11,6 +11,8 @@ use App\Models\Placement;
 use App\Models\Staff;
 use App\Models\DocumentType;
 use App\Services\Company\CompanyService;
+use App\Services\DocumentService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -58,8 +60,8 @@ class PlacementService
                 'origin_type' => $placement->origin_type,
                 'approval_status' => $placement->approval_status,
                 'company' => $placement->company,
-                'area_id' => $placement->area_id, // Usamos directamente el ID del modelo
-                'area' => $placement->area,
+                'area_id' => $placement->area_id,
+                'area_name' => $placement->area?->name,
                 'boss_name' => $placement->boss_name,
                 'boss_position' => $placement->boss_position,
                 'boss_phone' => $placement->boss_phone,
@@ -135,10 +137,10 @@ class PlacementService
                 [
                     'company_id' => $companyId,
                     'area_id' => $areaId,
-                    'boss_name' => $data['placement']['staff_name'] ?? null,
-                    'boss_position' => $data['placement']['staff_position'] ?? null,
-                    'boss_phone' => $data['placement']['staff_phone'] ?? null,
-                    'boss_email' => $data['placement']['staff_email'] ?? null,
+                    'boss_name' => $data['placement']['boss_name'] ?? null,
+                    'boss_position' => $data['placement']['boss_position'] ?? null,
+                    'boss_phone' => $data['placement']['boss_phone'] ?? null,
+                    'boss_email' => $data['placement']['boss_email'] ?? null,
                     'position' => $data['placement']['position'],
                     'description' => $data['placement']['description'] ?? null,
                     'start_date' => $data['placement']['start_date'],
@@ -151,11 +153,6 @@ class PlacementService
                 ]
             );
 
-            // Notificar al Admin, Subadmin y Docente del registro de formalización
-            $assignment->loadMissing('user.person');
-            $person = $assignment->user->person;
-            $studentName = trim(($person->surnames ?? '') . ' ' . ($person->names ?? ''));
-
             $this->notificationService->notify(
                 type: 'PLACEMENT_REGISTER',
                 actor: $assignment,
@@ -166,8 +163,9 @@ class PlacementService
                         'params' => ['a' => $assignment->id],
                     ],
                     'meta' => [
-                        'message' => "El estudiante {$studentName} ha hecho su registro para la formalización de prácticas.",
-                        'sender' => $studentName,
+                        'title' => 'Registro de Formalización',
+                        'role' => $assignment->role->name,
+                        'document' => 'Solicitud de Formalización',
                         'entity' => 'placement',
                     ],
                 ],
@@ -199,12 +197,15 @@ class PlacementService
                 ]);
             }
 
+            // Guardamos el ID del área anterior para limpieza posterior
+            $oldAreaId = $placement->area_id;
+
             // Actualizar datos del placement
             $placement->update([
-                'boss_name' => $data['placement']['staff_name'] ?? $placement->boss_name,
-                'boss_position' => $data['placement']['staff_position'] ?? $placement->boss_position,
-                'boss_phone' => $data['placement']['staff_phone'] ?? $placement->boss_phone,
-                'boss_email' => $data['placement']['staff_email'] ?? $placement->boss_email,
+                'boss_name' => $data['placement']['boss_name'] ?? $placement->boss_name,
+                'boss_position' => $data['placement']['boss_position'] ?? $placement->boss_position,
+                'boss_phone' => $data['placement']['boss_phone'] ?? $placement->boss_phone,
+                'boss_email' => $data['placement']['boss_email'] ?? $placement->boss_email,
                 'position' => $data['placement']['position'] ?? $placement->position,
                 'description' => $data['placement']['description'] ?? $placement->description,
                 'start_date' => $data['placement']['start_date'] ?? $placement->start_date,
@@ -214,26 +215,30 @@ class PlacementService
             ]);
 
             // Gestión de área:
-            // Si area_id es null → crear nueva área vinculada a la empresa
-            // Si area_id tiene valor → asociar área existente (no la sobreescribimos)
             $areaId = $data['placement']['area_id'] ?? null;
-            if ($areaId === null || $areaId === '') {
-                $area = Area::create([
+            
+            // Si no viene ID pero sí nombre, buscamos o creamos el área
+            if (!$areaId && !empty($data['placement']['area_name'])) {
+                $area = $this->companyService->registerArea([
                     'name' => $data['placement']['area_name'],
                     'company_id' => $placement->company_id,
                 ]);
-                $placement->area()->associate($area);
-                $placement->save();
-            } else {
-                // Asociar área existente (sin modificar su nombre)
+                $areaId = $area->id;
+            }
+
+            // Asociar el área (sea nueva o existente)
+            if ($areaId) {
                 $placement->area()->associate($areaId);
                 $placement->save();
             }
 
-            // Notificar al Admin, Subadmin y Docente del registro de formalización
-            $assignment->loadMissing('user.person');
-            $person = $assignment->user->person;
-            $studentName = trim(($person->surnames ?? '') . ' ' . ($person->names ?? ''));
+            // Limpieza de área huérfana: Si el área cambió, verificamos si la anterior quedó vacía
+            if ($oldAreaId && $oldAreaId != $areaId) {
+                $oldArea = Area::find($oldAreaId);
+                if ($oldArea && $oldArea->placements()->count() === 0) {
+                    $oldArea->delete();
+                }
+            }
 
             $this->notificationService->notify(
                 type: 'PLACEMENT_UPDATE',
@@ -245,8 +250,9 @@ class PlacementService
                         'params' => ['a' => $assignment->id],
                     ],
                     'meta' => [
-                        'message' => "El estudiante {$studentName} ha actualizado los datos para la formalización de prácticas.",
-                        'sender' => $studentName,
+                        'title' => 'Actualización de Formalización',
+                        'role' => $assignment->role->name,
+                        'document' => 'Solicitud de Formalización',
                         'entity' => 'placement',
                     ],
                 ],
@@ -263,6 +269,103 @@ class PlacementService
     public function updateDocument(Placement $placement, Assignment $assignment, array $data): void
     {
         $this->savePlacementDocument($placement, $assignment, $data['code'], $data['file']);
+    }
+
+    public function validatePlacementData(Placement $placement, array $data, Assignment $assignment): void
+    {
+        DB::transaction(function () use ($placement, $data, $assignment) {
+            $placement->update([
+                'approval_status' => $data['approval_status'],
+                'observation' => $data['observation'] ?? null,
+            ]);
+
+            $status = (int) $data['approval_status'];
+            $title = match ($status) {
+                1 => 'Datos de formalización aprobados',
+                3 => 'Datos de formalización observados',
+                default => 'Datos de formalización evaluados',
+            };
+
+            $this->notificationService->notify(
+                type: 'PLACEMENT_DATA_VALIDATION',
+                actor: $assignment,
+                subject: $placement,
+                payload: [
+                    'action' => [
+                        'route' => 'internship.submission',
+                        'params' => [],
+                    ],
+                    'meta' => [
+                        'title' => $title,
+                        'role' => $assignment->role->name,
+                        'document' => 'Datos de Empresa y Jefe',
+                        'status' => $status,
+                        'comment' => $data['observation'] ?? null,
+                        'entity' => 'placement',
+                    ],
+                ],
+                resolver: function ($subject, $actor) {
+                    return collect([$subject->assignment->user]);
+                }
+            );
+
+            if ($status === 1) {
+                $this->checkAndFinalizeValidation($placement, $placement->assignment);
+            }
+        });
+    }
+
+    public function validatePlacementDocument(array $data, \App\Models\Document $document, Assignment $assignment): \App\Models\Document
+    {
+        return DB::transaction(function () use ($data, $document, $assignment) {
+            $result = $this->documentService->updateStatus($document, [
+                'approval_status' => $data['approval_status'],
+                'comment' => $data['comment'] ?? ''
+            ]);
+
+            $docType = $result->documentType->name;
+            $status = (int) $data['approval_status'];
+            $title = match ($status) {
+                1 => 'Documento aprobado',
+                2 => 'Documento con observación',
+                3 => 'Documento rechazado',
+                default => 'Documento evaluado',
+            };
+
+            $this->notificationService->notify(
+                type: 'PLACEMENT_DOCUMENT_VALIDATION',
+                actor: $assignment,
+                subject: $document,
+                payload: [
+                    'action' => [
+                        'route' => 'internship.submission',
+                        'params' => [],
+                    ],
+                    'meta' => [
+                        'title' => $title,
+                        'role' => $assignment->role->name,
+                        'document' => $docType,
+                        'status' => $status,
+                        'comment' => $data['comment'] ?? null,
+                        'entity' => 'placement',
+                    ],
+                ],
+                resolver: function ($subject, $actor) {
+                    return collect([$subject->documentable->assignment->user]);
+                }
+            );
+
+            if ($status === 1) {
+                $filesV = ['fut', 'carta_presentacion', 'carta_aceptacion'];
+                if (in_array($document->documentType->code, $filesV)) {
+                    if ($document->documentable_type === Placement::class) {
+                        $this->checkAndFinalizeValidation($document->documentable, $document->documentable->assignment);
+                    }
+                }
+            }
+
+            return $result;
+        });
     }
 
     public function checkAndFinalizeValidation(Placement $placement, Assignment $assignment): void
@@ -309,7 +412,10 @@ class PlacementService
                         'params' => [],
                     ],
                     'meta' => [
-                        'message' => "Se ha formalizado la solicitud de prácticas. Ahora puedes continuar con el siguiente paso.",
+                        'title' => 'Formalización Aprobada',
+                        'role' => $assignment->role->name,
+                        'document' => 'Solicitud de Prácticas',
+                        'status' => 1,
                         'entity' => 'placement',
                     ],
                 ],

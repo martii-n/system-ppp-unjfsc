@@ -24,3 +24,9 @@ Route::middleware(['auth', 'role:1,2,3'])->group(function () {
     Route::post('/groups/{group}/detach', [InternshipGroupController::class , 'detachStudents'])->name('groups.detach');
     Route::post('/groups/{group}/move', [InternshipGroupController::class , 'moveStudents'])->name('groups.move');
 });
+
+Route::middleware(['auth', 'role:4'])->group(function () {
+    // List views
+    Route::get('/groups/supervision', [InternshipGroupController::class , 'indexBySupervision'])->name('groups.supervision');
+    Route::get('/groups/api/supervision/{group}/students', [InternshipGroupController::class, 'getGroupStudentsDetails'])->name('groups.api.supervision_students');
+});

@@ -16,8 +16,8 @@ use App\Models\Faculty;
 use App\Models\Internship;
 use App\Models\UserRequest;
 use App\Models\User;
-use App\Services\InternshipService;
-use App\Services\PlacementService;
+use App\Services\Academic\InternshipService;
+use App\Services\Academic\PlacementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -210,7 +210,7 @@ class InternshipController extends Controller
 
         $data = $request->validated();
 
-        $document = $this->internshipService->updateInternshipStatus($data, $document, $assignment);
+        $document = $this->placementService->validatePlacementDocument($data, $document, $assignment);
 
         return back()->with('message', 'Estado del documento actualizado correctamente.');
     }

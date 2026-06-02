@@ -10,6 +10,7 @@ use App\Models\Faculty;
 use App\Models\Role;
 use App\Models\School;
 use App\Models\Section;
+use App\Models\Resource;
 use App\Services\ResourceService;
 use Exception;
 use Illuminate\Http\Request;
@@ -115,5 +116,34 @@ class ResourceController extends Controller
         $this->resourceService->registerResourceAcademic($uploader, $data);
 
         return back()->with('success', 'Recurso registrado correctamente.');
+    }
+
+    public function update(Request $request, Resource $resource)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'file' => 'nullable|file',
+        ]);
+
+        $user = auth()->user();
+        $uploader = null;
+
+        // Determinar el cargador (Uploader) según el tipo de usuario
+        if (in_array($user->type_user_id, [1, 2])) {
+            $uploader = Assignment::find(session('assignment_id')) ?? $user->activeAssignment;
+        } elseif ($user->type_user_id === 3) {
+            $uploader = $user->person;
+        }
+
+        $this->resourceService->updateResource($resource, $data, $uploader);
+
+        return back()->with('success', 'Recurso actualizado correctamente.');
+    }
+
+    public function destroy(Resource $resource)
+    {
+        $this->resourceService->deleteResource($resource);
+        return back()->with('success', 'Recurso eliminado correctamente.');
     }
 }

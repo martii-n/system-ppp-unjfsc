@@ -17,3 +17,7 @@ Route::middleware(['role:1,2,3'])->group(function () {
 
     Route::patch('evaluations/{evaluation}/status', [SupervisionController::class, 'updateEvaluationStatus'])->name('supervision.update');
 });
+
+Route::middleware(['role:5'])->group(function () {
+    Route::get('supervision/student', [SupervisionController::class, 'studentIndex'])->name('supervision.student');
+});

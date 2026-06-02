@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Academic;
 
 use App\Exceptions\Document\DocumentAlreadyApprovedException;
 use App\Exceptions\Internship\InternshipAlreadyActiveException;
@@ -12,6 +12,10 @@ use App\Models\Internship;
 use App\Models\InternshipSetting;
 use App\Models\Placement;
 use App\Models\UserRequest;
+use App\Services\DocumentService;
+use App\Services\NotificationService;
+use App\Services\Academic\PlacementService;
+use App\Services\RequestService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -205,35 +209,7 @@ class InternshipService
         }
     }
 
-    /**
-     * @param array $data
-     * @param Document $document
-     * @param Assignment $assignment
-     * @return Document
-     */
-    public function updateInternshipStatus(array $data, Document $document, Assignment $assignment): Document
-    {
-        return DB::transaction(function () use ($data, $document, $assignment) {
-            //$model = $this->documentService->validateOwnership('internship', $document->documentable_id, $assignment);
 
-            $result = $this->documentService->updateStatus($document, [
-                'approval_status' => $data['approval_status'],
-                'comment' => $data['comment']
-            ]);
-
-            if ($data['approval_status'] == 1) {
-                $filesV = ['fut', 'carta_presentacion', 'carta_aceptacion'];
-                if (in_array($document->documentType->code, $filesV)) {
-                    // Si el documento pertenece a un Placement, intentar finalizarlo
-                    if ($document->documentable_type === Placement::class) {
-                        $this->placementService->checkAndFinalizeValidation($document->documentable, $assignment);
-                    }
-                }
-            }
-
-            return $result;
-        });
-    }
 
     /**
      * @param array $data

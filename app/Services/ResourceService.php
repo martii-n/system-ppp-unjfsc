@@ -108,4 +108,58 @@ class ResourceService
             $this->storeResource($data, $uploader);
         });
     }
+
+    /**
+     * Update a resource and optionally its document.
+     *
+     * @param Resource $resource
+     * @param array $data
+     * @param Model $uploader
+     * @return Resource
+     */
+    public function updateResource(Resource $resource, array $data, Model $uploader): Resource
+    {
+        return DB::transaction(function () use ($resource, $data, $uploader) {
+            $resource->update([
+                'name' => $data['name'],
+                'description' => $data['description'] ?? null,
+            ]);
+
+            if (isset($data['file'])) {
+                // Eliminar el documento anterior si existe
+                foreach ($resource->documents as $document) {
+                    $this->documentService->removerDocument($document);
+                }
+
+                // Registrar el nuevo documento
+                $this->documentService->registerDocument([
+                    'name' => $data['name'],
+                    'file' => $data['file'],
+                    'document_type_id' => $resource->document_type_id,
+                    'context' => 'resource',
+                ], $uploader, $resource);
+            }
+
+            return $resource->load('documents');
+        });
+    }
+
+    /**
+     * Delete a resource and its associated documents.
+     *
+     * @param Resource $resource
+     * @return void
+     */
+    public function deleteResource(Resource $resource): void
+    {
+        DB::transaction(function () use ($resource) {
+            // Eliminar documentos asociados (físico y base de datos)
+            foreach ($resource->documents as $document) {
+                $this->documentService->removerDocument($document);
+            }
+
+            // Eliminar el recurso
+            $resource->delete();
+        });
+    }
 }

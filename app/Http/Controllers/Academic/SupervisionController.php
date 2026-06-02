@@ -13,7 +13,7 @@ use App\Models\Evaluation;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Services\SupervisionService;
+use App\Services\Academic\SupervisionService;
 use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -231,5 +231,10 @@ class SupervisionController extends Controller
         return back()->with([
             'message' => 'Evaluación actualizada correctamente.',
         ]);
+    }
+
+    public function studentIndex(): Response
+    {
+        return Inertia::render('academic/supervision/student/index', []);
     }
 }

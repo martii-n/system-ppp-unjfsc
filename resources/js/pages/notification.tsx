@@ -1,7 +1,6 @@
 import Heading from "@/components/heading";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
@@ -9,11 +8,12 @@ import AppLayout from "@/layouts/app-layout";
 import academic from '@/routes/academic';
 import notificationsRoute from '@/routes/notifications';
 import { Head, router } from "@inertiajs/react";
-import { formatDistanceToNow, isToday, isYesterday, format } from 'date-fns';
+import { isToday, isYesterday, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Bell, CheckCircle2, ChevronLeft, FileUp, Inbox, CheckCheck, Trash2, Eye, Search, Filter } from "lucide-react";
+import { Bell, ChevronLeft, Inbox, CheckCheck, Trash2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React, { useState, useMemo } from "react";
+import { resolveConfig, NotificationMeta } from "@/config/notification";
 
 interface NotificationAction {
     route: string;
@@ -24,7 +24,12 @@ interface Notification {
     id: number;
     type: string;
     actor: string;
-    message: string;
+    title: string;
+    role: string;
+    document: string;
+    status: number | null;
+    comment: string | null;
+    entity: string | null;
     action: NotificationAction;
     read_at: string | null;
     seen_at: string | null;
@@ -67,8 +72,6 @@ export default function NotificationIndex({ title, notifications }: Props) {
         const routeName = notification.action.route;
         const params = notification.action.params || {};
 
-        console.log(routeName, params);
-
         if (!notification.read_at) {
             router.patch(notificationsRoute.read.url({ id: notification.id }), {}, {
                 preserveScroll: true,
@@ -105,8 +108,9 @@ export default function NotificationIndex({ title, notifications }: Props) {
 
     const filteredNotifications = useMemo(() => {
         return notifications.filter(n =>
-            n.actor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            n.message.toLowerCase().includes(searchQuery.toLowerCase())
+            n.actor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            n.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            n.document?.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [notifications, searchQuery]);
 
@@ -171,7 +175,7 @@ export default function NotificationIndex({ title, notifications }: Props) {
                                     </TabsList>
 
                                     <div className="relative flex-1 max-w-sm">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
                                         <Input
                                             placeholder="Buscar notificaciones..."
                                             className="pl-9 h-10 bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary/20 rounded-lg text-sm"
@@ -229,7 +233,6 @@ function NotificationList({ items, onClick, onDelete, onToggleRead }: {
         );
     }
 
-    // Grouping by date
     const groups = useMemo(() => {
         const sorted = [...items].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         const grouped: Record<string, Notification[]> = {};
@@ -273,7 +276,6 @@ function NotificationList({ items, onClick, onDelete, onToggleRead }: {
         </div>
     );
 }
-
 function NotificationItem({ notification, onClick, onDelete, onToggleRead }: {
     notification: Notification,
     onClick: (n: Notification) => void,
@@ -284,50 +286,78 @@ function NotificationItem({ notification, onClick, onDelete, onToggleRead }: {
         return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
     };
 
-    const getIcon = (type: string) => {
-        switch (type) {
-            case 'DOSSIER_UPLOAD': return <FileUp className="h-3 w-3 text-blue-500" />;
-            case 'DOSSIER_VALIDATION': return <CheckCircle2 className="h-3 w-3 text-green-500" />;
-            default: return <Bell className="h-3 w-3 text-muted-foreground" />;
-        }
+    const meta: NotificationMeta = {
+        title: notification.title,
+        role: notification.role,
+        document: notification.document,
+        status: notification.status,
+        comment: notification.comment,
     };
+
+    const { Icon, color: iconColor, bg: bgColor, render } = resolveConfig(notification.type, meta.status);
 
     return (
         <div
             onClick={() => onClick(notification)}
             className={cn(
-                "group flex items-center h-20 gap-4 px-6 w-full text-left transition-all duration-150 cursor-pointer relative",
-                notification.read_at ? "hover:bg-muted/30" : "bg-primary/2 hover:bg-primary/4"
+                "group flex items-start gap-4 px-6 py-4 cursor-pointer transition-all hover:bg-muted/40 relative",
+                !notification.read_at && "bg-primary/5 border-l-2 border-primary"
             )}
         >
-            {!notification.read_at && (
-                <div className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-            )}
+            <div className="shrink-0 pt-1">
+                <div className={cn(
+                    "h-10 w-10 rounded-full flex items-center justify-center border shadow-sm transition-transform group-hover:scale-105",
+                    notification.read_at ? "bg-background border-muted" : "bg-background border-primary/20"
+                )}>
+                    {notification.actor ? (
+                        <div className="h-full w-full rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary text-xs font-bold">
+                            {getInitials(notification.actor)}
+                        </div>
+                    ) : (
+                        <Bell className="h-4 w-4 text-muted-foreground/60" />
+                    )}
 
-            <div className="relative shrink-0">
-                <Avatar className="h-10 w-10 border-2 bg-background shadow-none">
-                    <AvatarFallback className="text-[10px] font-bold text-muted-foreground/60">
-                        {getInitials(notification.actor)}
-                    </AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1 border shadow-sm ring-1 ring-background">
-                    {getIcon(notification.type)}
+                    <div className={cn(
+                        "absolute -bottom-0.5 -right-0.5 h-5 w-5 rounded-full border-2 border-background flex items-center justify-center shadow-sm",
+                        bgColor
+                    )}>
+                        <Icon className={cn("h-2.5 w-2.5", iconColor)} />
+                    </div>
                 </div>
             </div>
 
-            <div className="flex-1 min-w-0 pr-20">
+            <div className="flex-1 min-w-0 flex flex-col gap-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className={cn(
+                        "text-sm font-semibold truncate",
+                        notification.read_at ? "text-foreground/70" : "text-foreground"
+                    )}>
+                        {notification.title || 'Actualización del sistema'}
+                    </h4>
+                    {!notification.read_at && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    )}
+                </div>
+
+                <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-tight">
+                        {notification.actor || 'Sistema'}
+                    </span>
+                    {notification.role && (
+                        <>
+                            <span className="text-muted-foreground/30 text-[10px]">•</span>
+                            <span className="text-[10px] bg-muted/50 text-muted-foreground px-1.5 py-0.5 rounded-md font-medium">
+                                {notification.role}
+                            </span>
+                        </>
+                    )}
+                </div>
                 <p className={cn(
-                    "text-sm tracking-tight truncate mb-0.5",
-                    notification.read_at ? "text-muted-foreground/80 font-medium" : "text-foreground font-bold"
-                )}>
-                    {notification.actor}
-                </p>
-                <p className={cn(
-                    "text-xs leading-snug line-clamp-1",
+                    "text-xs leading-snug line-clamp-2",
                     notification.read_at ? "text-muted-foreground/60" : "text-muted-foreground font-medium"
-                )}>
-                    {notification.message}
-                </p>
+                )} dangerouslySetInnerHTML={{
+                    __html: render(meta)
+                }} />
             </div>
 
             <div className="shrink-0 flex items-center gap-4">
@@ -335,34 +365,37 @@ function NotificationItem({ notification, onClick, onDelete, onToggleRead }: {
                     {format(new Date(notification.created_at), "HH:mm")}
                 </span>
 
-                <div className="absolute right-6 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                    {!notification.read_at && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => onToggleRead(e, notification)}
-                                    className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
-                                >
-                                    <Eye className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="text-[10px] px-2 py-1">Marcar leída</TooltipContent>
-                        </Tooltip>
-                    )}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm p-1 rounded-lg border shadow-sm">
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
                                 variant="ghost"
                                 size="icon"
+                                className="h-8 w-8 rounded-md hover:bg-primary/10 hover:text-primary"
+                                onClick={(e) => onToggleRead(e, notification)}
+                            >
+                                <Bell className={cn("h-4 w-4", notification.read_at ? "opacity-40" : "fill-primary text-primary")} />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p className="text-xs">{notification.read_at ? 'Marcar como no leída' : 'Marcar como leída'}</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground/50"
                                 onClick={(e) => onDelete(e, notification.id)}
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg"
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="text-[10px] px-2 py-1">Eliminar</TooltipContent>
+                        <TooltipContent side="top">
+                            <p className="text-xs">Eliminar notificación</p>
+                        </TooltipContent>
                     </Tooltip>
                 </div>
             </div>

@@ -1,3 +1,18 @@
+/**
+ * Hook custom main for paginate and filtering table.
+ * @param endpoint - API endpoint.
+ * @param initialData - Initial data.
+ * @param isAdmin - If is admin.
+ * @param pageSize - Page size.
+ * @param extraParams - Additional parameters.
+ * @param onLocalSearch - Local search function.
+ * 
+ * Maintain synchronize the URL of the address bar with the state of the paginator and filters.
+ * 
+ * Att: Ing. Martin Nicasio
+ * P.D. Explain well to Geppeto...
+ */
+
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -35,7 +50,7 @@ export function useConfigTable<T>({
         const params = new URLSearchParams(window.location.search);
         const search = params.get('search') || '';
         const page = parseInt(params.get('page') || '1', 10);
-        
+
         // Capturar filtros académicos comunes
         const filters: Record<string, any> = {};
         ['faculty_id', 'school_id', 'section_id'].forEach(key => {
@@ -60,10 +75,10 @@ export function useConfigTable<T>({
 
     const isLocalPagination = Array.isArray(data);
 
-    // --- Carga Inicial para Admins (Deep Linking) ---
+    // --- Initial Load for Admins (Deep Linking) ---
     useEffect(() => {
         if (isAdmin) {
-            // Si hay algo en la URL que no sea lo por defecto, cargamos data
+            // If there is something in the URL that is not the default, we load data
             const hasParams = initialParams.search || initialParams.page > 1 || initialParams.filters;
             if (hasParams) {
                 fetchData(endpoint, {
@@ -75,14 +90,14 @@ export function useConfigTable<T>({
         }
     }, []);
 
-    // --- Sincronización con URL (Deep Linking) ---
+    // --- Synchronization with URL (Deep Linking) ---
     useEffect(() => {
         const url = new URL(window.location.href);
         const academicKeys = ['faculty_id', 'school_id', 'section_id'];
-        
+
         if (search.trim()) {
             url.searchParams.set('search', search);
-            // Si hay búsqueda, limpiamos agresivamente los filtros de la URL
+            // If there is a search, we aggressively clean the URL filters
             academicKeys.forEach(key => url.searchParams.delete(key));
         } else {
             url.searchParams.delete('search');
@@ -104,13 +119,13 @@ export function useConfigTable<T>({
         window.history.replaceState({}, '', url.toString());
     }, [search, localPage, activeFilters]);
 
-    // --- Sincronización con Props (Deep Linking & Inertia updates) ---
+    // --- Synchronization with Props (Deep Linking & Inertia updates) ---
     useEffect(() => {
-        // En Inertia, al hacer form.patch(), las props vuelven a llegar.
-        // Si es admin y ya tiene datos de API, no debemos sobreescribirlos con initialData vacío.
+        // In Inertia, when doing form.patch(), the props arrive again.
+        // If admin and already has data from API, we must not overwrite them with empty initialData.
         if (!isAdmin) {
             setData(initialData);
-            // No resetear localPage aquí para que Inertia no rompa la paginación local al guardar.
+            // Do not reset localPage here so that Inertia does not break the local pagination when saving.
         }
     }, [initialData, isAdmin]);
 
@@ -123,7 +138,6 @@ export function useConfigTable<T>({
             const mergedParams = { ...extraParams, ...params };
             const res = await axios.get(url, { params: mergedParams });
 
-            // Mapeo inteligente de la respuesta
             const responseData = res.data as PaginatedResponse<T>;
             const result =
                 responseData.groups ||
@@ -142,7 +156,7 @@ export function useConfigTable<T>({
     const handleFilter = (values: Record<string, unknown>) => {
         const isEmpty = Object.values(values).every((v) => !v);
         if (isEmpty) {
-            // Si es admin y está vacío, mandamos objeto con data vacía para cumplir el tipo
+            // If admin and empty, we send an object with empty data to comply with the type
             setData(isAdmin ? { data: [] } : initialData);
             setActiveFilters(null);
             return;
@@ -168,8 +182,8 @@ export function useConfigTable<T>({
 
     const handlePageChange = (url: string | null) => {
         if (!url) return;
-        
-        // Extraer página de la URL para sincronizar el estado local (Deep Linking)
+
+        // Extract page from the URL to synchronize the local state (Deep Linking)
         const urlObj = new URL(url, window.location.origin);
         const page = urlObj.searchParams.get('page');
         if (page) setLocalPage(parseInt(page, 10));
@@ -180,7 +194,7 @@ export function useConfigTable<T>({
         fetchData(url, params);
     };
 
-    // --- Computación de Datos ---
+    // --- Data Computation ---
     const allLocalFiltered = isLocalPagination
         ? (data as T[]).filter((item: T) => {
             if (!search.trim()) return true;

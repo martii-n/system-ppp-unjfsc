@@ -9,7 +9,7 @@ use App\Models\Document;
 use App\Models\Dossier;
 use App\Models\Faculty;
 use App\Models\User;
-use App\Services\DossierService;
+use App\Services\Academic\DossierService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

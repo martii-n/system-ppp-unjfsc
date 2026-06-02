@@ -7,7 +7,7 @@ use App\Http\Requests\Internship\SaveInternshipSettingRequest;
 use App\Models\Assignment;
 use App\Models\Faculty;
 use App\Models\DocumentType;
-use App\Services\InternshipSettingService;
+use App\Services\Academic\InternshipSettingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;

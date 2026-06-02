@@ -12,6 +12,7 @@ import {
     UserPlus2,
     UserRoundCog,
     FileText,
+    Users,
 } from 'lucide-react';
 import { dashboard } from '@/routes';
 import { index as semestersIndex } from '@/routes/academic/semesters';
@@ -29,8 +30,10 @@ import { supervisor as supervisorDossierIndex } from '@/routes/academic/dossiers
 import { student as studentDossierIndex } from '@/routes/academic/dossiers';
 import { internship as internshipIndex } from '@/routes/academic/groups';
 import { student as studentIndex } from '@/routes/academic/groups';
+import { supervision as groupSupervisionIndex } from '@/routes/academic/groups';
 import { submission as supervisionSubmissionIndex } from '@/routes/academic/supervision';
 import { validation as supervisionValidationIndex } from '@/routes/academic/supervision';
+import { student as studentSupervisionIndex } from '@/routes/academic/supervision';
 import { index as resourceIndex } from '@/routes/resource';
 import { submission as internshipSubmissionIndex } from '@/routes/academic/internship';
 import { validation as internshipValidationIndex } from '@/routes/academic/internship';
@@ -121,6 +124,18 @@ export const ACADEMIC_NAV = [
         href: internshipSubmissionIndex().url,
         icon: Folder,
         roles: [5],
+    },
+    {
+        title: 'Rev. Prácticas',
+        href: studentSupervisionIndex().url,
+        icon: NotebookPen,
+        roles: [5],
+    },
+    {
+        title: "Estudiantes",
+        href: groupSupervisionIndex().url,
+        icon: Users,
+        roles: [4],
     },
     {
         title: 'Evaluación',
@@ -230,6 +245,7 @@ export const ACADEMIC_SETTINGS_NAV = [
         icon: FileText,
         roles: [1, 2],
     },
+
 ];
 
 export const FOOTER_NAV = [
@@ -260,20 +276,16 @@ export const FOOTER_NAV = [
     },
     {
         title: 'Repository',
-        href: 'https://github.com/marti-nm/system-ppp-unjfsc',
+        href: 'https://github.com/martii-n/system-ppp-unjfsc',
         icon: Folder,
-        userTypes: [1],
-    },
-    {
-        title: 'Repository',
-        href: 'https://github.com/marti-nm/system-ppp-unjfsc',
-        icon: Folder,
-        userTypes: [1],
+        userTypes: [1, 2],
+        roles: [1, 2],
     },
     {
         title: 'Documentation',
         href: 'https://laravel.com/docs/starter-kits#react',
         icon: BookOpen,
-        userTypes: [1],
+        userTypes: [1, 2],
+        roles: [1, 2],
     },
 ];

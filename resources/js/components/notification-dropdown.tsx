@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { router, Link } from '@inertiajs/react';
-import { Bell, CheckCircle, FileText, Info } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-    DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import academic from '@/routes/academic';
+import notificationsRoute from '@/routes/notifications';
+import { resolveConfig, NotificationMeta } from '@/config/notification';
 
 export function NotificationDropdown({ notifications = [] }: { notifications?: any[] }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -19,6 +20,8 @@ export function NotificationDropdown({ notifications = [] }: { notifications?: a
     const unreadCount = notifications.length;
 
     const resolveWayfinderUrl = (routeName: string, params: any) => {
+        if (routeName === 'dashboard') return '/dashboard';
+
         const parts = routeName.split('.');
         let current: any = { academic };
 
@@ -27,8 +30,6 @@ export function NotificationDropdown({ notifications = [] }: { notifications?: a
         }
 
         if (current && typeof current.url === 'function') {
-            // Wayfinder espera los parámetros dentro de una propiedad 'query'
-            // para concatenarlos como ?key=value
             return current.url({ query: params });
         }
 
@@ -37,36 +38,29 @@ export function NotificationDropdown({ notifications = [] }: { notifications?: a
 
     const handleNotificationClick = (notification: any) => {
         // Mark as read in the background
-        router.patch(`/notifications/${notification.id}/read`, {}, {
+        router.patch(notificationsRoute.read.url({ id: notification.id }), {}, {
             preserveScroll: true,
             preserveState: true,
             onSuccess: () => {
                 setIsOpen(false);
-                // Then navigate to the target route if it exists
-                const routeName = notification.action.route;
-                const params = notification.action.params || {};
 
-                console.log(routeName, params);
+                // Extract action from payload as it comes from SharedDataService
+                const action = notification.payload?.action || {};
+                const routeName = action.route;
+                const params = action.params || {};
+
+                console.log('Resolving route:', routeName, params);
 
                 const url = resolveWayfinderUrl(routeName, params);
 
                 if (url) {
                     router.visit(url);
                 } else {
-                    console.error('No se pudo resolver la ruta Wayfinder:', routeName);
-                    // Fallback al dashboard en caso de error
+                    console.warn('No se pudo resolver la ruta Wayfinder:', routeName, '. Redirigiendo a dashboard.');
                     router.visit('/dashboard');
                 }
             }
         });
-    };
-
-    const getIcon = (entity: string) => {
-        switch (entity) {
-            case 'dossier': return <FileText className="h-4 w-4 shrink-0 text-blue-500" />;
-            case 'success': return <CheckCircle className="h-4 w-4 shrink-0 text-green-500" />;
-            default: return <Info className="h-4 w-4 shrink-0 text-neutral-500" />;
-        }
     };
 
     return (
@@ -103,37 +97,55 @@ export function NotificationDropdown({ notifications = [] }: { notifications?: a
                         </div>
                     ) : (
                         <div className="flex flex-col py-1">
-                            {notifications.map((notification, idx) => (
-                                <DropdownMenuItem
-                                    key={notification.id}
-                                    className={cn(
-                                        "flex gap-3 px-4 py-3 cursor-pointer items-start rounded-none focus:bg-neutral-50 dark:focus:bg-neutral-800",
-                                        idx !== notifications.length - 1 && "border-b border-neutral-100 dark:border-neutral-800/50"
-                                    )}
-                                    // Make sure it doesn't close prematurely before inertia visit
-                                    onSelect={(e) => {
-                                        e.preventDefault();
-                                        handleNotificationClick(notification);
-                                    }}
-                                >
-                                    <div className="mt-0.5 shrink-0 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-full">
-                                        {getIcon(notification.payload?.meta?.entity)}
-                                    </div>
-                                    <div className="flex flex-col gap-1 w-full overflow-hidden">
-                                        <div className="flex items-center justify-between gap-2">
-                                            <p className="text-sm font-medium leading-none truncate dark:text-neutral-200">
-                                                {notification.payload?.meta?.sender || 'Sistema'}
-                                            </p>
-                                            <span className="text-[11px] text-neutral-400 whitespace-nowrap">
-                                                {notification.created_at}
-                                            </span>
+                            {notifications.map((notification, idx) => {
+                                const meta = (notification.payload?.meta || {}) as NotificationMeta;
+                                const { Icon, color: iconColor, bg: bgColor, render } = resolveConfig(notification.type, meta.status);
+
+                                return (
+                                    <DropdownMenuItem
+                                        key={notification.id}
+                                        className={cn(
+                                            "flex gap-3 px-4 py-3 cursor-pointer items-start rounded-none focus:bg-neutral-50 dark:focus:bg-neutral-800",
+                                            idx !== notifications.length - 1 && "border-b border-neutral-100 dark:border-neutral-800/50"
+                                        )}
+                                        // Make sure it doesn't close prematurely before inertia visit
+                                        onSelect={(e) => {
+                                            e.preventDefault();
+                                            handleNotificationClick(notification);
+                                        }}
+                                    >
+                                        <div className={cn("mt-0.5 shrink-0 p-2 rounded-full", bgColor)}>
+                                            <Icon className={cn("h-4 w-4 shrink-0", iconColor)} />
                                         </div>
-                                        <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">
-                                            {notification.payload?.meta?.message || 'Tienes una nueva notificación'}
-                                        </p>
-                                    </div>
-                                </DropdownMenuItem>
-                            ))}
+                                        <div className="flex flex-col gap-0.5 w-full overflow-hidden">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="text-sm font-semibold leading-none truncate dark:text-neutral-200">
+                                                    {meta.title || 'Notificación'}
+                                                </p>
+                                                <span className="text-[11px] text-neutral-400 whitespace-nowrap shrink-0">
+                                                    {notification.created_at}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 mt-1">
+                                                <span className="text-xs text-neutral-600 dark:text-neutral-300 truncate">
+                                                    {notification.actor || 'Sistema'}
+                                                </span>
+                                                {meta.role && (
+                                                    <>
+                                                        <span className="text-neutral-300 dark:text-neutral-600 text-xs">•</span>
+                                                        <span className="text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded-md font-medium">
+                                                            {meta.role}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 mt-0.5" dangerouslySetInnerHTML={{
+                                                __html: render(meta)
+                                            }} />
+                                        </div>
+                                    </DropdownMenuItem>
+                                );
+                            })}
                         </div>
                     )}
                 </ScrollArea>

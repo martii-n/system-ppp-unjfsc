@@ -1,6 +1,6 @@
 import internship from '@/routes/academic/internship';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 // El contexto activo puede ser 'empresa' o el índice de un requerimiento (número)
@@ -26,6 +26,14 @@ export function usePlacementSubmission({ placement, requirements }: UsePlacement
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [previewEnabled, setPreviewEnabled] = useState(false);
+
+    // Sincronizar estado cuando cambian las props (Inertia re-render)
+    useEffect(() => {
+        if (placement) {
+            setType(placement.internship_type || 'development');
+            setOrigin(placement.origin_type || 'direct');
+        }
+    }, [placement]);
 
     // ── Helpers ────────────────────────────────────────────────────────────
     const handleSelectType = (newType: string) => {
@@ -90,6 +98,11 @@ export function usePlacementSubmission({ placement, requirements }: UsePlacement
         }, {
             onSuccess: () => {
                 setIsEditing(false);
+                setTempFile(null);
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                    setPreviewUrl(null);
+                }
             },
             onError: (errors: any) => {
                 const firstError = Object.values(errors)[0] as string;

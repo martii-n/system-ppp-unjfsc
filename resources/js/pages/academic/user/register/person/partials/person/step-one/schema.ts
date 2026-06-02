@@ -1,35 +1,26 @@
 import { z } from "zod";
 import { academicSchema } from "@/pages/academic/user/register/components/AcademicSelector/academic.schema";
 
-export const massivePersonInitSchema = z.object({
+export const personInitSchema = z.object({
     role_id: z.string().min(1, "El rol es obligatorio"),
-    file: z.instanceof(File).optional(), // 👈 clave
-    rows: z.array(z.any()).optional(), // 👈 aquí guardaremos el JSON
+    email: z.email("Email inválido"),
 })
     .extend(academicSchema.shape)
     .superRefine((data, ctx) => {
 
-        // 🔥 VALIDAR FILE AQUÍ
-        if (!data.file) {
-            ctx.addIssue({
-                path: ["file"],
-                code: "custom",
-                message: "Archivo requerido",
-            });
-        }
-
         const isSubadmin = data.role_id === "2";
 
         if (!isSubadmin) {
-            if (!data.school_id) {
+            // Solo exigir escuela si ya hay una facultad seleccionada
+            if (data.faculty_id && !data.school_id) {
                 ctx.addIssue({
                     path: ["school_id"],
                     code: "custom",
                     message: "Seleccione una escuela",
                 });
             }
-
-            if (!data.section_id) {
+            // Solo exigir sección si ya hay una escuela seleccionada
+            if (data.school_id && !data.section_id) {
                 ctx.addIssue({
                     path: ["section_id"],
                     code: "custom",
@@ -39,4 +30,4 @@ export const massivePersonInitSchema = z.object({
         }
     });
 
-export type MassivePersonInitValues = z.infer<typeof massivePersonInitSchema>;
+export type PersonInitValues = z.infer<typeof personInitSchema>;
