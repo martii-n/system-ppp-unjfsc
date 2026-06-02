@@ -1,0 +1,1 @@
+import{c as o,j as n}from"./app-C9ujfHKY.js";import"./app-DBqHavXN.js";function s(){const t=o.c(1);let e;return t[0]===Symbol.for("react.memo_cache_sentinel")?(e=n.jsx("div",{children:n.jsx("h1",{children:"Admin Resource Content"})}),t[0]=e):e=t[0],e}export{s as default};

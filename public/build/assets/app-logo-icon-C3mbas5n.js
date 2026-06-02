@@ -1,0 +1,1 @@
+import{c as e,j as t}from"./app-C9ujfHKY.js";function r(c){const s=e.c(1);let o;return s[0]===Symbol.for("react.memo_cache_sentinel")?(o=t.jsx("img",{src:"/ins-unjfsc.png",className:"size-full object-contain",alt:"UNJFSC Logo"}),s[0]=o):o=s[0],o}export{r as A};

@@ -3,7 +3,7 @@
 echo "🚀 Iniciando proceso de actualización del sistema..."
 
 echo "📥 Trayendo cambios desde GitHub..."
-git pull origin main
+git pull origin production
 
 echo "📦 Reconstruyendo contenedor de la aplicación..."
 docker compose --profile prod build app-prod
