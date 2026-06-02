@@ -100,7 +100,7 @@ class DossierService
      * @param int|null $raId
      * @return array
      */
-    public function initDataValition(?int $raId, int $roleId, Assignment $assignment): array
+    public function initDataValidation(?int $raId, int $roleId, Assignment $assignment, int $semesterId): array
     {
         $assignments = [
             'data' => [],
@@ -132,10 +132,11 @@ class DossierService
      * @param array $filters
      * @return LengthAwarePaginator
      */
-    public function getAssignments(array $filters): LengthAwarePaginator
+    public function getAssignments(array $filters, int $semesterId): LengthAwarePaginator
     {
         $query = Assignment::with(['user.person', 'section.school.faculty', 'section.faculty', 'dossiers'])
-            ->where('role_id', $filters['target_role_id']);
+            ->where('role_id', $filters['target_role_id'])
+            ->where('semester_id', $semesterId);
 
         if (!empty($filters['faculty_id'])) {
             $query->whereHas('section.school.faculty', function ($q) use ($filters) {

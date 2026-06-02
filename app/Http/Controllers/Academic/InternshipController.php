@@ -103,8 +103,11 @@ class InternshipController extends Controller
             'search' => 'nullable|string',
         ]);
 
+        $semesterId = session('semester_id');
+
         $query = Assignment::with(['user.person', 'section.school.faculty', 'placement', 'internship'])
-            ->where('role_id', 5);
+            ->where('role_id', 5)
+            ->where('semester_id', $semesterId);
 
         if ($request->filled('faculty_id')) {
             $query->whereHas('section.school.faculty', fn($q) => $q->where('id', $request->faculty_id));

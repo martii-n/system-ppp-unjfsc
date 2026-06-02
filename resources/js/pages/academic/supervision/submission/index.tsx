@@ -82,7 +82,14 @@ export default function SubmissionShow({ faculties, groups, students }: Props) {
         setSelectedAnnexIdx,
     } = actions;
 
-    const { isSearching, search, setSearch, filterClearKey, fetchData } = tableManager;
+    const {
+        isSearching,
+        search,
+        setSearch,
+        filterClearKey,
+        activeFilters,
+        fetchData,
+    } = tableManager;
 
     // --- ESTADOS ESPECÍFICOS DE SUMISIÓN (Para el SubmitForm) ---
     const [tempFile, setTempFile] = useState<File | null>(null);
@@ -113,16 +120,18 @@ export default function SubmissionShow({ faculties, groups, students }: Props) {
                 </div>
 
                 <div className="relative flex flex-1 gap-6 overflow-hidden pr-1 pb-1">
-                    <aside className={`flex shrink-0 flex-col gap-4 transition-all duration-300 ease-in-out ${selectedId ? 'w-85 lg:w-95' : 'w-full'}`}>
+                    <aside
+                        className={`flex shrink-0 flex-col gap-4 transition-all duration-300 ease-in-out ${selectedId ? 'w-85 lg:w-95' : 'w-full'}`}
+                    >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex flex-wrap items-center gap-2">
                                 {isAdmin && (
                                     <AcademicFilter
-                                        key={tableManager.filterClearKey}
+                                        key={filterClearKey}
                                         faculties={faculties}
                                         onFilter={handleFilter}
                                         isLoading={isSearching}
-                                        initialValues={tableManager.activeFilters as any}
+                                        initialValues={activeFilters as any}
                                     />
                                 )}
                                 <GroupSelector
@@ -221,7 +230,9 @@ export default function SubmissionShow({ faculties, groups, students }: Props) {
                         />
                     </aside>
 
-                    <main className={`flex min-w-0 flex-1 flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${selectedId ? 'translate-x-0 opacity-100' : 'pointer-events-none translate-x-10 opacity-0'}`}>
+                    <main
+                        className={`flex min-w-0 flex-1 flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${selectedId ? 'translate-x-0 opacity-100' : 'pointer-events-none translate-x-10 opacity-0'}`}
+                    >
                         {selectedId && selectedItem ? (
                             <SupervisionDetailPanel
                                 selectedItem={selectedItem}
@@ -233,7 +244,13 @@ export default function SubmissionShow({ faculties, groups, students }: Props) {
                                 onClose={handleCloseSelected}
                                 actionTitle="Envío"
                                 // Lógica de subida (solo para Sumisión): se habilita si no hay archivo subido aún o si activamos edición
-                                canUpload={!!currentAnnex && !tempFile && (!currentAnnex.latest || (isEditing && currentAnnex.status !== 1))}
+                                canUpload={
+                                    !!currentAnnex &&
+                                    !tempFile &&
+                                    (!currentAnnex.latest ||
+                                        (isEditing &&
+                                            currentAnnex.status !== 1))
+                                }
                                 onUpload={(file) => setTempFile(file)}
                                 tempFile={tempFile}
                                 renderActionForm={(annex) => (
@@ -252,11 +269,14 @@ export default function SubmissionShow({ faculties, groups, students }: Props) {
                                 )}
                             />
                         ) : (
-                            <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl bg-muted/20">
-                                <User className="size-8 text-muted-foreground/30 mb-4" />
-                                <h3 className="text-sm font-bold text-foreground">Gestión de Envío</h3>
-                                <p className="text-xs text-muted-foreground mt-1 max-w-[250px] text-center">
-                                    Selecciona un estudiante para realizar el envío de sus evaluaciones y anexos.
+                            <div className="flex flex-1 flex-col items-center justify-center rounded-xl border-2 border-dashed bg-muted/20 text-muted-foreground">
+                                <User className="mb-4 size-8 text-muted-foreground/30" />
+                                <h3 className="text-sm font-bold text-foreground">
+                                    Gestión de Envío
+                                </h3>
+                                <p className="mt-1 max-w-[250px] text-center text-xs text-muted-foreground">
+                                    Selecciona un estudiante para realizar el
+                                    envío de sus evaluaciones y anexos.
                                 </p>
                             </div>
                         )}

@@ -107,7 +107,7 @@ class DossierController extends Controller
         $assignment = Assignment::query()->find($currentAssignmentId);
 
         $raId = request('a') ? (int) request('a') : null;
-        $assignments = $this->dossierService->initDataValition($raId, $roleId, $assignment);
+        $assignments = $this->dossierService->initDataValidation($raId, $roleId, $assignment, $semesterId);
 
         $faculties = Faculty::query()->forAssignmentContext($assignment, $semesterId)->get();
 
@@ -129,7 +129,8 @@ class DossierController extends Controller
             'search' => 'nullable|string'
         ]);
 
-        $data = $this->dossierService->getAssignments($request->all());
+        $semesterId = session('semester_id');
+        $data = $this->dossierService->getAssignments($request->all(), $semesterId);
 
         return response()->json(['assignments' => $data]);
     }

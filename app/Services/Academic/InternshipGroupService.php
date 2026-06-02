@@ -220,7 +220,7 @@ class InternshipGroupService
      */
     public function getStudentsAndGroupsBySection(int $sectionId): Collection
     {
-        return Assignment::where('role_id', 5)
+        return Assignment::query()->where('role_id', 5)
             ->where('access_status', 1)
             ->where('section_id', $sectionId)
             ->with(['user.person', 'section.school', 'studentGroups.internshipGroup'])

@@ -106,8 +106,14 @@ export default function ValidationIndex({
         setSelectedAnnexIdx,
     } = actions;
 
-    const { isSearching, search, setSearch, filterClearKey, fetchData } = tableManager;
-
+    const {
+        isSearching,
+        search,
+        setSearch,
+        filterClearKey,
+        activeFilters,
+        fetchData,
+    } = tableManager;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -138,7 +144,7 @@ export default function ValidationIndex({
                                         faculties={faculties}
                                         onFilter={handleFilter}
                                         isLoading={isSearching}
-                                        initialValues={tableManager.activeFilters as any}
+                                        initialValues={activeFilters as any}
                                     />
                                 )}
                                 <GroupSelector
@@ -253,23 +259,32 @@ export default function ValidationIndex({
                                     <ValidationPanel
                                         status={annex.status}
                                         history={annex.history}
-                                        showFileInfo={annex.latest ? {
-                                            name: annex.title,
-                                            grade: annex.grade
-                                        } : undefined}
+                                        showFileInfo={
+                                            annex.latest
+                                                ? {
+                                                      name: annex.title,
+                                                      grade: annex.grade,
+                                                  }
+                                                : undefined
+                                        }
                                         extendForm={true}
-                                        onSuccess={(data) => actions.validateAnnex(data, annex)}
+                                        onSuccess={(data) =>
+                                            actions.validateAnnex(data, annex)
+                                        }
                                     />
                                 )}
                             />
                         ) : (
-                            <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl bg-muted/20">
-                                <div className="size-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4 border border-dashed border-muted-foreground/30 ring-8 ring-muted/20">
+                            <div className="flex flex-1 flex-col items-center justify-center rounded-xl border-2 border-dashed bg-muted/20 text-muted-foreground">
+                                <div className="mb-4 flex size-16 items-center justify-center rounded-2xl border border-dashed border-muted-foreground/30 bg-muted/50 ring-8 ring-muted/20">
                                     <User className="size-8 text-muted-foreground/30" />
                                 </div>
-                                <h3 className="text-sm font-bold text-foreground">Expediente Alumno</h3>
-                                <p className="text-xs text-muted-foreground mt-1 max-w-[250px] text-center">
-                                    Selecciona un estudiante del listado para revisar sus anexos y validar su progreso.
+                                <h3 className="text-sm font-bold text-foreground">
+                                    Expediente Alumno
+                                </h3>
+                                <p className="mt-1 max-w-[250px] text-center text-xs text-muted-foreground">
+                                    Selecciona un estudiante del listado para
+                                    revisar sus anexos y validar su progreso.
                                 </p>
                             </div>
                         )}

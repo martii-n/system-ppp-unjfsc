@@ -285,7 +285,7 @@ class SupervisionService
      *
      * @@param array $filters
      */
-    public function getGroupsByFilter(array $filters): Collection
+    public function getGroupsByFilter(array $filters, int $semesterId): Collection
     {
         $query = InternshipGroup::with([
             'section.school.faculty',
@@ -293,6 +293,12 @@ class SupervisionService
             'teacher.user.person',
             'supervisor.user.person',
         ])->where('status', 1);
+
+        if ($semesterId) {
+            $query->whereHas('section', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            });
+        }
 
         if (!empty($filters['section_id'])) {
             $query->where('section_id', $filters['section_id']);

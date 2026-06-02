@@ -153,7 +153,9 @@ class SupervisionController extends Controller
             'search' => 'nullable|string',
         ]);
 
-        $groups = $this->supervisionService->getGroupsByFilter($request->all());
+        $semesterId = session('semester_id');
+
+        $groups = $this->supervisionService->getGroupsByFilter($request->all(), $semesterId);
 
         return response()->json(['groups' => $groups]);
     }

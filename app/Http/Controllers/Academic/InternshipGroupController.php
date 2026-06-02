@@ -68,12 +68,20 @@ class InternshipGroupController extends Controller
             'search' => 'nullable|string',
         ]);
 
+        $semesterId = session('semester_id');
+
         $query = InternshipGroup::with([
             'section.school.faculty',
             'teacher.user.person',
             'supervisor.user.person',
             'module',
         ]);
+
+        if ($semesterId) {
+            $query->whereHas('section', function ($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId);
+            });
+        }
 
         if ($request->filled('faculty_id')) {
             $query->whereHas('section.school.faculty', fn($q) => $q->where('id', $request->faculty_id));
@@ -142,8 +150,11 @@ class InternshipGroupController extends Controller
             'search' => 'nullable|string',
         ]);
 
+        $semesterId = session('semester_id');
+
         $query = Assignment::with(['user.person', 'internshipGroup.module', 'section.school.faculty'])
-            ->where('role_id', 5);
+            ->where('role_id', 5)
+            ->where('semester_id', $semesterId);
 
         if ($request->filled('faculty_id')) {
             $query->whereHas('section.school.faculty', fn($q) => $q->where('id', $request->faculty_id));

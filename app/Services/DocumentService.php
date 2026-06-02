@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\Document\DocumentInvalidContextException;
+use App\Exceptions\Document\DocumentSizeLimitException;
 use App\Exceptions\ResourceNotFoundException;
 
 use App\Models\Assignment;
@@ -35,6 +36,12 @@ class DocumentService
      */
     public function registerDocument(array $data, Assignment $assignment, Model $model): Document
     {
+        $maxSizeInBytes = 10 * 1024 * 1024;
+        
+        if (isset($data['file']) && $data['file']->getSize() > $maxSizeInBytes) {
+            throw new DocumentSizeLimitException();
+        }
+
         return DB::transaction(function () use ($data, $assignment, $model) {
             //$model = $this->validateOwnership($data['context'], $data['target_id'], $user);
 

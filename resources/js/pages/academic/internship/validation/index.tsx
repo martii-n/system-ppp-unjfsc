@@ -1,5 +1,12 @@
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { usePage } from '@inertiajs/react';
+import { User, ChevronRight, Building2, Loader2 } from 'lucide-react';
+import { AcademicFilter } from '@/components/academic/academic-filter';
+import AcademicPagination from '@/components/academic/academic-pagination';
+import AcademicSearch from '@/components/academic/academic-search';
+import { DetailHeader } from '@/components/academic/detail-header';
+import Heading from '@/components/heading';
+import { Badge } from '@/components/ui/badge';
 import {
     Table,
     TableBody,
@@ -9,36 +16,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-    User,
-    ChevronRight,
-    CheckCircle2,
-    AlertCircle,
-    Building2,
-    ArrowRight,
-    Clock,
-    MessageSquare,
-    XCircle,
-    X,
-    Loader2,
-} from 'lucide-react';
-import Heading from '@/components/heading';
-import { Label } from '@/components/ui/label';
-import { AcademicFilter } from '@/components/academic/academic-filter';
-import AcademicPagination from '@/components/academic/academic-pagination';
-import AcademicSearch from '@/components/academic/academic-search';
-import { useConfigTable } from '@/hooks/use-config-table';
-import { usePage, router } from '@inertiajs/react';
-
-// Hooks & Partials
 import { useValidation } from './hooks/use-validation';
-import PlacementDetail from './partials/placement-detail';
 import InternshipDetail from './partials/internship-detail';
-
-import internship from '@/routes/academic/internship';
-import { DetailHeader } from '@/components/academic/detail-header';
+import PlacementDetail from './partials/placement-detail';
 
 interface Props {
     assignments: any;

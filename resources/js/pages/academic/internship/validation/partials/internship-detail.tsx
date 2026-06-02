@@ -9,6 +9,7 @@ import { ValidationPanel } from '@/components/academic/validation-panel';
 import { router } from '@inertiajs/react';
 import internship from '@/routes/academic/internship';
 import { Button } from '@/components/ui/button';
+import { SectionCard } from '@/components/ui/section-card';
 
 interface InternshipDetailProps {
     detailData: any;
@@ -65,9 +66,18 @@ export default function InternshipDetail({
     };
 
     if (steps.length === 0) {
-        const sectionId = detailData?.assignment?.section_id || detailData?.assignment?.section?.id || '';
-        const schoolId = detailData?.assignment?.section?.school_id || detailData?.assignment?.section?.school?.id || '';
-        const facultyId = detailData?.assignment?.section?.school?.faculty_id || detailData?.assignment?.section?.school?.faculty?.id || '';
+        const sectionId =
+            detailData?.assignment?.section_id ||
+            detailData?.assignment?.section?.id ||
+            '';
+        const schoolId =
+            detailData?.assignment?.section?.school_id ||
+            detailData?.assignment?.section?.school?.id ||
+            '';
+        const facultyId =
+            detailData?.assignment?.section?.school?.faculty_id ||
+            detailData?.assignment?.section?.school?.faculty?.id ||
+            '';
         const settingsUrl = `/settings/internship?faculty_id=${facultyId}&school_id=${schoolId}&section_id=${sectionId}`;
 
         return (
@@ -76,23 +86,46 @@ export default function InternshipDetail({
                     <div className="mb-4 flex size-12 items-center justify-center rounded-full border border-dashed bg-muted/10">
                         <Info className="size-6 text-muted-foreground" />
                     </div>
-                    <h3 className="text-sm font-bold tracking-tight uppercase">Etapas no configuradas</h3>
-                    <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                        Las etapas y requisitos del flujo de prácticas aún no han sido configurados para esta sección. Por favor, establezca la configuración antes de continuar.
+                    <h3 className="text-sm font-bold tracking-tight uppercase">
+                        Etapas no configuradas
+                    </h3>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                        Las etapas y requisitos del flujo de prácticas aún no
+                        han sido configurados para esta sección. Por favor,
+                        establezca la configuración antes de continuar.
                     </p>
-                    
+
                     {detailData?.assignment?.section && (
-                        <div className="mt-6 w-full rounded-lg border bg-muted/20 p-4 text-left text-[11px] text-muted-foreground space-y-1">
-                            <p className="font-bold text-foreground mb-1.5 uppercase tracking-wider text-[10px]">Detalle Académico:</p>
-                            <p><span className="font-medium text-foreground">Facultad:</span> {detailData?.assignment?.section?.school?.faculty?.name || 'N/A'}</p>
-                            <p><span className="font-medium text-foreground">Escuela:</span> {detailData?.assignment?.section?.school?.name || 'N/A'}</p>
-                            <p><span className="font-medium text-foreground">Sección:</span> {detailData?.assignment?.section?.name || 'N/A'}</p>
+                        <div className="mt-6 w-full space-y-1 rounded-lg border bg-muted/20 p-4 text-left text-[11px] text-muted-foreground">
+                            <p className="mb-1.5 text-[10px] font-bold tracking-wider text-foreground uppercase">
+                                Detalle Académico:
+                            </p>
+                            <p>
+                                <span className="font-medium text-foreground">
+                                    Facultad:
+                                </span>{' '}
+                                {detailData?.assignment?.section?.school
+                                    ?.faculty?.name || 'N/A'}
+                            </p>
+                            <p>
+                                <span className="font-medium text-foreground">
+                                    Escuela:
+                                </span>{' '}
+                                {detailData?.assignment?.section?.school
+                                    ?.name || 'N/A'}
+                            </p>
+                            <p>
+                                <span className="font-medium text-foreground">
+                                    Sección:
+                                </span>{' '}
+                                {detailData?.assignment?.section?.name || 'N/A'}
+                            </p>
                         </div>
                     )}
 
-                    <Button 
+                    <Button
                         onClick={() => router.get(settingsUrl)}
-                        className="mt-6 font-bold text-xs uppercase"
+                        className="mt-6 text-xs font-bold uppercase"
                         size="sm"
                     >
                         Configurar etapas
@@ -103,7 +136,7 @@ export default function InternshipDetail({
     }
 
     return (
-        <div className="flex h-full flex-col gap-6 overflow-hidden p-4">
+        <div className="mt-4 flex h-full flex-col gap-6 overflow-hidden">
             {/* Stepper Superior */}
             <Stepper
                 currentStep={detailData?.currentStep}
@@ -150,35 +183,56 @@ export default function InternshipDetail({
             ) : requirements.length > 0 ? (
                 <div className="flex min-h-0 flex-1 gap-6 overflow-hidden">
                     {/* COL 2: Visor de Documento */}
-                    <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl border bg-background shadow-sm">
-                        <div className="flex shrink-0 items-center justify-between border-b bg-muted/10 px-4 py-2">
-                            <div className="flex items-center gap-2">
-                                <FileText className="size-4 text-primary" />
-                                <span className="truncate text-xs font-bold">
-                                    {currentRequirement?.title}
-                                </span>
-                            </div>
-                            <button
-                                onClick={() =>
-                                    setPreviewEnabled(!previewEnabled)
-                                }
-                                className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:text-primary"
-                            >
-                                {previewEnabled ? (
-                                    <EyeOff className="size-3.5" />
-                                ) : (
-                                    <Eye className="size-3.5" />
-                                )}
-                                {previewEnabled ? 'Ocultar' : 'Ver'}
-                            </button>
-                        </div>
-                        <div className="relative flex-1 bg-slate-50">
-                            <FilePreview
-                                path={currentRequirement?.latest?.path}
-                                name={currentRequirement?.title}
-                                previewEnabled={previewEnabled}
-                            />
-                        </div>
+                    <main className="flex min-w-0 flex-1 flex-col">
+                        <SectionCard className="flex-1">
+                            <SectionCard.Header>
+                                <div className="flex h-full items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div
+                                            className={`flex size-8 items-center justify-center rounded-md border ${currentRequirement ? 'border-primary/20 bg-primary/5' : 'bg-muted/50'}`}
+                                        >
+                                            <FileText
+                                                className={`size-4 ${currentRequirement ? 'text-primary' : 'text-muted-foreground'}`}
+                                            />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm leading-none font-semibold">
+                                                {currentRequirement.title}
+                                            </span>
+                                            <span className="mt-1 text-[11px] text-muted-foreground">
+                                                {currentRequirement?.latest
+                                                    ? 'Archivo cargado'
+                                                    : 'Sin archivo'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() =>
+                                            setPreviewEnabled((p) => !p)
+                                        }
+                                        className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                                    >
+                                        {previewEnabled ? (
+                                            <EyeOff className="size-4" />
+                                        ) : (
+                                            <Eye className="size-4" />
+                                        )}
+                                        <span className="hidden sm:block">
+                                            {previewEnabled
+                                                ? 'Desactivar'
+                                                : 'Previsualizar'}
+                                        </span>
+                                    </button>
+                                </div>
+                            </SectionCard.Header>
+                            <SectionCard.Body>
+                                <FilePreview
+                                    path={currentRequirement?.latest?.path}
+                                    name={currentRequirement?.title}
+                                    previewEnabled={previewEnabled}
+                                />
+                            </SectionCard.Body>
+                        </SectionCard>
                     </main>
 
                     {/* COL 3: Dictamen */}
@@ -225,9 +279,6 @@ export default function InternshipDetail({
                     <p className="text-sm font-medium">
                         No hay documentos en esta etapa.
                     </p>
-                    <Button size="sm" className="">
-                        Waaa
-                    </Button>
                 </div>
             )}
         </div>
